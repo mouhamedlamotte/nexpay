@@ -9,7 +9,7 @@
     "schema": "prisma/schema"
   },
   "scripts": {
-    "build": "nest build",
+    "build":  "prisma generate && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "dev": "nest start --watch",
