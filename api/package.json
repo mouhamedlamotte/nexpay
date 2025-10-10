@@ -9,7 +9,7 @@
     "schema": "prisma/schema"
   },
   "scripts": {
-    "postinstall": "prisma migrate deploy",
+    "postinstall": "prisma migrate deploy && prisma generate",
     "build":  "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
