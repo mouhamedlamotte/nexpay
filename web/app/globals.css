@@ -1,0 +1,235 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Improved contrast ratios and brighter colors for better readability */
+  --background: #0f0f1a;
+  --foreground: #ffffff;
+  --card: #1a1a2e;
+  --card-foreground: #ffffff;
+  --popover: #1a1a2e;
+  --popover-foreground: #ffffff;
+  --primary: #8b7cc8;
+  --primary-foreground: #ffffff;
+  --secondary: #5ba3f5;
+  --secondary-foreground: #ffffff;
+  --muted: #2d2d42;
+  --muted-foreground: #c0c0d0;
+  --accent: #b668d9;
+  --accent-foreground: #ffffff;
+  --destructive: #ff5555;
+  --destructive-foreground: #ffffff;
+  --border: #2d2d42;
+  --input: #1a1a2e;
+  --ring: rgba(91, 163, 245, 0.6);
+  --chart-1: #5ba3f5;
+  --chart-2: #b668d9;
+  --chart-3: #8b7cc8;
+  --chart-4: #ff5555;
+  --chart-5: #ffb347;
+  --radius: 0.5rem;
+  --sidebar: #1a1a2e;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #8b7cc8;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #5ba3f5;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #2d2d42;
+  --sidebar-ring: rgba(91, 163, 245, 0.6);
+}
+
+.dark {
+  /* Same improved contrast for dark mode consistency */
+  --background: #0f0f1a;
+  --foreground: #ffffff;
+  --card: #1a1a2e;
+  --card-foreground: #ffffff;
+  --popover: #1a1a2e;
+  --popover-foreground: #ffffff;
+  --primary: #8b7cc8;
+  --primary-foreground: #ffffff;
+  --secondary: #5ba3f5;
+  --secondary-foreground: #ffffff;
+  --muted: #2d2d42;
+  --muted-foreground: #c0c0d0;
+  --accent: #b668d9;
+  --accent-foreground: #ffffff;
+  --destructive: #ff5555;
+  --destructive-foreground: #ffffff;
+  --border: #2d2d42;
+  --input: #1a1a2e;
+  --ring: rgba(91, 163, 245, 0.6);
+  --chart-1: #5ba3f5;
+  --chart-2: #b668d9;
+  --chart-3: #8b7cc8;
+  --chart-4: #ff5555;
+  --chart-5: #ffb347;
+  --sidebar: #1a1a2e;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #8b7cc8;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #5ba3f5;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #2d2d42;
+  --sidebar-ring: rgba(91, 163, 245, 0.6);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground outline-0 shadow-none;
+  }
+
+  /* Added better typography defaults for improved readability */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold text-balance;
+  }
+
+  h1 {
+    @apply text-3xl lg:text-4xl;
+  }
+
+  h2 {
+    @apply text-2xl lg:text-3xl;
+  }
+
+  h3 {
+    @apply text-xl lg:text-2xl;
+  }
+
+  p {
+    @apply text-base leading-relaxed text-pretty;
+  }
+
+  .text-sm {
+    @apply text-sm leading-relaxed;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+  main {
+    @apply outline-0;
+  }
+
+  /* Improved minimum sizes for better accessibility */
+  .text-xs {
+    @apply text-sm;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-loop {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.animate-scale-loop {
+  animation: scale-loop 1s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  display: none;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #2d2d42;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #1a1a2e;
+}
+
+::-webkit-scrollbar-corner {
+  background-color: #1a1a2e;
+}
+
+::-webkit-scrollbar-button {
+  background-color: #1a1a2e;
+}

@@ -1,0 +1,18 @@
+model PaymentProvider {
+  id       String  @id @default(cuid())
+  name     String
+  code     String  @unique
+  logoUrl  String?
+  isActive Boolean @default(true) @map("is_active")
+
+  secretsFields String[] @map("secrets_fields")
+
+  secrets String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  transactions Transaction[]
+
+  @@map("payment_providers")
+}

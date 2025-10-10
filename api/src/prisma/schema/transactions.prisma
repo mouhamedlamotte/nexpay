@@ -1,0 +1,76 @@
+enum Currency {
+  USD
+  XOF
+  EUR
+  GBP
+  JPY
+  AUD
+  CAD
+  CHF
+  CNY
+  SEK
+  NZD
+}
+
+
+enum TransactionStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  EXPIRED
+  REFUNDED
+}
+
+enum TransactionType {
+  PAYMENT
+  PAYOUT
+}
+
+model Payer {
+  id           String        @id @default(cuid())
+  name         String?
+  email        String?
+  phone        String?
+  userId       String?
+  metadata     Json?
+  transactions Transaction[]
+}
+
+
+model Transaction {
+  id String @id @default(cuid())
+
+  amount   Decimal  @db.Decimal(18, 2)
+  currency Currency @default(XOF)
+
+  status TransactionStatus @default(PENDING)
+
+  payerId String? @map("payer_id")
+  payer   Payer?  @relation(fields: [payerId], references: [id])
+
+
+  reference       String  @unique
+  clientReference String? @map("client_reference")
+
+  providerTransactionId String?         @map("provider_transaction_id")
+  providerId            String          @map("provider_id")
+  provider              PaymentProvider @relation(fields: [providerId], references: [id])
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  idempotencyKey String? @unique @default(cuid()) @map("idempotency_key")
+  type           TransactionType? @default(PAYMENT)
+
+  metadata Json?
+
+  expiresAt  DateTime? @map("expires_at")
+  resolvedAt DateTime? @map("resolved_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([payerId, providerId, providerTransactionId, reference])
+  @@map("transactions")
+}

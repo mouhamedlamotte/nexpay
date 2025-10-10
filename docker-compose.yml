@@ -1,0 +1,49 @@
+services:
+  traefik:
+    image: traefik:v3.5
+    container_name: traefik
+    ports:
+      - "8081:80"
+      - "8080:8080"
+    volumes:
+      - ./config/traefik/traefik.yml:/etc/traefik/traefik.yml
+      - ./config/traefik/dynamic:/etc/traefik/dynamic
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - traefik
+    restart: unless-stopped
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - psql
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: /bin/sh -c "redis-server --requirepass $REDIS_PASSWORD"
+    hostname: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis/data:/data
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: false
+  psql:
+    driver: bridge
+
+volumes:
+  postgres-data:

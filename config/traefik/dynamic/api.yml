@@ -1,0 +1,18 @@
+http:
+  routers:
+    api-router:
+      rule: "PathPrefix(`/v1`)"
+      service: api-service
+      entryPoints:
+        - web
+      priority: 100
+      middlewares:
+        - cors-middleware@file
+
+  services:
+    api-service:
+      loadBalancer:
+        servers:
+          # For production, use: http://api-service:3000
+          # For development, use: http://host.docker.internal:3000
+          - url: "http://host.docker.internal:8000"

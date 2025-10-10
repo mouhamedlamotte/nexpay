@@ -1,0 +1,19 @@
+entryPoints:
+  web:
+    address: ":80"
+
+providers:
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+api:
+  dashboard: true
+  insecure: true
+
+# Logs
+log:
+  level: INFO
+
+accessLog:
+  filePath: "/var/log/traefik/access.log"
