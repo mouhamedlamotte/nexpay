@@ -42,7 +42,8 @@
     "keyv": "^5.5.2",
     "libphonenumber-js": "^1.12.17",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "prisma": "^6.16.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
