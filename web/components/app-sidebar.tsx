@@ -32,12 +32,12 @@ export function AppSidebar() {
       items: [
         {
           title: "Projects",
-          href: "/projects",
+          href: "/admin/projects",
           icon: FolderKanban,
         },
         {
           title: "Providers",
-          href: "/providers",
+          href: "/admin/providers",
           icon: CreditCard,
         },
       ],
@@ -51,7 +51,7 @@ export function AppSidebar() {
           items: [
             {
               title: "Transactions",
-              href: `/${selectedProjectId}/transactions`,
+              href: `/admin/${selectedProjectId}/transactions`,
               icon: Receipt,
             },
           ],
@@ -61,12 +61,12 @@ export function AppSidebar() {
           items: [
             {
               title: "Redirects",
-              href: `/${selectedProjectId}/settings/redirects`,
+              href: `/admin/${selectedProjectId}/settings/redirects`,
               icon: LinkIcon,
             },
             {
               title: "Webhooks",
-              href: `/${selectedProjectId}/settings/webhooks`,
+              href: `/admin/${selectedProjectId}/settings/webhooks`,
               icon: Webhook,
             },
           ],
@@ -75,7 +75,7 @@ export function AppSidebar() {
     : []
 
   const isActive = (href: string) => {
-    if (href === "/projects" || href === "/providers") {
+    if (href === "/admin/projects" || href === "admin/providers") {
       return pathname === href
     }
     return pathname.startsWith(href)

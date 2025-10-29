@@ -120,16 +120,20 @@ export interface Transaction {
   status: TransactionStatus;
   reference: string;
   providerTransactionId?: string;
-  userId: string;
-  name: string;
-  phone: string;
-  email: string;
-  client_reference: string;
+  clientReference: string;
   metadata?: Record<string, any>;
   expiresAt?: string;
   resolvedAt?: string;
   createdAt: string;
   updatedAt: string;
+  payer: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    userId: string;
+    metadata?: Record<string, any>;
+  }
 }
 
 export interface TransactionFilters extends PaginationParams {

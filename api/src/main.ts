@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import helmet from 'helmet';
+// import helmet from 'helmet';
 import * as compression from 'compression';
 import { CustomExceptionFilter } from './lib/filters';
 import { ErrorInterceptor } from './lib/interceptors';
@@ -22,23 +22,23 @@ async function bootstrap() {
 
     app.set('trust proxy', 1);
 
-    app.use(
-      helmet({
-        contentSecurityPolicy: {
-          directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
-            scriptSrc: ["'self'"],
-            imgSrc: ["'self'", 'data:', 'https:'],
-          },
-        },
-        hsts: {
-          maxAge: 31536000,
-          includeSubDomains: true,
-          preload: true,
-        },
-      }),
-    );
+    // app.use(
+    //   helmet({
+    //     contentSecurityPolicy: {
+    //       directives: {
+    //         defaultSrc: ["'self'"],
+    //         styleSrc: ["'self'", "'unsafe-inline'"],
+    //         scriptSrc: ["'self'"],
+    //         imgSrc: ["'self'", 'data:', 'https:'],
+    //       },
+    //     },
+    //     hsts: {
+    //       maxAge: 31536000,
+    //       includeSubDomains: true,
+    //       preload: true,
+    //     },
+    //   }),
+    // );
 
     app.use(compression());
 

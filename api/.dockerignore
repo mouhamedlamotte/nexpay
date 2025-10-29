@@ -1,0 +1,9 @@
+.env
+dist
+nodes_modules
+logs
+test
+.git
+.vscode
+.idea
+.gitignore

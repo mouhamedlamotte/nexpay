@@ -63,11 +63,11 @@ export function TransactionDetailsDialog({ transaction, open, onOpenChange }: Tr
             )}
             <div>
               <p className="text-sm font-medium text-muted-foreground">Client Reference</p>
-              <p className="mt-1 text-sm">{transaction.client_reference}</p>
+              <p className="mt-1 text-sm">{transaction.clientReference}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">User ID</p>
-              <p className="mt-1 text-sm">{transaction.userId}</p>
+              <p className="mt-1 text-sm">{transaction.payer?.userId}</p>
             </div>
           </div>
 
@@ -79,15 +79,15 @@ export function TransactionDetailsDialog({ transaction, open, onOpenChange }: Tr
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Name</p>
-                <p className="mt-1 text-sm">{transaction.name}</p>
+                <p className="mt-1 text-sm">{transaction.payer?.name}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Email</p>
-                <p className="mt-1 text-sm">{transaction.email}</p>
+                <p className="mt-1 text-sm">{transaction.payer?.email}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Phone</p>
-                <p className="mt-1 text-sm">{transaction.phone}</p>
+                <p className="mt-1 text-sm">{transaction.payer?.phone}</p>
               </div>
             </div>
           </div>
