@@ -1,0 +1,29 @@
+enum SessionStatus {
+    opened
+    closed
+    expired
+}
+
+model Session {
+    id       String   @id @default(cuid())
+
+    amount   Decimal  @db.Decimal(18, 2)
+    currency Currency @default(XOF)
+
+    payerId String? @map("payer_id")
+    payer   Payer?  @relation(fields: [payerId], references: [id])
+
+    clientReference String? @map("client_reference")
+
+    projectId String
+    project   Project @relation(fields: [projectId], references: [id])
+
+    expiresAt DateTime @map("expires_at")
+
+    status SessionStatus @default(opened)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    transactions Transaction[]
+}

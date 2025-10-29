@@ -7,13 +7,16 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CallbacksService } from './callbacks.service';
 import { CallBacksDto } from './dto/callbacks.dto';
+import { JwtAuthGuard } from 'src/guards/auth/jwt/jwt.guard';
 
 @ApiTags('Settings - Redirects Callbacks')
 @Controller(':projectId/settings/redirects')
+@UseGuards(JwtAuthGuard())
 export class CallbacksController {
   constructor(private readonly service: CallbacksService) {}
 

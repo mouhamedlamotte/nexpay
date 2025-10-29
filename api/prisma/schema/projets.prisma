@@ -13,6 +13,7 @@ model Project {
   callback Callback?
 
   transactions Transaction[]
+  sessions Session[]
 
   @@map("projects")
 }

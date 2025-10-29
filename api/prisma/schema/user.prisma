@@ -1,0 +1,18 @@
+model User {
+  id        String   @id @default(cuid())
+
+
+  firstName String
+  lastName  String
+
+  email     String  @unique
+  password  String
+
+
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  deletedAt DateTime?
+}

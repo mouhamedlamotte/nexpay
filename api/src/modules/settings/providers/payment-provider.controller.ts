@@ -8,14 +8,17 @@ import {
   Param,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { PaymentProviderService } from './payment-provider.service';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UpdatePaymentProviderDto } from './dto/update-payment-provider.dto';
 import { GetPaymentProviderDto } from './dto/get-payment-provider.dto';
+import { JwtAuthGuard } from 'src/guards/auth/jwt/jwt.guard';
 
 @ApiTags('Settings - Payment Providers')
 @Controller('/settings/providers')
+@UseGuards(JwtAuthGuard())
 export class PaymentProviderController {
   constructor(private readonly service: PaymentProviderService) {}
 

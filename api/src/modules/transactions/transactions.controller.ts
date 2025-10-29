@@ -1,10 +1,19 @@
-import { Controller, Get, HttpStatus, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpStatus,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetTransactionDto } from './dto/get-transaction.dto';
 import { TransactionsService } from './transactions.service';
+import { JwtAuthGuard } from 'src/guards/auth/jwt/jwt.guard';
 
 @ApiTags('Project - Transactions')
 @Controller(':projectId/transactions')
+@UseGuards(JwtAuthGuard())
 export class TransactionsController {
   constructor(private readonly service: TransactionsService) {}
 

@@ -35,6 +35,8 @@ model Payer {
   userId       String?
   metadata     Json?
   transactions Transaction[]
+
+  sessions Session[]
 }
 
 
@@ -70,6 +72,9 @@ model Transaction {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
+  sessionId String? @map("session_id") @unique
+  session   Session? @relation(fields: [sessionId], references: [id])
 
   @@index([payerId, providerId, providerTransactionId, reference])
   @@map("transactions")

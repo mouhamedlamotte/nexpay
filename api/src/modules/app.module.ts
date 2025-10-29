@@ -9,6 +9,8 @@ import { CallbacksModule } from './settings/callbacks/redirects.module';
 import { WebhooksModule } from './settings/webhooks/webhooks.module';
 import { PaymentsModule } from './public/payments/webhook/payments.module';
 import { SeedersModule } from 'src/lib/modules/seeders/seeders.module';
+import { SessionModule } from './session/session.module';
+import { UsersModule } from './users/user.module';
 
 @Module({
   imports: [
@@ -25,8 +27,11 @@ import { SeedersModule } from 'src/lib/modules/seeders/seeders.module';
     ProjectModule,
     TransactionsModule,
     PaymentsModule,
+    SessionModule,
+    UsersModule,
   ],
   controllers: [],
   providers: [],
+  exports: [],
 })
 export class AppModule {}

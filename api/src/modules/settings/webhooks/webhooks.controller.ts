@@ -8,15 +8,18 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { WebhooksService } from './webhooks.service';
 import { CreateWebhooksConfigDto } from './dto/create-webhooks-config.dto';
 import { UpdateWebhooksConfigDto } from './dto/update-webhooks-config.dto';
 import { GetWebhookConfigDto } from './dto/get-webhook-config.dto';
+import { JwtAuthGuard } from 'src/guards/auth/jwt/jwt.guard';
 
 @ApiTags('Settings - Webhooks urls')
 @Controller(':projectId/settings/webhooks')
+@UseGuards(JwtAuthGuard())
 export class WebhooksController {
   constructor(private readonly service: WebhooksService) {}
 

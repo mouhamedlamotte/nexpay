@@ -7,15 +7,18 @@ import {
   Param,
   Body,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { ProjectService } from './project.service';
 import { GetProjectsDto } from './dto/get-project.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { JwtAuthGuard } from 'src/guards/auth/jwt/jwt.guard';
 
 @ApiTags('Projects')
 @Controller('projects')
+@UseGuards(JwtAuthGuard())
 export class ProjectsController {
   constructor(private readonly service: ProjectService) {}
 
