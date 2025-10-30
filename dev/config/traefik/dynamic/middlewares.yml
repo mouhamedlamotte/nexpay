@@ -1,0 +1,32 @@
+http:
+  middlewares:
+    cors-middleware:
+      headers:
+        accessControlAllowMethods:
+          - "GET"
+          - "POST"
+          - "PUT"
+          - "DELETE"
+          - "OPTIONS"
+        accessControlAllowHeaders:
+          - "Content-Type"
+          - "Authorization"
+          - "X-Requested-With"
+          - "Accept"
+          - "Origin"
+          - "Cookie"
+          - "Set-Cookie"
+        accessControlAllowOriginList:
+          - "http://localhost:9001"
+          - "http://localhost:9090"
+        accessControlAllowCredentials: true
+        accessControlMaxAge: 3600
+        accessControlExposeHeaders:
+          - "X-User-Id"
+          - "X-User-Role"
+          - "Set-Cookie"
+
+    auth-basic-middleware:
+      basicAuth:
+        users:
+          - "admin:$2y$05$isIQ6BV1W7eKyQT4UqeVOOk/O94akrEJ2apnbeK4F5Ysc556NVkkm"

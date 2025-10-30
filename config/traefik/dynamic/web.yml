@@ -1,26 +1,19 @@
 http:
   routers:
     admin-router:
-      rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/admin`)'
+      rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/`)'
       service: web
       entryPoints:
-        - web
+        - websecure
       priority: 100
       middlewares:
         - cors-middleware@file
-    checkout-router:
-      rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/checkout`)'
-      service: web
-      entryPoints:
-        - web
-      priority: 100
-      middlewares:
-        - cors-middleware@file
+      tls:
+        certResolver: letsencrypt
+
 
   services:
     web:
       loadBalancer:
         servers:
-          # For production, use: http://api-service:3000
-          # For development, use: http://host.docker.internal:3000
-          - url: "http://host.docker.internal:9001"
+          - url: "http://web:9001"

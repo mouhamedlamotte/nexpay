@@ -4,14 +4,15 @@ http:
       rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/api/v1`)'
       service: api-service
       entryPoints:
-        - websecure
+        - web
       priority: 100
       middlewares:
         - cors-middleware@file
-      tls:
-        certResolver: letsencrypt
+
   services:
     api-service:
       loadBalancer:
         servers:
-          - url: "http://api:9000"
+          # For production, use: http://api-service:3000
+          # For development, use: http://host.docker.internal:3000
+          - url: "http://host.docker.internal:9000"

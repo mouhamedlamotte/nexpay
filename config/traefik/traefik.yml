@@ -1,6 +1,24 @@
+
 entryPoints:
   web:
     address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: ":443"
+
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: contact@thenexcom.com
+      storage: /letsencrypt/acme-nexpay.json
+      httpChallenge:
+        entryPoint: web
 
 providers:
   file:
@@ -9,9 +27,8 @@ providers:
 
 api:
   dashboard: true
-  insecure: true
+  insecure: false
 
-# Logs
 log:
   level: INFO
 
