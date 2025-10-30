@@ -131,7 +131,8 @@ REPO_URL="https://github.com/mouhamedlamotte/nexpay.git"
 TEMP_DIR=$(mktemp -d)
 
 # Clone dans un dossier temporaire
-git clone --depth 1 --branch main "$REPO_URL" "$TEMP_DIR" 2>&1 | grep -v "Cloning"
+git clone --depth 1 --branch main "$REPO_URL" "$TEMP_DIR"
+
 
 # Copier les fichiers nécessaires
 cp -r "$TEMP_DIR"/* $INSTALL_DIR/
