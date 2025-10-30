@@ -35,6 +35,9 @@ cat << "EOF"
 EOF
 echo -e "${NC}"
 
+# Créer le dossier d'installation AVANT le logging
+mkdir -p "$INSTALL_DIR"
+
 # Fonction de logging
 exec > >(tee -a "$LOG_FILE") 2>&1
 
@@ -85,13 +88,13 @@ log_info "Installation des dépendances..."
 case "$OS_TYPE" in
     ubuntu|debian|raspbian)
         apt-get update -y >/dev/null 2>&1
-        apt-get install -y git openssl apache2-utils >/dev/null 2>&1
+        apt-get install -y curl wget git jq openssl apache2-utils >/dev/null 2>&1
         ;;
     centos|fedora|rhel)
-        dnf install -y git openssl httpd-tools >/dev/null 2>&1
+        dnf install -y curl wget git jq openssl httpd-tools >/dev/null 2>&1
         ;;
     arch)
-        pacman -Sy --noconfirm git openssl apache-tools >/dev/null 2>&1
+        pacman -Sy --noconfirm curl wget git jq openssl apache-tools >/dev/null 2>&1
         ;;
 esac
 
@@ -223,7 +226,7 @@ chmod 600 config/traefik/acme.json
 # 11. Démarrage des containers
 log_info "Démarrage de Nexpay..."
 docker compose pull
-docker compose -f docker-compose-prod.yml up -d --build
+docker compose up -d --build
 
 # 12. Attente du démarrage
 log_info "Attente du démarrage des services..."
@@ -292,8 +295,8 @@ echo "🔄 Mise à jour de Nexpay..."
 docker compose exec postgres pg_dump -U nexpay nexpay > "backup-$(date +%Y%m%d-%H%M%S).sql"
 
 # Pull & restart
-docker compose pull
-docker compose up -d --build
+docker compose -f docker-compose-prod.yml pull
+docker compose up -f docker-compose-prod.yml -d --build
 
 echo "✅ Mise à jour terminée"
 UPGRADE_SCRIPT
