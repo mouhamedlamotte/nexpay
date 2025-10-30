@@ -178,7 +178,7 @@ sleep 2
 log_info "Génération des secrets de sécurité..."
 
 JWT_SECRET=$(openssl rand -base64 32)
-DB_PASSWORD=password
+DB_PASSWORD=portgres
 REDIS_PASSWORD=$(openssl rand -base64 32)
 ENCRYPTION_KEY=$(openssl rand -hex 32)
 TRAEFIK_AUTH=$(echo $(htpasswd -nb admin "$TRAEFIK_PASSWORD") | sed -e 's/\$/\$\$/g')
