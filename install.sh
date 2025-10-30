@@ -133,44 +133,46 @@ TEMP_DIR=$(mktemp -d)
 # Clone dans un dossier temporaire
 git clone --depth 1 --branch main "$REPO_URL" "$TEMP_DIR"
 
-
 # Copier les fichiers nécessaires
 cp -r "$TEMP_DIR"/* $INSTALL_DIR/
 rm -rf "$TEMP_DIR"
 
 log_success "Code source téléchargé"
 
-# 7. Configuration interactive
+# 7. Configuration automatique
 echo ""
-log_info "Configuration de Nexpay"
+log_info "Configuration automatique de Nexpay"
 echo ""
 
-# Domaine
-read -p "$(echo -e ${BLUE})🌐 Nom de domaine (ex: pay.example.com): $(echo -e ${NC})" APP_DOMAIN
-while [[ ! "$APP_DOMAIN" =~ ^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$ ]]; do
-    log_warn "Domaine invalide"
-    read -p "$(echo -e ${BLUE})🌐 Nom de domaine: $(echo -e ${NC})" APP_DOMAIN
-done
+# Détection automatique du hostname/IP
+DETECTED_HOSTNAME=$(hostname -f 2>/dev/null || hostname)
+DETECTED_IP=$(hostname -I | awk '{print $1}')
 
-# Email admin
-read -p "$(echo -e ${BLUE})📧 Email admin (pour SSL): $(echo -e ${NC})" ADMIN_EMAIL
-while [[ ! "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; do
-    log_warn "Email invalide"
-    read -p "$(echo -e ${BLUE})📧 Email admin: $(echo -e ${NC})" ADMIN_EMAIL
-done
+# Utiliser l'IP par défaut si disponible, sinon le hostname
+if [ -n "$DETECTED_IP" ]; then
+    APP_DOMAIN="$DETECTED_IP"
+    log_info "Domaine détecté: $APP_DOMAIN (IP du serveur)"
+else
+    APP_DOMAIN="$DETECTED_HOSTNAME"
+    log_info "Domaine détecté: $APP_DOMAIN (hostname du serveur)"
+fi
+
+# Email admin par défaut
+ADMIN_EMAIL="admin@nexpay.local"
+log_info "Email admin: $ADMIN_EMAIL (par défaut)"
 
 # Nom de l'app
-read -p "$(echo -e ${BLUE})💳 Nom de l'application [Nexpay]: $(echo -e ${NC})" APP_NAME
-APP_NAME=${APP_NAME:-Nexpay}
+APP_NAME="Nexpay"
+log_info "Nom de l'application: $APP_NAME"
 
-# Mot de passe Traefik
-read -s -p "$(echo -e ${BLUE})🔐 Mot de passe Traefik dashboard: $(echo -e ${NC})" TRAEFIK_PASSWORD
+# Mot de passe Traefik par défaut
+TRAEFIK_PASSWORD="nexpay2024"
+log_info "Mot de passe Traefik: $TRAEFIK_PASSWORD (par défaut)"
+
 echo ""
-while [ ${#TRAEFIK_PASSWORD} -lt 8 ]; do
-    log_warn "Mot de passe trop court (min 8 caractères)"
-    read -s -p "$(echo -e ${BLUE})🔐 Mot de passe Traefik: $(echo -e ${NC})" TRAEFIK_PASSWORD
-    echo ""
-done
+log_warn "Configuration par défaut appliquée. Vous pourrez modifier ces paramètres plus tard dans le fichier .env"
+echo ""
+sleep 2
 
 # 8. Génération des secrets
 log_info "Génération des secrets de sécurité..."
@@ -213,29 +215,34 @@ REDIS_PASSWORD=$REDIS_PASSWORD
 TRAEFIK_AUTH=$TRAEFIK_AUTH
 
 # Ports (you can change these)
-HTTP_PORT=80
-HTTPS_PORT=443
-TRAEFIK_DASHBOARD_PORT=8080
+HTTP_PORT=9090
+HTTPS_PORT=9091
+TRAEFIK_DASHBOARD_PORT=9092
+POSTGRES_PORT=54321
+REDIS_PORT=63791
+API_PORT=9093
 EOF
 
 log_success "Fichier .env créé"
 
 # 10. Configuration de Traefik pour SSL
-touch config/traefik/acme.json
-chmod 600 config/traefik/acme.json
+mkdir -p config/traefik/letsencrypt
+touch config/traefik/letsencrypt/acme-nexpay.json
+chmod 600 config/traefik/letsencrypt/acme-nexpay.json
 
 # 11. Démarrage des containers
 log_info "Démarrage de Nexpay..."
-docker compose pull
+docker compose pull 2>&1 | grep -v "Pulling" || true
 docker compose up -d --build
 
 # 12. Attente du démarrage
 log_info "Attente du démarrage des services..."
-sleep 10
+sleep 15
 
 # Vérifier que les containers tournent
-if [ $(docker compose ps | grep -c "Up") -ge 3 ]; then
-    log_success "Tous les services sont démarrés"
+RUNNING_CONTAINERS=$(docker compose ps --status running 2>/dev/null | grep -c "Up" || echo "0")
+if [ "$RUNNING_CONTAINERS" -ge 3 ]; then
+    log_success "Tous les services sont démarrés ($RUNNING_CONTAINERS containers actifs)"
 else
     log_warn "Certains services ont des problèmes"
     docker compose ps
@@ -245,8 +252,10 @@ fi
 log_info "Test de connectivité..."
 sleep 5
 
-if curl -f http://localhost:9090/api/v1/health > /dev/null 2>&1; then
+if curl -f http://localhost:9093/api/v1/health > /dev/null 2>&1; then
     log_success "API répond correctement"
+elif curl -f http://localhost:9000/api/v1/health > /dev/null 2>&1; then
+    log_success "API répond correctement (port interne)"
 else
     log_warn "API ne répond pas encore (peut prendre 1-2 minutes)"
 fi
@@ -262,49 +271,109 @@ EOF
 echo -e "${NC}"
 echo ""
 echo -e "${GREEN}🌐 URLs disponibles:${NC}"
-echo "   • Dashboard Admin:  https://$APP_DOMAIN/admin"
-echo "   • API:              https://$APP_DOMAIN/api/v1"
-echo "   • Checkout:         https://$APP_DOMAIN/checkout"
-echo "   • Traefik Dashboard: https://$APP_DOMAIN:8080"
+echo "   • API:               http://$APP_DOMAIN:9093/api/v1"
+echo "   • Dashboard Admin:   http://$APP_DOMAIN:9093/admin"
+echo "   • Traefik Dashboard: http://$APP_DOMAIN:9092"
 echo ""
-echo -e "${GREEN}🔑 Identifiants Traefik:${NC}"
-echo "   • Utilisateur: admin"
-echo "   • Mot de passe: [celui que vous avez choisi]"
+echo -e "${GREEN}🔑 Identifiants par défaut:${NC}"
+echo "   • Traefik utilisateur: admin"
+echo "   • Traefik mot de passe: $TRAEFIK_PASSWORD"
 echo ""
-echo -e "${YELLOW}⚠️  IMPORTANT - Sauvegardez ces fichiers:${NC}"
-echo "   • $INSTALL_DIR/.env"
-echo "   • $INSTALL_DIR/config/traefik/acme.json"
+echo -e "${GREEN}🔌 Ports exposés:${NC}"
+echo "   • HTTP (Traefik):    9090"
+echo "   • HTTPS (Traefik):   9091"
+echo "   • Dashboard:         9092"
+echo "   • API:               9093"
+echo "   • PostgreSQL:        54321"
+echo "   • Redis:             63791"
+echo ""
+echo -e "${YELLOW}⚠️  IMPORTANT:${NC}"
+echo "   1. Sauvegardez le fichier: $INSTALL_DIR/.env"
+echo "   2. Pour configurer un domaine personnalisé:"
+echo "      - Éditez le fichier: nano $INSTALL_DIR/.env"
+echo "      - Modifiez la variable APP_DOMAIN"
+echo "      - Redémarrez: cd $INSTALL_DIR && docker compose restart"
+echo "   3. Changez le mot de passe Traefik par défaut !"
 echo ""
 echo -e "${BLUE}📚 Commandes utiles:${NC}"
 echo "   • Voir les logs:     cd $INSTALL_DIR && docker compose logs -f"
 echo "   • Redémarrer:        cd $INSTALL_DIR && docker compose restart"
 echo "   • Arrêter:           cd $INSTALL_DIR && docker compose down"
-echo "   • Mettre à jour:     cd $INSTALL_DIR && ./upgrade.sh"
+echo "   • Voir les services: cd $INSTALL_DIR && docker compose ps"
+echo "   • Mettre à jour:     cd $INSTALL_DIR && ./update.sh"
+echo ""
+echo -e "${BLUE}📝 Configuration du domaine:${NC}"
+echo "   Pour ajouter un domaine personnalisé plus tard:"
+echo "   1. cd $INSTALL_DIR"
+echo "   2. nano .env"
+echo "   3. Modifier APP_DOMAIN=votre-domaine.com"
+echo "   4. docker compose restart"
 echo ""
 echo -e "${BLUE}📖 Documentation:${NC} https://docs.nexpay.com"
 echo -e "${BLUE}💬 Support:${NC} https://github.com/mouhamedlamotte/nexpay/issues"
 echo ""
 
 # 15. Créer un script de mise à jour
-cat > upgrade.sh << 'UPGRADE_SCRIPT'
+cat > update.sh << 'UPDATE_SCRIPT'
 #!/bin/bash
 set -e
 
 echo "🔄 Mise à jour de Nexpay..."
 
-# Backup
-docker compose exec postgres pg_dump -U nexpay nexpay > "backup-$(date +%Y%m%d-%H%M%S).sql"
+# Backup de la base de données
+echo "📦 Création d'un backup..."
+docker compose exec -T postgres_nexpay pg_dump -U nexpay nexpay > "backups/backup-$(date +%Y%m%d-%H%M%S).sql"
 
-# Pull & restart
-docker compose -f docker-compose-prod.yml pull
-docker compose up -f docker-compose-prod.yml -d --build
+# Pull des nouvelles images
+echo "⬇️  Téléchargement des mises à jour..."
+docker compose pull
+
+# Rebuild et restart
+echo "🔨 Reconstruction des services..."
+docker compose up -d --build
 
 echo "✅ Mise à jour terminée"
-UPGRADE_SCRIPT
+echo "📊 Status des services:"
+docker compose ps
+UPDATE_SCRIPT
 
-chmod +x upgrade.sh
+chmod +x update.sh
+
+# 16. Créer un script de configuration du domaine
+cat > configure-domain.sh << 'DOMAIN_SCRIPT'
+#!/bin/bash
+set -e
+
+echo "🌐 Configuration du domaine personnalisé"
+echo ""
+
+read -p "Entrez votre nom de domaine (ex: pay.example.com): " NEW_DOMAIN
+
+if [ -z "$NEW_DOMAIN" ]; then
+    echo "❌ Domaine vide, annulation"
+    exit 1
+fi
+
+# Backup du .env
+cp .env .env.backup-$(date +%Y%m%d-%H%M%S)
+
+# Modifier le domaine dans .env
+sed -i "s/^APP_DOMAIN=.*/APP_DOMAIN=$NEW_DOMAIN/" .env
+
+echo "✅ Domaine configuré: $NEW_DOMAIN"
+echo "🔄 Redémarrage des services..."
+
+docker compose restart
+
+echo "✅ Configuration terminée!"
+echo ""
+echo "Votre application est maintenant accessible sur: http://$NEW_DOMAIN:9093"
+DOMAIN_SCRIPT
+
+chmod +x configure-domain.sh
 
 log_success "Script d'installation terminé!"
 echo ""
 echo -e "${GREEN}🎉 Nexpay est maintenant prêt à l'emploi!${NC}"
+echo -e "${BLUE}💡 Conseil: Exécutez ./configure-domain.sh pour configurer un domaine personnalisé${NC}"
 echo ""
