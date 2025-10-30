@@ -83,6 +83,8 @@ services:
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis_nexpay:6379
       - JWT_SECRET=${JWT_SECRET}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - ADMIN_EMAIL=admin@nexpay.command
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     depends_on:
       postgres_nexpay:
         condition: service_healthy

@@ -180,7 +180,9 @@ log_info "Génération des secrets de sécurité..."
 JWT_SECRET=$(openssl rand -base64 32)
 DB_PASSWORD=portgres
 REDIS_PASSWORD=$(openssl rand -base64 32)
+ADMIN_EMAIL=admin@nexpay.com
 ENCRYPTION_KEY=$(openssl rand -hex 32)
+ADMIN_PASSWORD=$(openssl rand -hex 32)
 TRAEFIK_AUTH=$(echo $(htpasswd -nb admin "$TRAEFIK_PASSWORD") | sed -e 's/\$/\$\$/g')
 
 log_success "Secrets générés"
@@ -197,6 +199,7 @@ APP_NAME=$APP_NAME
 APP_DOMAIN=$APP_DOMAIN
 APP_VERSION=1.0.0
 ADMIN_EMAIL=$ADMIN_EMAIL
+ADMIN_PASSWORD=$ADMIN_PASSWORD
 NODE_ENV=production
 
 # Security
@@ -375,5 +378,6 @@ chmod +x configure-domain.sh
 log_success "Script d'installation terminé!"
 echo ""
 echo -e "${GREEN}🎉 Nexpay est maintenant prêt à l'emploi!${NC}"
+echo -e "${YELLOW} MOT DE PASSE ADMIN : $ADMIN_PASSWORD , changez-le !${NC}"
 echo -e "${BLUE}💡 Conseil: Exécutez ./configure-domain.sh pour configurer un domaine personnalisé${NC}"
 echo ""
