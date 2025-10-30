@@ -180,7 +180,7 @@ log_info "Génération des secrets de sécurité..."
 JWT_SECRET=$(openssl rand -base64 32)
 DB_PASSWORD=portgres
 REDIS_PASSWORD=$(openssl rand -base64 32)
-ADMIN_EMAIL=admin@nexpay.com
+ADMIN_EMAIL="admin@nexpay.com"
 ENCRYPTION_KEY=$(openssl rand -hex 32)
 ADMIN_PASSWORD=$(openssl rand -hex 32)
 TRAEFIK_AUTH=$(echo $(htpasswd -nb admin "$TRAEFIK_PASSWORD") | sed -e 's/\$/\$\$/g')

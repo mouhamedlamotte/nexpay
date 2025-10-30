@@ -79,6 +79,7 @@ services:
       - APP_PORT=9000
       - APP_NAME=${APP_NAME}
       - APP_DOMAIN=${APP_DOMAIN}
+      - GLOBAL_PREFIX=api/v1
       - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres_nexpay:5432/${DB_NAME}
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis_nexpay:6379
       - JWT_SECRET=${JWT_SECRET}
