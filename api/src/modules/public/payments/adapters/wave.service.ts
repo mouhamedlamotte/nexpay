@@ -72,6 +72,7 @@ export class WaveService implements PaymentAdapter {
         providerTransactionId: response.data.id,
         expiresAt: new Date(response.data.when_expires),
       });
+      const THUMB_URL = `${process.env.APP_URL}/${process.env.GLOBAL_PREFIX}/media/images/thumbs`;
 
       return {
         amount: data.amount,
@@ -84,7 +85,11 @@ export class WaveService implements PaymentAdapter {
           name: transaction.payer.name,
         },
         checkout_urls: [
-          { name: 'wave launch url', url: response.data.wave_launch_url },
+          {
+            name: 'wave launch url',
+            url: response.data.wave_launch_url,
+            thumb: `${THUMB_URL}/wave.png`,
+          },
         ],
         expiration: transaction.expiresAt?.toISOString(),
       };

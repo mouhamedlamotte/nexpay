@@ -30,6 +30,13 @@ RUN addgroup -g 1001 -S nodejs && \
 RUN mkdir -p /app/logs && \
     chown -R nodejs:nodejs /app/logs
 
+RUN mkdir -p /app/media && \
+    chown -R nodejs:nodejs /app/media
+
+
+
+
+
 
 
 # Copie uniquement des fichiers nécessaires

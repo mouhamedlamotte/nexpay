@@ -5,18 +5,23 @@ import { LoggerService } from 'src/lib/services/logger.service';
 type Provider = {
   name: string;
   code: string;
+  logoUrl: string;
   secretsFields: string[];
 };
+
+const LOGO_URL = `${process.env.APP_URL}/${process.env.GLOBAL_PREFIX}/media/images/logos`;
 
 const SEED_PROVIDERS: Provider[] = [
   {
     name: 'Orange Money',
     code: 'om',
+    logoUrl: `${LOGO_URL}/om.png`,
     secretsFields: ['client_id', 'client_secret', 'name', 'code'],
   },
   {
     name: 'Wave',
     code: 'wave',
+    logoUrl: `${LOGO_URL}/wave.png`,
     secretsFields: ['api_key'],
   },
 ];
@@ -33,7 +38,11 @@ export class ProvidersSeedersService implements OnModuleInit {
     for (const provider of SEED_PROVIDERS) {
       await this.prisma.paymentProvider.upsert({
         where: { code: provider.code },
-        update: {},
+        update: {
+          name: provider.name,
+          logoUrl: provider.logoUrl,
+          secretsFields: provider.secretsFields,
+        },
         create: provider,
       });
     }

@@ -104,6 +104,7 @@ export class OMService implements PaymentAdapter {
         providerTransactionId: response.data.id,
         expiresAt: new Date(response.data.validFor?.endDateTime),
       });
+      const THUMB_URL = `${process.env.APP_URL}/${process.env.GLOBAL_PREFIX}/media/images/thumbs`;
 
       return {
         amount,
@@ -116,8 +117,16 @@ export class OMService implements PaymentAdapter {
           name: transaction.payer.name,
         },
         checkout_urls: [
-          { name: 'MaxIt', url: response.data.deepLinks?.MAXIT },
-          { name: 'Orange Money', url: response.data.deepLinks?.OM },
+          {
+            name: 'MaxIt',
+            url: response.data.deepLinks?.MAXIT,
+            thumb: `${THUMB_URL}/maxit.png`,
+          },
+          {
+            name: 'Orange Money',
+            url: response.data.deepLinks?.OM,
+            thumb: `${THUMB_URL}/om.png`,
+          },
         ],
         qr_code: { data: response.data.qrCode },
         expiration: transaction.expiresAt?.toISOString(),

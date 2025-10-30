@@ -8,7 +8,7 @@ import * as compression from 'compression';
 import { CustomExceptionFilter } from './lib/filters';
 import { ErrorInterceptor } from './lib/interceptors';
 import { AppModule } from './modules/app.module';
-
+import * as path from 'path';
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
@@ -58,7 +58,9 @@ async function bootstrap() {
       credentials: true,
       maxAge: 86400,
     });
-
+    app.useStaticAssets(path.join(process.cwd(), 'media'), {
+      prefix: `/${globalPrefix}/media/`,
+    });
     app.setGlobalPrefix(globalPrefix);
 
     app.useGlobalPipes(

@@ -34,7 +34,7 @@ export interface PaymentResponse {
   checkout_urls?: {
     name: string;
     url: string;
-    logo_url?: string;
+    thumb?: string;
   }[];
   qr_code?: {
     url?: string;

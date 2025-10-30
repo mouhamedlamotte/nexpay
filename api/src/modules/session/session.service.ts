@@ -24,7 +24,7 @@ export class SessionService {
     dto: InitiateSessionPaymentDto,
   ): Promise<SessionPaymenResponse> {
     try {
-      const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
       const session = await this.prisma.session.create({
         data: {
           amount: dto.amount,
@@ -74,12 +74,17 @@ export class SessionService {
         },
       });
       if (!session) {
-        throw new NotFoundException('Session not found or expired');
+        throw new NotFoundException('Checkout session not found or expired');
       }
+      const providers = await this.prisma.paymentProvider.findMany({
+        where: { isActive: true },
+        select: { id: true, name: true, code: true, logoUrl: true },
+      });
       const checkoutUrl = `${this.env.get('app.url')}/checkout/${session.id}`;
       return {
         ...session,
         checkoutUrl,
+        providers,
       };
     } catch (error) {
       this.logger.error('Error fetching session', error);
