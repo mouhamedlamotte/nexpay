@@ -150,17 +150,20 @@ export class SessionService {
       ) {
         return paymentData;
       }
-      paymentData = await this.payment.initiatePayment({
-        ...dto,
-        amount: Number(session.amount),
-        currency: session.currency,
-        userId: session.payer.userId,
-        name: session.payer.name,
-        phone: session.payer.phone,
-        email: session.payer.email,
-        client_reference: session.clientReference,
-        projectId: session.projectId,
-      });
+      paymentData = await this.payment.initiatePayment(
+        {
+          ...dto,
+          amount: Number(session.amount),
+          currency: session.currency,
+          userId: session.payer.userId,
+          name: session.payer.name,
+          phone: session.payer.phone,
+          email: session.payer.email,
+          client_reference: session.clientReference,
+          projectId: session.projectId,
+        },
+        sessionId,
+      );
       await this.prisma.session.update({
         where: {
           id: sessionId,

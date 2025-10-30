@@ -5,6 +5,7 @@ export interface PaymentAdapter {
 }
 
 export interface PaymentInitiationData {
+  sessionId?: string;
   amount: number;
   currency: Currency;
   userId?: string;

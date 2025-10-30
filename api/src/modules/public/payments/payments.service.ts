@@ -26,7 +26,7 @@ export class PaymentsService {
     };
   }
 
-  async initiatePayment(data: InitiatePaymentDto) {
+  async initiatePayment(data: InitiatePaymentDto, sessionId?: string) {
     try {
       const provider = await this.prisma.paymentProvider.findFirst({
         where: { code: data.provider, isActive: true },
@@ -50,6 +50,7 @@ export class PaymentsService {
 
       return adapter.initiate({
         ...data,
+        sessionId,
         reference: this.generateReference(),
         secrets,
         currency: data.currency || 'XOF',

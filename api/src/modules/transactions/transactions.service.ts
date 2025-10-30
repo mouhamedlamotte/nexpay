@@ -115,6 +115,7 @@ export class TransactionsService {
 
   async create(data: {
     amount: number;
+    sessionId?: string;
     projectId: string;
     currency: Currency;
     status: TransactionStatus;
@@ -143,20 +144,29 @@ export class TransactionsService {
         throw new Error('Payer not found or created');
       }
 
+      let tData: any = {
+        project: { connect: { id: data.projectId } },
+        amount: data.amount,
+        currency: data.currency,
+        status: data.status,
+        clientReference: data.client_reference,
+        reference: data.reference,
+        providerTransactionId: data.providerTransactionId,
+        metadata: data.metadata,
+        payer: { connect: { id: payer.id } },
+        provider: { connect: { id: data.providerId } },
+        expiresAt: data.expiresAt,
+      };
+
+      if (data.sessionId) {
+        tData = {
+          ...tData,
+          session: { connect: { id: data.sessionId } },
+        };
+      }
+
       const transaction = await this.prisma.transaction.create({
-        data: {
-          project: { connect: { id: data.projectId } },
-          amount: data.amount,
-          currency: data.currency,
-          status: data.status,
-          clientReference: data.client_reference,
-          reference: data.reference,
-          providerTransactionId: data.providerTransactionId,
-          metadata: data.metadata,
-          payer: { connect: { id: payer.id } },
-          provider: { connect: { id: data.providerId } },
-          expiresAt: data.expiresAt,
-        },
+        data: tData,
         include: this.getTransactionInclude(),
       });
       return transaction;

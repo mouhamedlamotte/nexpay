@@ -99,12 +99,10 @@ export class OMService implements PaymentAdapter {
         throw new Error('OM initiation failed');
       }
 
-      // ! expiration set to 1 min for testing
       const transaction = await this.transactionFactory.createTransaction({
         ...data,
         providerTransactionId: response.data.id,
-        // expiresAt: new Date(response.data.validFor?.endDateTime),
-        expiresAt: new Date(Date.now() + 60 * 1000),
+        expiresAt: new Date(response.data.validFor?.endDateTime),
       });
       const THUMB_URL = `${process.env.APP_URL}/${process.env.GLOBAL_PREFIX}/media/images/thumbs`;
 

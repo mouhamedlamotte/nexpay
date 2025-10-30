@@ -1,6 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
-import { TransactionStatus, Webhook } from 'src/lib';
+import { SessionStatus, TransactionStatus, Webhook } from 'src/lib';
 import { firstValueFrom } from 'rxjs';
 import { HashService, PrismaService } from 'src/lib';
 import { TransactionsService } from 'src/modules/transactions/transactions.service';
@@ -75,6 +75,17 @@ export class WebhookService {
         data.reference,
         data.status,
       );
+
+      if (updatedTransaction.sessionId) {
+        await this.prisma.session.update({
+          where: {
+            id: updatedTransaction.sessionId,
+          },
+          data: {
+            status: SessionStatus.closed,
+          },
+        });
+      }
 
       this.logger.log(
         `Transaction updated: id=${transaction.id}, status=${transaction.status}`,

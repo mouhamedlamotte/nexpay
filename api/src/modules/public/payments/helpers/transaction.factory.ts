@@ -8,6 +8,7 @@ export class TransactionFactory {
 
   async createTransaction(data: {
     amount: number;
+    sessionId?: string;
     currency: Currency;
     userId?: string;
     email?: string;
