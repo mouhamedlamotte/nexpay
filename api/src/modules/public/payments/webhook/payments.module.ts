@@ -26,5 +26,6 @@ import { WebhookController } from './webhook.controller';
     TransactionFactory,
   ],
   controllers: [PaymentsController, WebhookController],
+  exports: [PaymentsService],
 })
 export class PaymentsModule {}

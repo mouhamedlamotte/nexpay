@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckoutSummary } from "./checkout-summary";
 import { ProviderSelector } from "./provider-selector";
 import { QrDisplay } from "./qr-display";
@@ -13,6 +13,7 @@ import { useCheckoutSession } from "../hooks/use-checkout-session";
 import { PaymentResponse } from "../schemas/checkout.schema";
 import { useInitiatePayment } from "../hooks/use-initiate-payment";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface CheckoutFormProps {
   sessionId: string;
@@ -20,9 +21,15 @@ interface CheckoutFormProps {
 
 export function CheckoutForm({ sessionId }: CheckoutFormProps) {
   const { provider } = useCheckoutStore();
-  const [paymentData, setPaymentData] = useState<PaymentResponse | null>(null);
+  const [paymentData, setPaymentData] = useState<PaymentResponse['data'] | null>(null);
 
   const { data: session, isLoading, error } = useCheckoutSession(sessionId);
+
+  useEffect(() => {
+    if(session && session.paymentData) {
+      setPaymentData(JSON.parse(session?.paymentData || "{}"));
+    }
+  }, [session]);
 
   const initiatePayment = useInitiatePayment();
 
@@ -31,25 +38,22 @@ export function CheckoutForm({ sessionId }: CheckoutFormProps) {
 
     try {
       const result = await initiatePayment.mutateAsync({
-        amount: Number.parseFloat(session.amount),
-        userId: session.payer.userId,
-        name: session.payer.name,
-        phone: session.payer.phone,
-        email: session.payer.email,
-        client_reference: session.clientReference,
-        projectId: session.projectId,
-        provider: provider as "om" | "wave" | "free",
-        currency: session.currency,
-        metadata: session.payer.metadata || undefined,
+        sessionId,
+        data: {
+          provider : provider as 'om' | 'wave',
+        },
       });
 
-      setPaymentData(result);
+      setPaymentData(result.data);
+
+      const data = result.data;
 
       // If no QR code, redirect to first checkout URL
-      if (!result.qr_code && result.checkout_urls.length > 0) {
-        window.open(result.checkout_urls[0].url, "_blank");
+      if (!data?.qr_code && data?.checkout_urls.length > 0) {
+        window.open(data?.checkout_urls[0].url, "_blank");
       }
     } catch (err) {
+      toast.error('Une erreur est survenue lors de l\'initiation du paiement');
       console.error("Payment initiation failed:", err);
     }
   };
@@ -66,7 +70,7 @@ export function CheckoutForm({ sessionId }: CheckoutFormProps) {
   if (error || !session) {
     return (
       <div className="h-[calc(100vh-300px)] flex items-center justify-center">
-          <h2 className="text-2xl font-bold">{error?.response?.data?.message || "Une erreur est survenue"}</h2>
+          <h2 className="text-2xl font-bold text-center">{error?.response?.data?.message || "Une erreur est survenue"}</h2>
       </div>
     );
   }
@@ -79,7 +83,7 @@ export function CheckoutForm({ sessionId }: CheckoutFormProps) {
       </div>
       <div className="space-y-5">
         {paymentData ? (
-          <QrDisplay paymentData={paymentData} />
+          <QrDisplay paymentData={paymentData} setPaymentData={setPaymentData} />
         ) : (
           <>
             <ProviderSelector providers={session.providers} />

@@ -75,6 +75,12 @@ export class WaveService implements PaymentAdapter {
       const THUMB_URL = `${process.env.APP_URL}/${process.env.GLOBAL_PREFIX}/media/images/thumbs`;
 
       return {
+        provider: {
+          id: transaction.provider.id,
+          name: transaction.provider.name,
+          code: transaction.provider.code,
+          logoUrl: transaction.provider.logoUrl,
+        },
         amount: data.amount,
         currency: transaction.currency,
         reference: transaction.reference,
@@ -91,6 +97,9 @@ export class WaveService implements PaymentAdapter {
             thumb: `${THUMB_URL}/wave.png`,
           },
         ],
+        qr_code: {
+          url: response.data.wave_launch_url,
+        },
         expiration: transaction.expiresAt?.toISOString(),
       };
     } catch (error) {

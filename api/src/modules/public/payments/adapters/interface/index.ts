@@ -23,6 +23,12 @@ export interface PaymentInitiationData {
 
 export interface PaymentResponse {
   amount: number;
+  provider: {
+    id: string;
+    name: string;
+    code: string;
+    logoUrl?: string;
+  };
   currency: string;
   reference: string;
   payer: {

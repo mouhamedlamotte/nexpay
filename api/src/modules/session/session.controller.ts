@@ -10,6 +10,7 @@ import {
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { SessionService } from './session.service';
 import { InitiateSessionPaymentDto } from './dto/initiate-session-payment.dto';
+import { CheckoutSessionPaymentDto } from './dto/CheckoutSessionPaymentDto';
 
 @Controller('payment/session')
 export class SessionController {
@@ -45,6 +46,26 @@ export class SessionController {
     return {
       statusCode: HttpStatus.OK,
       message: 'Payment session successfully initiated',
+      data: res,
+    };
+  }
+
+  @Post('/:id/checkout')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Checkout a payment session' })
+  @ApiResponse({
+    status: 201,
+    description: 'Payment data successfully fetched',
+  })
+  @ApiResponse({ status: 404, description: 'Provider or service not found' })
+  async checkoutSession(
+    @Param('id') id: string,
+    @Body() data: CheckoutSessionPaymentDto,
+  ) {
+    const res = await this.service.checkoutSessionPayment(id, data);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Payment data successfully fetched',
       data: res,
     };
   }

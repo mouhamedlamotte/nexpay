@@ -37,6 +37,7 @@ export const CheckoutSessionSchema = z.object({
   clientReference: z.string(),
   projectId: z.string(),
   expiresAt: z.string(),
+  paymentData: z.string().nullable(),
   status: z.enum(["opened", "pending", "completed", "failed", "expired"]),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -48,15 +49,7 @@ export const CheckoutSessionSchema = z.object({
 
 // Payment initiate request schema
 export const PaymentInitiateSchema = z.object({
-  amount: z.number().positive(),
-  userId: z.string(),
-  name: z.string().min(1),
-  phone: z.string().regex(/^\+\d{10,15}$/),
-  email: z.string().email(),
-  client_reference: z.string(),
-  projectId: z.string(),
-  provider: z.enum(["om", "wave", "free"]),
-  currency: z.string().default("XOF"),
+  provider: z.enum(["om", "wave"]),
   metadata: z.record(z.any()).optional(),
 })
 
@@ -70,11 +63,12 @@ export const CheckoutUrlSchema = z.object({
 // QR Code schema
 export const QrCodeSchema = z.object({
   data: z.string(),
+  url: z.string().url(),
 })
 
-// Payment response schema
-export const PaymentResponseSchema = z.object({
-  amount: z.number(),
+export const PaymentDataSchema = z.object({
+    amount: z.number(),
+    provider: ProvidersSchema,
   currency: z.string(),
   reference: z.string(),
   payer: z.object({
@@ -86,6 +80,13 @@ export const PaymentResponseSchema = z.object({
   checkout_urls: z.array(CheckoutUrlSchema),
   qr_code: QrCodeSchema.optional(),
   expiration: z.string(),
+})
+
+// Payment response schema
+export const PaymentResponseSchema = z.object({
+  message: z.string(),
+  statusCode: z.number(),
+  data: PaymentDataSchema,
 })
 
 // API Response wrapper

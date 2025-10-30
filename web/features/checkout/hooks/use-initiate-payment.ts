@@ -8,13 +8,13 @@ import {
 import { apiClient } from "@/lib/api-client";
 
 export function useInitiatePayment() {
-  return useMutation({
-    mutationFn: async (data: PaymentInitiate) => {
+  return useMutation<PaymentResponse, unknown, { sessionId: string; data: PaymentInitiate }>({
+    mutationFn: async ({ sessionId, data }: { sessionId: string; data: PaymentInitiate }) => {
       // Validate input with Zod
       const validatedInput = PaymentInitiateSchema.parse(data);
 
       const response = await apiClient.post<PaymentResponse>(
-        "/payment/initiate",
+        `/payment/session/${sessionId}/checkout`,
         validatedInput
       );
 

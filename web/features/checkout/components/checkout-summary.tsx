@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { CreditCard, User, Building2, Calendar } from "lucide-react"
 import { CheckoutSession } from "../schemas/checkout.schema"
+import { Badge } from "@/components/ui/badge"
 
 interface CheckoutSummaryProps {
   session: CheckoutSession
@@ -20,12 +21,19 @@ export function CheckoutSummary({ session }: CheckoutSummaryProps) {
     timeStyle: "short",
   })
 
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "opened":
+        return <Badge variant="secondary" className="">En cours</Badge>
+    }
+  }
+
   return (
     <Card className="bg-card border-border h-fit">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-card-foreground">
-          <CreditCard className="h-5 w-5 text-primary" />
-          Résumé du paiement
+          Details de la transaction
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -65,9 +73,8 @@ export function CheckoutSummary({ session }: CheckoutSummaryProps) {
 
         <Separator className="bg-border" />
 
-        <div className="text-xs text-muted-foreground">
-          <p>Référence: {session.clientReference}</p>
-          <p className="mt-1">Statut: {session.status}</p>
+        <div className="text-xs text-muted-foreground inline-flex gap-2">
+          <span className="mt-1">Statut: </span> {getStatusBadge(session.status)}
         </div>
       </CardContent>
     </Card>
