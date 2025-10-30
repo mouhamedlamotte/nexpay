@@ -85,13 +85,13 @@ log_info "Installation des dépendances..."
 case "$OS_TYPE" in
     ubuntu|debian|raspbian)
         apt-get update -y >/dev/null 2>&1
-        apt-get install -y curl wget git jq openssl apache2-utils >/dev/null 2>&1
+        apt-get install -y git openssl apache2-utils >/dev/null 2>&1
         ;;
     centos|fedora|rhel)
-        dnf install -y curl wget git jq openssl httpd-tools >/dev/null 2>&1
+        dnf install -y git openssl httpd-tools >/dev/null 2>&1
         ;;
     arch)
-        pacman -Sy --noconfirm curl wget git jq openssl apache-tools >/dev/null 2>&1
+        pacman -Sy --noconfirm git openssl apache-tools >/dev/null 2>&1
         ;;
 esac
 
