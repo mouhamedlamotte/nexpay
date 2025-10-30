@@ -103,6 +103,18 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: nexpay_web
+    environment:
+      - NEXT_PUBLIC_API_URL=http://${APP_DOMAIN}/api/v1
+    expose:
+      - 9001
+    networks:
+      - web_nexpay
+
 
 networks:
   web_nexpay:

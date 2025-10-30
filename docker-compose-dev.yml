@@ -14,12 +14,12 @@ services:
         # - "--certificatesresolvers.letsencrypt.acme.storage=/acme.json"
         # - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
       ports:
-        - "9090:80"
+        - "9093:80"
         - "9091:8080"
         # - "443:443"
       volumes:
-      - ./config/traefik/traefik.yml:/etc/traefik/traefik.yml
-      - ./config/traefik/dynamic:/etc/traefik/dynamic
+      - ./dev/config/traefik/traefik.yml:/etc/traefik/traefik.yml
+      - ./dev/config/traefik/dynamic:/etc/traefik/dynamic
       environment:
         - APP_DOMAIN=${APP_DOMAIN}
       labels:
@@ -95,6 +95,17 @@ services:
       - web
       - backend
     restart: unless-stopped
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: nexpay_web
+    environment:
+      - NEXT_PUBLIC_API_URL=http://${APP_DOMAIN}/api/v1
+    expose:
+      - 9001
+    networks:
+      - web
 
 
 

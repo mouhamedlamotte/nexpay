@@ -1,15 +1,7 @@
 http:
   routers:
     admin-router:
-      rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/admin`)'
-      service: web
-      entryPoints:
-        - web
-      priority: 100
-      middlewares:
-        - cors-middleware@file
-    checkout-router:
-      rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/checkout`)'
+      rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/`) && !PathPrefix(`/api/v1`)'
       service: web
       entryPoints:
         - web
