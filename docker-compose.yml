@@ -12,15 +12,18 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.storage=/acme.json"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
     ports:
-      - "9090:80"      # Port HTTP différent (au lieu de 80)
-      - "9091:443"     # Port HTTPS différent (au lieu de 443)
-      - "9092:8080"    # Dashboard Traefik (au lieu de 8080)
+      - "${HTTP_PORT:-9090}:80"
+      - "${HTTPS_PORT:-9091}:443"
+      - "${TRAEFIK_DASHBOARD_PORT:-9092}:8080"
     volumes:
-      - ./config/traefik/traefik.yml:/etc/traefik/traefik.yml
-      - ./config/traefik/dynamic:/etc/traefik/dynamic
-      - ./config/traefik/letsencrypt/acme-nexpay.json:/letsencrypt/acme-nexpay.json
+      - ./config/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./config/traefik/dynamic:/etc/traefik/dynamic:ro
+      - ./config/traefik/certs:/etc/traefik/certs:ro
+      - /var/log/traefik:/var/log/traefik
     environment:
       - APP_DOMAIN=${APP_DOMAIN}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - SSL_CONFIGURED=${SSL_CONFIGURED:-false}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.traefik.rule=Host(`traefik.${APP_DOMAIN}`)"

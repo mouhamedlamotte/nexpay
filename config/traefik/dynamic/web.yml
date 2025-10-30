@@ -1,19 +1,60 @@
 http:
   routers:
-    admin-router:
-      rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/`)'
-      service: web
+    # Router HTTP (redirection vers HTTPS si SSL activé)
+    web-router-http:
+      rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/`) && !PathPrefix(`/api/v1`)'
+      service: web-service
+      entryPoints:
+        - web
+      priority: 101
+      {{- if eq (env "SSL_CONFIGURED") "true" }}
+      middlewares:
+        - redirect-to-https@file
+      {{- else }}
+      middlewares:
+        - cors-middleware@file
+      {{- end }}
+
+    {{- if eq (env "SSL_CONFIGURED") "true" }}
+    # Router HTTPS (uniquement si SSL configuré)
+    web-router-https:
+      rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/`) && !PathPrefix(`/api/v1`)'
+      service: web-service
       entryPoints:
         - websecure
-      priority: 100
+      priority: 101
       middlewares:
         - cors-middleware@file
       tls:
         certResolver: letsencrypt
-
+    {{- end }}
 
   services:
-    web:
+    web-service:
       loadBalancer:
         servers:
-          - url: "http://web:9001"
+          - url: "http://nexpay_web:9001"
+
+  middlewares:
+    {{- if eq (env "SSL_CONFIGURED") "true" }}
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+    {{- end }}
+
+    cors-middleware:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - PATCH
+          - OPTIONS
+        accessControlAllowHeaders:
+          - "*"
+        accessControlAllowOriginList:
+          - "*"
+        accessControlMaxAge: 100
+        addVaryHeader: true

@@ -1,0 +1,12 @@
+# Ce fichier sera généré dynamiquement si SSL est configuré
+{{- if eq (env "SSL_CONFIGURED") "true" }}
+tls:
+  certificates:
+    - certFile: /etc/traefik/certs/{{ env "APP_DOMAIN" }}.crt
+      keyFile: /etc/traefik/certs/{{ env "APP_DOMAIN" }}.key
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /etc/traefik/certs/{{ env "APP_DOMAIN" }}.crt
+        keyFile: /etc/traefik/certs/{{ env "APP_DOMAIN" }}.key
+{{- end }}
