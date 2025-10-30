@@ -68,6 +68,7 @@ export class WebhooksService {
         select: {
           id: true,
           secret: false,
+          createdAt: true,
           url: true,
           header: true,
         },
@@ -113,6 +114,17 @@ export class WebhooksService {
       });
     } catch (error) {
       this.logger.error('Error updating redirect config', error);
+      throw error;
+    }
+  }
+
+  async remove(projectId: string, id: string) {
+    try {
+      return await this.prisma.webhook.delete({
+        where: { projectId, id },
+      });
+    } catch (error) {
+      this.logger.error('Error deleting redirect config', error);
       throw error;
     }
   }

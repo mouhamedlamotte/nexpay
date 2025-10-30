@@ -16,8 +16,8 @@ import {
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { settingsApi } from "@/lib/api/settings"
-import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 const formSchema = z.object({
   url: z.string().url("Must be a valid URL"),
@@ -35,7 +35,6 @@ interface CreateWebhookDialogProps {
 }
 
 export function CreateWebhookDialog({ projectId, open, onOpenChange, onSuccess }: CreateWebhookDialogProps) {
-  const { toast } = useToast()
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -48,19 +47,12 @@ export function CreateWebhookDialog({ projectId, open, onOpenChange, onSuccess }
   const mutation = useMutation({
     mutationFn: (values: FormValues) => settingsApi.createWebhook(projectId, values),
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Webhook created successfully",
-      })
+      toast.success("Webhook created successfully")
       form.reset()
       onSuccess()
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to create webhook",
-        variant: "destructive",
-      })
+      toast.error(error.response?.data?.message || "Failed to create webhook")
     },
   })
 

@@ -146,7 +146,7 @@ export class WebhookService {
         const headers = { 'Content-Type': 'application/json' };
         try {
           if (webhook.header && webhook.secret) {
-            const decriptedSecret = this.hash.decryptSensitiveData(
+            const decriptedSecret = await this.hash.decryptSensitiveData(
               webhook.secret,
             );
             headers[webhook.header] = decriptedSecret;

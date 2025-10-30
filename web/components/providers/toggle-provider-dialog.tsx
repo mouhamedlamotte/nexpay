@@ -11,9 +11,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { providersApi } from "@/lib/api/providers"
-import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import type { PaymentProvider } from "@/lib/types"
+import { toast } from "sonner"
 
 interface ToggleProviderDialogProps {
   provider: PaymentProvider
@@ -23,23 +23,15 @@ interface ToggleProviderDialogProps {
 }
 
 export function ToggleProviderDialog({ provider, open, onOpenChange, onSuccess }: ToggleProviderDialogProps) {
-  const { toast } = useToast()
 
   const mutation = useMutation({
     mutationFn: () => providersApi.toggle(provider.id, provider.isActive),
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: `Provider ${provider.isActive ? "deactivated" : "activated"} successfully`,
-      })
+      toast.success(provider.isActive ? "Provider deactivated successfully" : "Provider activated successfully")
       onSuccess()
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to toggle provider status",
-        variant: "destructive",
-      })
+      toast.error(error.response?.data?.message || "Failed to toggle provider")
     },
   })
 

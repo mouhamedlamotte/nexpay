@@ -14,6 +14,7 @@ interface AuthState {
   login: (credentials: AuthCredentials) => Promise<any>
   checkAuth: () => Promise<void | any>
   updateUser: (userData: Partial<UserData>) => void
+  logout: () => void
   setLoading: (loading?: boolean) => void
   setError: (error: string) => void
   clearError: () => void
@@ -84,6 +85,12 @@ export const useAuthStore = create<AuthState>()(
             ...userData,
           } as UserData,
         })),
+
+      logout: () =>
+        set({
+          user: null,
+          isAuthenticated: false,
+        }),
     }),
     {
       name: "auth-storage",

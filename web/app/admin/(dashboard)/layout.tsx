@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useAuthStore } from "./stores/auth/auth-store";
 import { AppSidebar } from "@/components/app-sidebar";
-import { AppHeader } from "@/components/page-header";
+import { AppHeader } from "@/components/app-header";
 import { useProjectStore } from "@/stores/project.store";
 import { useAppStore } from "@/stores/app.store";
 

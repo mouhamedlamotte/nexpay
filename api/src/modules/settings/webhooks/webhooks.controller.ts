@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -82,6 +83,22 @@ export class WebhooksController {
     return {
       statusCode: HttpStatus.OK,
       message: 'La configuration webhook a été récupérée avec succès.',
+      data: res,
+    };
+  }
+
+  @ApiOperation({ summary: 'Delete one webhook config by ID' })
+  @ApiResponse({
+    status: 204,
+    description: 'Returns one webhook configuration.',
+  })
+  @HttpCode(HttpStatus.OK)
+  @Delete('/:id')
+  async delete(@Param('projectId') projectId: string, @Param('id') id: string) {
+    const res = await this.service.remove(projectId, id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'La configuration webhook a été supprimée avec succès.',
       data: res,
     };
   }

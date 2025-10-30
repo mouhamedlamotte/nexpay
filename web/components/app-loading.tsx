@@ -64,11 +64,11 @@ const AppLoading = () => {
         </div>
 
         {/* Texte de chargement */}
-        <div className="text-center space-y-4">
+        {/* <div className="text-center space-y-4">
           <p className="text-gray-600 text-2xl animate-fade-in w-[500px]">
             {getLoadingMessageFromPhase(loadingPhase)}
           </p>
-        </div>
+        </div> */}
       </div>
 
     </div>

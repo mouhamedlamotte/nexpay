@@ -57,9 +57,9 @@ export function ProjectSwitcher() {
       <DropdownMenuContent align="start" className="w-[320px]">
         <div className="flex items-center justify-between">
         <DropdownMenuLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          Organisations
+          Projects
         </DropdownMenuLabel>
-        <Link href="/app/organizations">
+        <Link href="/projects">
             <Button variant="ghost" className="hover:bg-secondary">
               <Cog className="h-4 w-4" />
               Gerer
@@ -87,15 +87,6 @@ export function ProjectSwitcher() {
             )}
           </DropdownMenuItem>
         ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild >
-          <Link href="/app/organizations/new">
-            <Button variant="ghost" className="flex items-center gap-2 p-3 cursor-pointer  hover:bg-transparent">
-              <Plus className="h-4 w-4" />
-              Créer une organisation
-            </Button>
-          </Link>
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

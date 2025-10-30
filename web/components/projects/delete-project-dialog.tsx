@@ -11,9 +11,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { projectsApi } from "@/lib/api/projects"
-import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import type { Project } from "@/lib/types"
+import { toast } from "sonner"
 
 interface DeleteProjectDialogProps {
   project: Project
@@ -23,23 +23,15 @@ interface DeleteProjectDialogProps {
 }
 
 export function DeleteProjectDialog({ project, open, onOpenChange, onSuccess }: DeleteProjectDialogProps) {
-  const { toast } = useToast()
 
   const mutation = useMutation({
     mutationFn: () => projectsApi.delete(project.id),
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Project deleted successfully",
-      })
+      toast.success("Project deleted successfully")
       onSuccess()
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to delete project",
-        variant: "destructive",
-      })
+      toast.error(error.response?.data?.message || "Failed to delete project")
     },
   })
 

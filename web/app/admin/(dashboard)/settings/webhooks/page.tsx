@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { Plus, MoreVertical, Pencil, Eye } from "lucide-react"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { Plus, MoreVertical, Pencil, Eye, Trash } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -12,10 +12,11 @@ import { CreateWebhookDialog } from "@/components/webhooks/create-webhook-dialog
 import { EditWebhookDialog } from "@/components/webhooks/edit-webhook-dialog"
 import { ViewWebhookDialog } from "@/components/webhooks/view-webhook-dialog"
 import type { Webhook } from "@/lib/types"
-import { format } from "date-fns"
+import { format, formatDate } from "date-fns"
 import { Skeleton } from "@/components/ui/skeleton"
 import { use } from "react"
 import { useProjectStore } from "@/stores/project.store"
+import { toast } from "sonner"
 
 export default function WebhooksPage() {
   const projectId  = useProjectStore(s=>s.currentProject?.id!)
@@ -29,10 +30,28 @@ export default function WebhooksPage() {
     queryFn: () => settingsApi.getWebhooks(projectId, { page, limit: 10 }),
   })
 
-  return (
-    <div>
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => settingsApi.deleteWebhook(projectId, id),
+    onSuccess: () => {
+      toast.success("Webhook deleted successfully")
+      refetch()
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to delete webhook")
+    },
+  })
 
-      <div className="flex-1 space-y-4 p-6">
+  const handleDeleteWebhook = (id: string) => {
+    deleteMutation.mutate(id)
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Button onClick={() => setCreateDialogOpen(true)} className="ml-auto">
+        <Plus className="mr-2 h-4 w-4" />
+        Nouveau webhook
+      </Button>
+      <div className="flex-1 space-y-4">
         <Card>
           <Table>
             <TableHeader>
@@ -75,7 +94,7 @@ export default function WebhooksPage() {
                       <code className="rounded bg-muted px-2 py-1 text-xs">{webhook.header}</code>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {webhook.createdAt}
+                      {formatDate(webhook.createdAt, "dd MMMM yyyy")}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -92,6 +111,10 @@ export default function WebhooksPage() {
                           <DropdownMenuItem onClick={() => setEditWebhook(webhook)}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem variant="destructive" onClick={() => handleDeleteWebhook(webhook.id)}>
+                            <Trash className="mr-2 h-4 w-4" />
+                            Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -139,6 +162,7 @@ export default function WebhooksPage() {
         onSuccess={() => {
           refetch()
           setCreateDialogOpen(false)
+          toast.success("Webhook added successfully")
         }}
       />
       {editWebhook && (

@@ -45,9 +45,10 @@ export default function TransactionsPage() {
   })
 
   return (
-    <div >
+    <>
 
-      <div className="flex-1 space-y-4 p-6">
+    <main className="flex-1 overflow-y-auto p-2 md:p-6 space-y-4">
+
         {/* Filters */}
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">
@@ -178,7 +179,7 @@ export default function TransactionsPage() {
             </div>
           </div>
         )}
-      </div>
+      </main>
 
       {/* Transaction Details Dialog */}
       {selectedTransaction && (
@@ -188,6 +189,6 @@ export default function TransactionsPage() {
           onOpenChange={(open) => !open && setSelectedTransaction(null)}
         />
       )}
-    </div>
+    </>
   )
 }

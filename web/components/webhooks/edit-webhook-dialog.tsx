@@ -16,10 +16,10 @@ import {
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { settingsApi } from "@/lib/api/settings"
-import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import type { Webhook } from "@/lib/types"
 import { useEffect } from "react"
+import { toast } from "sonner"
 
 const formSchema = z.object({
   url: z.string().url("Must be a valid URL").optional(),
@@ -38,7 +38,6 @@ interface EditWebhookDialogProps {
 }
 
 export function EditWebhookDialog({ projectId, webhook, open, onOpenChange, onSuccess }: EditWebhookDialogProps) {
-  const { toast } = useToast()
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -59,18 +58,11 @@ export function EditWebhookDialog({ projectId, webhook, open, onOpenChange, onSu
   const mutation = useMutation({
     mutationFn: (values: FormValues) => settingsApi.updateWebhook(projectId, webhook.id, values),
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Webhook updated successfully",
-      })
+      toast.success("Webhook updated successfully")
       onSuccess()
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to update webhook",
-        variant: "destructive",
-      })
+      toast.error(error.response?.data?.message || "Failed to update webhook")
     },
   })
 
@@ -127,7 +119,7 @@ export function EditWebhookDialog({ projectId, webhook, open, onOpenChange, onSu
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={mutation.isPending}>
+              <Button type="submit" disabled={mutation.isPending || !form.formState.isDirty || !form.formState.isValid}>
                 {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Changes
               </Button>

@@ -15,14 +15,12 @@ import {
   UserPlus,
   Key,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Tableau de bord", href: "/admin", icon: BarChart3 },
   { name: "Methodes de paiement", href: "/admin/providers", icon: Package },
   { name: "Transactions", href: "/admin/transactions", icon: CreditCard },
-  { name: "Membres", href: "/admin/members", icon: Users },
-  { name: "Invitations", href: "/admin/invitations", icon: UserPlus },
-  { name: "Clés API", href: "/admin/api-keys", icon: Key },
 ];
 
 export function AppSidebar() {
@@ -150,11 +148,12 @@ export function AppSidebar() {
           <Button
             asChild
             variant="ghost"
-            className={`w-full transition-all duration-200 ${
+            className={cn("w-full transition-all duration-200 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
               collapsed
                 ? "justify-center h-12 px-0"
-                : "justify-start px-3 py-2.5 h-11"
-            } text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground`}
+                : "justify-start px-3 py-2.5 h-11",
+              pathname.includes("/admin/settings") && "bg-sidebar-primary/30 text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
+             )}
           >
             <Link href={`/admin/settings`} className="flex items-center">
               <Settings

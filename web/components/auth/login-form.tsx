@@ -27,7 +27,7 @@ const loginSchema = z.object({
 
 const LoginForm = () => {
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/admin/projects";
+  const next = searchParams.get("next") || "/admin";
   const [showPassword, setShowPassword] = React.useState(false);
 
   const loginMutatation = useMutation({

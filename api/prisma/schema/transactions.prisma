@@ -60,7 +60,7 @@ model Transaction {
   provider              PaymentProvider @relation(fields: [providerId], references: [id])
 
   projectId String
-  project   Project @relation(fields: [projectId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   idempotencyKey String? @unique @default(cuid()) @map("idempotency_key")
   type           TransactionType? @default(PAYMENT)

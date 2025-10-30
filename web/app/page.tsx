@@ -7,7 +7,7 @@ export default function HomePage() {
   const router = useRouter()
 
   useEffect(() => {
-    router.push("/admin/projects")
+    router.push("/admin")
   }, [router])
 
   return null

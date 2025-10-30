@@ -23,6 +23,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi } from "@/lib/api/dashboard";
 import { useProjectStore } from "@/stores/project.store";
+import Link from "next/link";
 
 const Dashboard = () => {
   const projectId = useProjectStore((state) => state.currentProject?.id!);
@@ -70,15 +71,6 @@ const Dashboard = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, string> = {
-      SUCCEEDED: "bg-green-100 text-green-700 border-green-300",
-      FAILED: "bg-red-100 text-red-700 border-red-300",
-      PENDING: "bg-yellow-100 text-yellow-700 border-yellow-300",
-    };
-    return variants[status] || "bg-gray-100 text-gray-700";
-  };
-
   return (
     <main className="flex-1 overflow-y-auto p-2 md:p-6 space-y-4">
       {/* Header */}
@@ -94,7 +86,7 @@ const Dashboard = () => {
             variant={timeRange === '1d' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => handleTimeRangeChange('1d')}
-            className={timeRange === '1d' ? 'bg-indigo-600' : 'bg-[#252937] text-gray-300 border-gray-700 hover:bg-[#2d3243]'}
+            className={timeRange === '1d' ? '' : 'bg-[#252937] text-gray-300 border-gray-700 hover:bg-primary/90'}
           >
             1 jour
           </Button>
@@ -102,7 +94,7 @@ const Dashboard = () => {
             variant={timeRange === '7d' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => handleTimeRangeChange('7d')}
-            className={timeRange === '7d' ? 'bg-indigo-600' : 'bg-[#252937] text-gray-300 border-gray-700 hover:bg-[#2d3243]'}
+            className={timeRange === '7d' ? '' : 'bg-[#252937] text-gray-300 border-gray-700 hover:bg-primary/90'}
           >
             7 jours
           </Button>
@@ -110,7 +102,7 @@ const Dashboard = () => {
             variant={timeRange === '30d' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => handleTimeRangeChange('30d')}
-            className={timeRange === '30d' ? 'bg-indigo-600' : 'bg-[#252937] text-gray-300 border-gray-700 hover:bg-[#2d3243]'}
+            className={timeRange === '30d' ? '' : 'bg-[#252937] text-gray-300 border-gray-700 hover:bg-primary/90'}
           >
             30 jours
           </Button>
@@ -118,7 +110,7 @@ const Dashboard = () => {
             variant={timeRange === '90d' ? 'default' : 'outline'} 
             size="sm"
             onClick={() => handleTimeRangeChange('90d')}
-            className={timeRange === '90d' ? 'bg-indigo-600' : 'bg-[#252937] text-gray-300 border-gray-700 hover:bg-[#2d3243]'}
+            className={timeRange === '90d' ? '' : 'bg-[#252937] text-gray-300 border-gray-700 hover:bg-primary/90'}
           >
             90 jours
           </Button>
@@ -302,8 +294,10 @@ const Dashboard = () => {
             <CardTitle>Transactions récentes</CardTitle>
             <CardDescription>Les 5 dernières transactions</CardDescription>
           </div>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="!border !border-border">
+            <Link href="/admin/transactions">
             Voir tout
+            </Link>
           </Button>
         </CardHeader>
 
@@ -313,7 +307,7 @@ const Dashboard = () => {
               data.recentTransactions.map((tx) => (
                 <div
                   key={tx.id}
-                  className="flex items-center justify-between rounded-lg border bg-card text-card-foreground p-3 hover:bg-accent hover:text-accent-foreground transition-colors"
+                  className="flex items-center justify-between rounded-lg border bg-card text-card-foreground p-3 hover:bg-muted cursor-pointer hover:text-accent-foreground transition-colors"
                 >
                   <div className="flex items-start space-x-3">
                     {getStatusIcon(tx.status)}

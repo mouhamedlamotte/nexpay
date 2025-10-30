@@ -12,6 +12,8 @@ export interface UserData {
   lastName: string;
   email: string;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
   // Ajoutez d'autres propriétés selon vos besoins
 }
 

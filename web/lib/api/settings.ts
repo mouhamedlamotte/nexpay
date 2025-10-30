@@ -45,4 +45,9 @@ export const settingsApi = {
     const { data } = await apiClient.put<ApiResponse<Webhook>>(`/${projectId}/settings/webhooks/${id}`, dto)
     return data
   },
+
+  deleteWebhook: async (projectId: string, id: string) => {
+    const { data } = await apiClient.delete<ApiResponse<void>>(`/${projectId}/settings/webhooks/${id}`)
+    return data
+  },
 }

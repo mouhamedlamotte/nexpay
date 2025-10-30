@@ -9,11 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { settingsApi } from "@/lib/api/settings"
-import { useToast } from "@/hooks/use-toast"
 import { Loader2, Save } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
-import { use } from "react"
 import { useProjectStore } from "@/stores/project.store"
+import { toast } from "sonner"
 
 const formSchema = z.object({
   successUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
@@ -25,7 +24,6 @@ type FormValues = z.infer<typeof formSchema>
 
 export default function RedirectsPage() {
   const projectId = useProjectStore((state) => state.currentProject?.id!)
-  const { toast } = useToast()
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["redirects", projectId],
@@ -49,25 +47,16 @@ export default function RedirectsPage() {
         : settingsApi.createRedirects(projectId, values)
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Redirect URLs updated successfully",
-      })
+      toast.success("Redirect URLs updated successfully")
       refetch()
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to update redirect URLs",
-        variant: "destructive",
-      })
+      toast.error(error.response?.data?.message || "Failed to update redirect URLs")
     },
   })
 
   return (
-    <div >
 
-      <div className="flex-1 p-6">
         <Card className="max-w-2xl">
           <CardHeader>
             <CardTitle>Callback Configuration</CardTitle>
@@ -85,49 +74,44 @@ export default function RedirectsPage() {
             ) : (
               <Form {...form}>
                 <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="successUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Success URL</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://example.com/success" {...field} />
-                        </FormControl>
-                        <FormDescription>Redirect URL after successful payment</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="failureUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Failure URL</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://example.com/failure" {...field} />
-                        </FormControl>
-                        <FormDescription>Redirect URL after failed payment</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="cancelUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cancel URL</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://example.com/cancel" {...field} />
-                        </FormControl>
-                        <FormDescription>Redirect URL when payment is cancelled</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" disabled={mutation.isPending}>
+                  {
+                    [
+                      {
+                        name: "successUrl",
+                        label: "Success URL",
+                        placeholder: "https://example.com/success",
+                        description: "Redirect URL after successful payment",
+                      },
+                      {
+                        name: "failureUrl",
+                        label: "Failure URL",
+                        placeholder: "https://example.com/failure",
+                        description: "Redirect URL after failed payment",
+                      },
+                      {
+                        name: "cancelUrl",
+                        label: "Cancel URL",
+                        placeholder: "https://example.com/cancel",
+                        description: "Redirect URL after canceled payment",
+                      },
+                    ].map(({ name, label, placeholder, description }) => (
+                      <FormField
+                        control={form.control}
+                        name={name as keyof FormValues}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{label}</FormLabel>
+                            <FormControl>
+                              <Input className="border-border" placeholder={placeholder} {...field} />
+                            </FormControl>
+                            <FormDescription></FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ))
+                  }
+                  <Button type="submit" disabled={mutation.isPending || !form.formState.isDirty}>
                     {mutation.isPending ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
@@ -140,7 +124,5 @@ export default function RedirectsPage() {
             )}
           </CardContent>
         </Card>
-      </div>
-    </div>
   )
 }

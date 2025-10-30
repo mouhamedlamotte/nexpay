@@ -16,10 +16,10 @@ import {
 import { Form, FormLabel, FormDescription } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { providersApi } from "@/lib/api/providers"
-import { useToast } from "@/hooks/use-toast"
 import { Loader2, Edit2 } from "lucide-react"
 import type { PaymentProvider } from "@/lib/types"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 const formSchema = z.object({
   secrets: z.record(z.string()),
@@ -35,7 +35,6 @@ interface ConfigureProviderDialogProps {
 }
 
 export function ConfigureProviderDialog({ provider, open, onOpenChange, onSuccess }: ConfigureProviderDialogProps) {
-  const { toast } = useToast()
   const [editingFields, setEditingFields] = useState<Set<string>>(new Set())
 
   const form = useForm<FormValues>({
@@ -45,12 +44,13 @@ export function ConfigureProviderDialog({ provider, open, onOpenChange, onSucces
   // Check which fields have existing values
   const hasExistingSecret = (field: string): boolean => {
     try {
-      if (typeof provider.secrets === "string" && provider.secrets.trim() !== "") {
-        const parsed = JSON.parse(provider.secrets)
-        return !!parsed[field]
+      const secrets = provider.secrets as unknown
+      if (typeof secrets === "string" && (secrets as string).trim() !== "") {
+        const parsed = JSON.parse(secrets as string)
+        return !!parsed?.[field]
       }
-      if (typeof provider.secrets === "object" && provider.secrets !== null) {
-        return !!(provider.secrets as Record<string, any>)[field]
+      if (typeof secrets === "object" && secrets !== null) {
+        return !!(secrets as Record<string, any>)[field]
       }
     } catch (e) {
       return false
@@ -94,18 +94,11 @@ export function ConfigureProviderDialog({ provider, open, onOpenChange, onSucces
       })
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Provider configuration updated successfully",
-      })
+      toast.success("Provider configuration updated successfully")
       onSuccess()
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to update provider configuration",
-        variant: "destructive",
-      })
+      toast.error(error.response?.data?.message || "Failed to update provider configuration")
     },
   })
 

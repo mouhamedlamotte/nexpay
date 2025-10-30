@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { QueryProvider } from "@/providers/query-provider"
 import { Suspense } from "react"
 import "./globals.css"
+import { Toaster } from "sonner"
 
 export const metadata: Metadata = {
   title: "NEXPAY Admin Portal",
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <Suspense fallback={null}>
           <QueryProvider>{children}</QueryProvider>
+          <Toaster position="top-right" />
         </Suspense>
         <Analytics />
       </body>

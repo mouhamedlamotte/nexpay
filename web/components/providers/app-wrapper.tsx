@@ -2,7 +2,7 @@
 
 import AppLoading from "../app-loading"
 import { RequireAuth } from "../require-auth"
-import { RequireProject } from "../required-organization"
+import { RequireProject } from "../required-project"
 
 
 interface AppWrapperProps {

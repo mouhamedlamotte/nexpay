@@ -17,10 +17,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { projectsApi } from "@/lib/api/projects"
-import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import type { Project } from "@/lib/types"
 import { useEffect } from "react"
+import { toast } from "sonner"
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -37,7 +37,6 @@ interface EditProjectDialogProps {
 }
 
 export function EditProjectDialog({ project, open, onOpenChange, onSuccess }: EditProjectDialogProps) {
-  const { toast } = useToast()
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -56,18 +55,11 @@ export function EditProjectDialog({ project, open, onOpenChange, onSuccess }: Ed
   const mutation = useMutation({
     mutationFn: (values: FormValues) => projectsApi.update(project.id, values),
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Project updated successfully",
-      })
+      toast.success("Project updated successfully")
       onSuccess()
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to update project",
-        variant: "destructive",
-      })
+      toast.error(error.response?.data?.message || "Failed to update project")
     },
   })
 

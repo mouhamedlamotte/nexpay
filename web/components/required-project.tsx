@@ -65,7 +65,7 @@ const isIgnoredPath = useMemo(() => {
     } catch (error) {
       console.error("Erreur lors de la gestion de  project:", error);
       alert("Une erreur s'est produite lors de la gestion de  project. FIn");
-      router.push("/admin/projects");
+      router.push("/projects");
     }
   }, [
     isIgnoredPath,

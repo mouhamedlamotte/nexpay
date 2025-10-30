@@ -17,8 +17,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { projectsApi } from "@/lib/api/projects"
-import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -37,7 +37,6 @@ interface CreateProjectDialogProps {
 }
 
 export function CreateProjectDialog({ open, onOpenChange, onSuccess }: CreateProjectDialogProps) {
-  const { toast } = useToast()
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -52,19 +51,12 @@ export function CreateProjectDialog({ open, onOpenChange, onSuccess }: CreatePro
   const mutation = useMutation({
     mutationFn: projectsApi.create,
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Project created successfully",
-      })
+      toast.success("Project created successfully")
       form.reset()
       onSuccess()
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to create project",
-        variant: "destructive",
-      })
+      toast.error(error.response?.data?.message || "Failed to create project")
     },
   })
 

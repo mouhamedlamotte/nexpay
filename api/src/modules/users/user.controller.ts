@@ -67,11 +67,11 @@ export class UserController {
   })
   @UseGuards(JwtAuthGuard())
   async create(@Body() dto: CreateUserDto, @Request() req: any) {
-    const admin = await this.user.create(req.user.id, dto);
+    const data = await this.user.create(req.user.id, dto);
     return {
       statusCode: HttpStatus.CREATED,
       message: 'Admin created successfully',
-      admin,
+      data,
     };
   }
 
@@ -85,11 +85,11 @@ export class UserController {
   })
   async update(@Body() dto: UpdateUserDto, @Request() req: any) {
     const id = req.user.id;
-    const admin = await this.user.update(id, dto);
+    const data = await this.user.update(id, dto);
     return {
       statusCode: HttpStatus.OK,
       message: 'Admin updated successfully',
-      admin,
+      data,
     };
   }
 
@@ -127,12 +127,12 @@ export class UserController {
     description: 'Administrateur supprimé avec succès',
   })
   async me(@Req() req: any) {
-    const admin = await this.user.findOne(req.user.id);
-    delete admin.password;
+    const data = await this.user.findOne(req.user.id);
+    delete data.password;
     return {
       statusCode: HttpStatus.OK,
       message: 'Admin retrieved successfully',
-      admin,
+      data,
     };
   }
   @Get('users/:id')
@@ -144,7 +144,12 @@ export class UserController {
     description: 'Détails de l’administrateur',
   })
   async findOne(@Param('id') id: string) {
-    return await this.user.findOne(id);
+    const data = await this.user.findOne(id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Admin retrieved successfully',
+      data,
+    };
   }
 
   @Delete('users/:id')
@@ -160,11 +165,11 @@ export class UserController {
     description: 'Administrateur supprimé avec succès',
   })
   async remove(@Param('id') id: string) {
-    const admin = await this.user.remove(id);
+    const data = await this.user.remove(id);
     return {
       statusCode: HttpStatus.OK,
       message: 'Admin deleted successfully',
-      admin,
+      admin: data,
     };
   }
 }
