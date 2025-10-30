@@ -36,16 +36,30 @@ export class ProjectsController {
   }
 
   // ---- GET ONE BY ID ----
+  @Get('default')
+  @ApiOperation({ summary: 'Get default project' })
+  @ApiResponse({ status: 200, description: 'project found' })
+  @ApiResponse({ status: 404, description: 'project not found' })
+  async getDefaultProject() {
+    const result = await this.service.getDefaultProject();
+    return {
+      statusCode: 200,
+      message: 'Project retrieved successfully',
+      data: result,
+    };
+  }
+
+  // ---- GET ONE BY ID ----
   @Get(':id')
   @ApiOperation({ summary: 'Get a project by ID' })
   @ApiResponse({ status: 200, description: 'project found' })
   @ApiResponse({ status: 404, description: 'project not found' })
   async findOneById(@Param('id') id: string) {
-    const result = this.service.findOneById(id);
+    const result = await this.service.findOneById(id);
     return {
       statusCode: 200,
       message: 'Project retrieved successfully',
-      result,
+      data: result,
     };
   }
 

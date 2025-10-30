@@ -45,6 +45,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
+    "cookies-next": "^6.1.1",
     "date-fns": "latest",
     "embla-carousel-react": "8.5.1",
     "geist": "latest",

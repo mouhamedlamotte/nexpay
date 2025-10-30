@@ -2,78 +2,44 @@
 
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Plus, Search, MoreVertical, Pencil, Trash2, Eye } from "lucide-react"
-import { PageHeader } from "@/components/page-header"
+import { Plus, MoreVertical, Pencil, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { projectsApi } from "@/lib/api/projects"
-import { CreateProjectDialog } from "@/components/projects/create-project-dialog"
-import { EditProjectDialog } from "@/components/projects/edit-project-dialog"
-import { DeleteProjectDialog } from "@/components/projects/delete-project-dialog"
-import type { Project } from "@/lib/types"
+import { settingsApi } from "@/lib/api/settings"
+import { CreateWebhookDialog } from "@/components/webhooks/create-webhook-dialog"
+import { EditWebhookDialog } from "@/components/webhooks/edit-webhook-dialog"
+import { ViewWebhookDialog } from "@/components/webhooks/view-webhook-dialog"
+import type { Webhook } from "@/lib/types"
 import { format } from "date-fns"
-import { useAppStore } from "@/lib/store"
-import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
+import { use } from "react"
+import { useProjectStore } from "@/stores/project.store"
 
-export default function ProjectsPage() {
-  const router = useRouter()
-  const { setSelectedProjectId } = useAppStore()
-  const [search, setSearch] = useState("")
+export default function WebhooksPage() {
+  const projectId  = useProjectStore(s=>s.currentProject?.id!)
   const [page, setPage] = useState(1)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [editProject, setEditProject] = useState<Project | null>(null)
-  const [deleteProject, setDeleteProject] = useState<Project | null>(null)
+  const [editWebhook, setEditWebhook] = useState<Webhook | null>(null)
+  const [viewWebhook, setViewWebhook] = useState<Webhook | null>(null)
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["projects", page, search],
-    queryFn: () => projectsApi.getAll({ page, limit: 10, search }),
+    queryKey: ["webhooks", projectId, page],
+    queryFn: () => settingsApi.getWebhooks(projectId, { page, limit: 10 }),
   })
 
-  const handleViewProject = (project: Project) => {
-    setSelectedProjectId(project.id)
-    router.push(`/${project.id}/transactions`)
-  }
-
   return (
-    <div className="flex h-full flex-col">
-      <PageHeader
-        title="Projects"
-        description="Manage your payment projects"
-        actions={
-          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            New Project
-          </Button>
-        }
-      />
+    <div>
 
       <div className="flex-1 space-y-4 p-6">
-        {/* Search */}
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search projects..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-        </div>
-
-        {/* Table */}
         <Card>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
+                <TableHead>URL</TableHead>
+                <TableHead>Header</TableHead>
                 <TableHead>Created</TableHead>
-                <TableHead>Updated</TableHead>
                 <TableHead className="w-[70px]"></TableHead>
               </TableRow>
             </TableHeader>
@@ -82,13 +48,10 @@ export default function ProjectsPage() {
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell>
+                      <Skeleton className="h-4 w-64" />
+                    </TableCell>
+                    <TableCell>
                       <Skeleton className="h-4 w-32" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-48" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-24" />
                     </TableCell>
                     <TableCell>
                       <Skeleton className="h-4 w-24" />
@@ -100,20 +63,19 @@ export default function ProjectsPage() {
                 ))
               ) : data?.data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
-                    No projects found.
+                  <TableCell colSpan={4} className="h-24 text-center">
+                    No webhooks configured.
                   </TableCell>
                 </TableRow>
               ) : (
-                data?.data.map((project) => (
-                  <TableRow key={project.id}>
-                    <TableCell className="font-medium">{project.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{project.description || "—"}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {format(new Date(project.createdAt), "MMM d, yyyy")}
+                data?.data.map((webhook) => (
+                  <TableRow key={webhook.id}>
+                    <TableCell className="font-mono text-sm">{webhook.url}</TableCell>
+                    <TableCell>
+                      <code className="rounded bg-muted px-2 py-1 text-xs">{webhook.header}</code>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {format(new Date(project.updatedAt), "MMM d, yyyy")}
+                      {webhook.createdAt}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -123,17 +85,13 @@ export default function ProjectsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleViewProject(project)}>
+                          <DropdownMenuItem onClick={() => setViewWebhook(webhook)}>
                             <Eye className="mr-2 h-4 w-4" />
                             View
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setEditProject(project)}>
+                          <DropdownMenuItem onClick={() => setEditWebhook(webhook)}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setDeleteProject(project)} className="text-destructive">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -174,7 +132,8 @@ export default function ProjectsPage() {
       </div>
 
       {/* Dialogs */}
-      <CreateProjectDialog
+      <CreateWebhookDialog
+        projectId={projectId}
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onSuccess={() => {
@@ -182,26 +141,23 @@ export default function ProjectsPage() {
           setCreateDialogOpen(false)
         }}
       />
-      {editProject && (
-        <EditProjectDialog
-          project={editProject}
-          open={!!editProject}
-          onOpenChange={(open) => !open && setEditProject(null)}
+      {editWebhook && (
+        <EditWebhookDialog
+          projectId={projectId}
+          webhook={editWebhook}
+          open={!!editWebhook}
+          onOpenChange={(open) => !open && setEditWebhook(null)}
           onSuccess={() => {
             refetch()
-            setEditProject(null)
+            setEditWebhook(null)
           }}
         />
       )}
-      {deleteProject && (
-        <DeleteProjectDialog
-          project={deleteProject}
-          open={!!deleteProject}
-          onOpenChange={(open) => !open && setDeleteProject(null)}
-          onSuccess={() => {
-            refetch()
-            setDeleteProject(null)
-          }}
+      {viewWebhook && (
+        <ViewWebhookDialog
+          webhook={viewWebhook}
+          open={!!viewWebhook}
+          onOpenChange={(open) => !open && setViewWebhook(null)}
         />
       )}
     </div>

@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -47,7 +46,7 @@ export class PaymentProviderController {
     description: 'The record has been successfully Toggled.',
   })
   @HttpCode(HttpStatus.OK)
-  @Delete('/:providerId')
+  @Put('/:providerId/toggle')
   async toggle(
     @Param('providerId') providerId: string,
     @Body('isActive') isActive: boolean,

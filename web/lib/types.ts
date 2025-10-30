@@ -81,6 +81,7 @@ export interface PaymentProvider {
   id: string;
   name: string;
   code: string;
+  secretsFields: string[]
   secrets: Record<string, any>;
   isActive: boolean;
   createdAt: string;

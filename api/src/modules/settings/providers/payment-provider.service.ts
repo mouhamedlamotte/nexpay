@@ -144,15 +144,37 @@ export class PaymentProviderService {
       const provider = await this.getProviderById(dto.providerId);
       if (!provider) throw new NotFoundException('Provider not found');
 
-      const secrets = await this.validateAndEncryptSecrets(
-        dto.secrets,
+      // Parse existing secrets from database
+      let existingSecrets: Record<string, string> = {};
+      try {
+        if (provider.secrets && typeof provider.secrets === 'string') {
+          existingSecrets = JSON.parse(provider.secrets);
+        }
+      } catch (e) {
+        console.error('Failed to parse existing secrets:', e);
+      }
+
+      // Merge new secrets with existing encrypted ones
+      // New secrets (plain text) override existing ones (encrypted)
+      const mergedSecrets = { ...existingSecrets, ...dto.secrets };
+
+      // Decrypt and validate all secrets (this method handles both encryption check and validation)
+      const decryptedSecrets = await this.validateAndDecryptSecrets(
+        mergedSecrets,
+        provider.secretsFields,
+        provider.name,
+      );
+
+      // Re-encrypt all decrypted secrets
+      const reEncryptedSecrets = await this.validateAndEncryptSecrets(
+        decryptedSecrets,
         provider.secretsFields,
         provider.name,
       );
 
       return this.prisma.paymentProvider.update({
         where: { id: dto.providerId },
-        data: { secrets: JSON.stringify(secrets) },
+        data: { secrets: JSON.stringify(reEncryptedSecrets) },
         omit: { secrets: true },
       });
     });

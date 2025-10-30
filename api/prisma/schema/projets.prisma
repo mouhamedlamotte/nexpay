@@ -2,6 +2,9 @@ model Project {
   id   String @id @default(cuid())
   name String @unique
 
+  isDefault Boolean @default(false)
+
+
   description String?
 
   metadata     Json?

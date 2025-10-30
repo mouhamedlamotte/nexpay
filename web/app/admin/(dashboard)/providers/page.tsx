@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Search, Settings2, Power, PowerOff } from "lucide-react"
-import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -28,8 +27,7 @@ export default function ProvidersPage() {
   })
 
   return (
-    <div className="flex h-full flex-col">
-      <PageHeader title="Payment Providers" description="Manage payment provider configurations" />
+    <div>
 
       <div className="flex-1 space-y-4 p-6">
         {/* Search */}

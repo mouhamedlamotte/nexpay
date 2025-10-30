@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Search, Filter, Eye } from "lucide-react"
-import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -16,6 +15,7 @@ import { format } from "date-fns"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { use } from "react"
+import { useProjectStore } from "@/stores/project.store"
 
 const statusColors: Record<TransactionStatus, "default" | "secondary" | "destructive" | "outline"> = {
   PENDING: "outline",
@@ -26,8 +26,8 @@ const statusColors: Record<TransactionStatus, "default" | "secondary" | "destruc
   REFUNDED: "secondary",
 }
 
-export default function TransactionsPage({ params }: { params: Promise<{ projectId: string }> }) {
-  const { projectId } = use(params)
+export default function TransactionsPage() {
+  const projectId  = useProjectStore((state) => state.currentProject?.id!)
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
   const [status, setStatus] = useState<TransactionStatus | "all">("all")
@@ -45,8 +45,7 @@ export default function TransactionsPage({ params }: { params: Promise<{ project
   })
 
   return (
-    <div className="flex h-full flex-col">
-      <PageHeader title="Transactions" description="View and manage payment transactions" />
+    <div >
 
       <div className="flex-1 space-y-4 p-6">
         {/* Filters */}

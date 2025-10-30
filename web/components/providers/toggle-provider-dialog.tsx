@@ -26,7 +26,7 @@ export function ToggleProviderDialog({ provider, open, onOpenChange, onSuccess }
   const { toast } = useToast()
 
   const mutation = useMutation({
-    mutationFn: () => providersApi.toggle(provider.id),
+    mutationFn: () => providersApi.toggle(provider.id, provider.isActive),
     onSuccess: () => {
       toast({
         title: "Success",

@@ -1,19 +1,28 @@
-import type React from "react"
+import { Button } from "@/components/ui/button";
+import { Bell, User } from "lucide-react";
+import { ProjectSwitcher } from "./organization-switcher";
 
-interface PageHeaderProps {
-  title: string
-  description?: string
-  actions?: React.ReactNode
-}
-
-export function PageHeader({ title, description, actions }: PageHeaderProps) {
+export function AppHeader() {
   return (
-    <div className="flex items-center justify-between border-b border-border bg-card px-6 py-4">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
-        {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+    <header className="flex items-center justify-between h-14 px-6 bg-card border-b border-border z-40">
+      <ProjectSwitcher />
+
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <Bell className="h-6 w-6" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <User className="h-6 w-6" />
+        </Button>
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
-    </div>
-  )
+    </header>
+  );
 }

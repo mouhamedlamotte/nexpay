@@ -17,7 +17,7 @@ import { Form, FormLabel, FormDescription } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { providersApi } from "@/lib/api/providers"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, Plus, Trash2 } from "lucide-react"
+import { Loader2, Edit2 } from "lucide-react"
 import type { PaymentProvider } from "@/lib/types"
 import { useEffect, useState } from "react"
 
@@ -36,38 +36,63 @@ interface ConfigureProviderDialogProps {
 
 export function ConfigureProviderDialog({ provider, open, onOpenChange, onSuccess }: ConfigureProviderDialogProps) {
   const { toast } = useToast()
-  const [secretFields, setSecretFields] = useState<Array<{ key: string; value: string }>>(
-    Object.entries(
-      typeof provider.secrets === "string" && provider.secrets.trim() !== ""
-        ? JSON.parse(provider.secrets)
-        : {}
-    ).map(([key, value]) => ({ key, value: value as string })),
-  )
+  const [editingFields, setEditingFields] = useState<Set<string>>(new Set())
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      secrets: JSON.parse(JSON.stringify(provider.secrets || {})),
-    },
   })
 
+  // Check which fields have existing values
+  const hasExistingSecret = (field: string): boolean => {
+    try {
+      if (typeof provider.secrets === "string" && provider.secrets.trim() !== "") {
+        const parsed = JSON.parse(provider.secrets)
+        return !!parsed[field]
+      }
+      if (typeof provider.secrets === "object" && provider.secrets !== null) {
+        return !!(provider.secrets as Record<string, any>)[field]
+      }
+    } catch (e) {
+      return false
+    }
+    return false
+  }
+
+  // Reset form when provider or dialog opens
   useEffect(() => {
-    const secrets = secretFields.reduce(
-      (acc, field) => {
-        if (field.key) acc[field.key] = field.value
-        return acc
-      },
-      {} as Record<string, string>,
-    )
-    form.setValue("secrets", secrets)
-  }, [secretFields, form])
+    if (open) {
+      form.reset({ secrets: {} })
+      setEditingFields(new Set())
+    }
+  }, [provider.id, open, form])
+
+  const toggleEdit = (field: string) => {
+    const newEditing = new Set(editingFields)
+    if (newEditing.has(field)) {
+      newEditing.delete(field)
+      // Clear the field value when stopping edit
+      form.setValue(`secrets.${field}`, "")
+    } else {
+      newEditing.add(field)
+    }
+    setEditingFields(newEditing)
+  }
 
   const mutation = useMutation({
-    mutationFn: (values: FormValues) =>
-      providersApi.update({
+    mutationFn: (values: FormValues) => {
+      // Only send modified fields (non-empty values)
+      const modifiedSecrets = Object.entries(values.secrets).reduce((acc, [key, value]) => {
+        if (value && value.trim() !== "") {
+          acc[key] = value
+        }
+        return acc
+      }, {} as Record<string, string>)
+
+      return providersApi.update({
         providerId: provider.id,
-        secrets: values.secrets,
-      }),
+        secrets: modifiedSecrets,
+      })
+    },
     onSuccess: () => {
       toast({
         title: "Success",
@@ -84,20 +109,6 @@ export function ConfigureProviderDialog({ provider, open, onOpenChange, onSucces
     },
   })
 
-  const addSecretField = () => {
-    setSecretFields([...secretFields, { key: "", value: "" }])
-  }
-
-  const removeSecretField = (index: number) => {
-    setSecretFields(secretFields.filter((_, i) => i !== index))
-  }
-
-  const updateSecretField = (index: number, field: "key" | "value", value: string) => {
-    const updated = [...secretFields]
-    updated[index][field] = value
-    setSecretFields(updated)
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -108,48 +119,71 @@ export function ConfigureProviderDialog({ provider, open, onOpenChange, onSucces
         <Form {...form}>
           <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="space-y-4">
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div>
                 <FormLabel>API Secrets</FormLabel>
-                <Button type="button" variant="outline" size="sm" onClick={addSecretField}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Secret
-                </Button>
+                <FormDescription>
+                  Enter the required API credentials for {provider.name}
+                </FormDescription>
               </div>
-              <FormDescription>
-                Add key-value pairs for API credentials (e.g., client_id, client_secret, api_key)
-              </FormDescription>
-              {secretFields.length === 0 ? (
+              
+              {provider.secretsFields.length === 0 ? (
                 <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-                  No secrets configured. Click "Add Secret" to add credentials.
+                  No secrets required for this provider.
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {secretFields.map((field, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        placeholder="Key (e.g., client_id)"
-                        value={field.key}
-                        onChange={(e) => updateSecretField(index, "key", e.target.value)}
-                        className="flex-1"
-                      />
-                      <Input
-                        placeholder="Value"
-                        type="password"
-                        value={field.value}
-                        onChange={(e) => updateSecretField(index, "value", e.target.value)}
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeSecretField(index)}
-                        className="text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
+                <div className="space-y-4">
+                  {provider.secretsFields.map((field) => {
+                    const hasValue = hasExistingSecret(field)
+                    const isEditing = editingFields.has(field)
+                    
+                    return (
+                      <div key={field} className="space-y-2">
+                        <FormLabel htmlFor={field} className="text-sm font-medium">
+                          {field.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                          <span className="ml-1 text-destructive">*</span>
+                        </FormLabel>
+                        
+                        {hasValue && !isEditing ? (
+                          <div className="flex gap-2">
+                            <Input
+                              value="••••••••••••••••"
+                              disabled
+                              className="w-full"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              onClick={() => toggleEdit(field)}
+                              title="Edit this secret"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2">
+                            <Input
+                              id={field}
+                              type="password"
+                              placeholder={hasValue ? "Enter new value to update" : `Enter ${field}`}
+                              {...form.register(`secrets.${field}`)}
+                              className="w-full"
+                            />
+                            {hasValue && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => toggleEdit(field)}
+                                title="Cancel editing"
+                              >
+                                Cancel
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>

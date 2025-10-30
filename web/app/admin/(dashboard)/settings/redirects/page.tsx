@@ -4,7 +4,6 @@ import { useQuery, useMutation } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -14,6 +13,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Loader2, Save } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { use } from "react"
+import { useProjectStore } from "@/stores/project.store"
 
 const formSchema = z.object({
   successUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
@@ -23,8 +23,8 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
-export default function RedirectsPage({ params }: { params: Promise<{ projectId: string }> }) {
-  const { projectId } = use(params)
+export default function RedirectsPage() {
+  const projectId = useProjectStore((state) => state.currentProject?.id!)
   const { toast } = useToast()
 
   const { data, isLoading, refetch } = useQuery({
@@ -65,8 +65,7 @@ export default function RedirectsPage({ params }: { params: Promise<{ projectId:
   })
 
   return (
-    <div className="flex h-full flex-col">
-      <PageHeader title="Redirect URLs" description="Configure callback URLs for payment flows" />
+    <div >
 
       <div className="flex-1 p-6">
         <Card className="max-w-2xl">

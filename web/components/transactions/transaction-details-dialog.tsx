@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import type { Transaction, TransactionStatus } from "@/lib/types"
 import { format } from "date-fns"
 import { Separator } from "@/components/ui/separator"
+import { ScrollArea } from "../ui/scroll-area"
 
 const statusColors: Record<TransactionStatus, "default" | "secondary" | "destructive" | "outline"> = {
   PENDING: "outline",
@@ -24,10 +25,11 @@ interface TransactionDetailsDialogProps {
 export function TransactionDetailsDialog({ transaction, open, onOpenChange }: TransactionDetailsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl p-0">
+        <DialogHeader className="px-6 pt-6">
           <DialogTitle>Transaction Details</DialogTitle>
         </DialogHeader>
+        <ScrollArea className="max-h-[85vh] px-6 pb-2">
         <div className="space-y-6">
           {/* Status and Amount */}
           <div className="flex items-center justify-between">
@@ -127,6 +129,7 @@ export function TransactionDetailsDialog({ transaction, open, onOpenChange }: Tr
             </>
           )}
         </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   )

@@ -11,6 +11,7 @@ import { PaymentsModule } from './public/payments/webhook/payments.module';
 import { SeedersModule } from 'src/lib/modules/seeders/seeders.module';
 import { SessionModule } from './session/session.module';
 import { UsersModule } from './users/user.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { UsersModule } from './users/user.module';
     PaymentsModule,
     SessionModule,
     UsersModule,
+    DashboardModule,
   ],
   controllers: [],
   providers: [],

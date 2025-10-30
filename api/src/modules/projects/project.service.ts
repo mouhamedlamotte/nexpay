@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { FilterConfig, FilterService } from 'src/lib/services/filter.service';
 import { PaginationService } from 'src/lib/services/pagination.service';
 import { GetProjectsDto } from './dto/get-project.dto';
@@ -56,11 +56,17 @@ export class ProjectService {
       const service = await this.prisma.project.findUnique({
         where: { id },
       });
-      if (!service) {
-        this.logger.warn(`Service with id ${id} not found`);
-        throw new NotFoundException(`Service with id ${id} not found`);
-      }
       return service;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getDefaultProject() {
+    try {
+      return await this.prisma.project.findFirst({
+        where: { isDefault: true },
+      });
     } catch (error) {
       throw error;
     }
@@ -85,6 +91,18 @@ export class ProjectService {
           ...data,
         },
       });
+
+      const defaultProjet = await this.getDefaultProject();
+      console.log(defaultProjet);
+
+      if (!defaultProjet) {
+        await this.prisma.project.update({
+          where: { id: project.id },
+          data: {
+            isDefault: true,
+          },
+        });
+      }
 
       if (callbackUrls) {
         await this.prisma.callback.create({

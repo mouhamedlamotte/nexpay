@@ -1,4 +1,5 @@
 import axios from "axios"
+import { getCookie } from "cookies-next"
 
 export const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:9090/api/v1",
@@ -11,10 +12,10 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     // Add auth token here if needed
-    // const token = localStorage.getItem('token')
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`
-    // }
+    const token = getCookie("access_token")
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   (error) => {
@@ -27,7 +28,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     // Handle errors globally
-    console.error("[v0] API Error:", error.response?.data || error.message)
+    console.error("API Error:", error.response?.data || error.message)
     return Promise.reject(error)
   },
 )

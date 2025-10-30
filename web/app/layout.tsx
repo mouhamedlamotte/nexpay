@@ -10,7 +10,6 @@ import "./globals.css"
 export const metadata: Metadata = {
   title: "NEXPAY Admin Portal",
   description: "Admin portal for NEXPAY payment gateway",
-  generator: "v0.app",
 }
 
 export default function RootLayout({

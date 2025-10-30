@@ -19,6 +19,7 @@ interface WebhookData {
   status: TransactionStatus;
   client_reference: string | null;
   resolvedAt: Date | null;
+  amount: number;
   payer: {
     userId: string | null;
     userPhone: string | null;
@@ -119,6 +120,7 @@ export class WebhookService {
     return {
       type,
       data: {
+        amount: transaction.amount,
         client_reference: transaction.clientReference,
         status: transaction.status,
         resolvedAt: transaction.resolvedAt,

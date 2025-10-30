@@ -1,196 +1,172 @@
-"use client"
+"use client";
 
-import type React from "react"
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Package,
+  CreditCard,
+  BarChart3,
+  Settings,
+  Users,
+  ChevronLeft,
+  ChevronRight,
+  UserPlus,
+  Key,
+} from "lucide-react";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { FolderKanban, CreditCard, Receipt, ChevronLeft, ChevronRight, Webhook, LinkIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { useAppStore } from "@/lib/store"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-
-interface NavItem {
-  title: string
-  href: string
-  icon: React.ComponentType<{ className?: string }>
-  badge?: string
-}
-
-interface NavGroup {
-  title?: string
-  items: NavItem[]
-}
+const navigation = [
+  { name: "Tableau de bord", href: "/admin", icon: BarChart3 },
+  { name: "Methodes de paiement", href: "/admin/providers", icon: Package },
+  { name: "Transactions", href: "/admin/transactions", icon: CreditCard },
+  { name: "Membres", href: "/admin/members", icon: Users },
+  { name: "Invitations", href: "/admin/invitations", icon: UserPlus },
+  { name: "Clés API", href: "/admin/api-keys", icon: Key },
+];
 
 export function AppSidebar() {
-  const pathname = usePathname()
-  const { sidebarCollapsed, toggleSidebar, selectedProjectId } = useAppStore()
+  const [collapsed, setCollapsed] = useState(true);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const pathname = usePathname();
 
-  const mainNavigation: NavGroup[] = [
-    {
-      items: [
-        {
-          title: "Projects",
-          href: "/admin/projects",
-          icon: FolderKanban,
-        },
-        {
-          title: "Providers",
-          href: "/admin/providers",
-          icon: CreditCard,
-        },
-      ],
-    },
-  ]
+  // Vérifier la taille d'écran
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsLargeScreen(window.innerWidth >= 1024); // lg breakpoint
+    };
 
-  const projectNavigation: NavGroup[] = selectedProjectId
-    ? [
-        {
-          title: "Project",
-          items: [
-            {
-              title: "Transactions",
-              href: `/admin/${selectedProjectId}/transactions`,
-              icon: Receipt,
-            },
-          ],
-        },
-        {
-          title: "Settings",
-          items: [
-            {
-              title: "Redirects",
-              href: `/admin/${selectedProjectId}/settings/redirects`,
-              icon: LinkIcon,
-            },
-            {
-              title: "Webhooks",
-              href: `/admin/${selectedProjectId}/settings/webhooks`,
-              icon: Webhook,
-            },
-          ],
-        },
-      ]
-    : []
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
 
-  const isActive = (href: string) => {
-    if (href === "/admin/projects" || href === "admin/providers") {
-      return pathname === href
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
+  // Auto-collapse sur petit écran
+  useEffect(() => {
+    if (!isLargeScreen) {
+      setCollapsed(true);
     }
-    return pathname.startsWith(href)
-  }
+  }, [isLargeScreen]);
+
+  const toggleCollapsed = () => {
+    if (isLargeScreen) {
+      setCollapsed(!collapsed);
+    }
+  };
 
   return (
     <div
-      className={cn(
-        "relative flex h-screen flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300",
-        sidebarCollapsed ? "w-16" : "w-64",
-      )}
+      className={`bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out flex-shrink-0 ${
+        collapsed ? "w-16" : "w-64"
+      }`}
     >
-      {/* Header */}
-      <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
-        {!sidebarCollapsed && (
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <span className="text-sm font-bold text-primary-foreground">NP</span>
-            </div>
-            <span className="text-lg font-semibold text-sidebar-foreground">NEXPAY</span>
-          </div>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleSidebar}
-          className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
+      <div className="flex h-full flex-col">
+        {/* Header - Même hauteur que HubHeader */}
+        <div
+          className={`flex items-center border-b border-sidebar-border transition-all duration-300 h-14 min-h-[3.5rem] ${
+            collapsed ? "justify-center px-4" : "justify-between px-6"
+          }`}
         >
-          {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
-      </div>
+          {/* Logo avec animation de fade */}
+          <div
+            className={`transition-all duration-300 overflow-hidden text-primary text-2xl font-bold ${
+              collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+            }`}
+          >
+            NEXPAY
+          </div>
 
-      {/* Navigation */}
-      <ScrollArea className="flex-1 px-3 py-4">
-        <nav className="flex flex-col gap-6">
-          {/* Main Navigation */}
-          {mainNavigation.map((group, groupIndex) => (
-            <div key={groupIndex} className="flex flex-col gap-1">
-              {group.title && !sidebarCollapsed && (
-                <h4 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {group.title}
-                </h4>
+          {/* Toggle button - seulement sur grands écrans */}
+          {isLargeScreen && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleCollapsed}
+              className="text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 flex-shrink-0"
+            >
+              {collapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
               )}
-              {group.items.map((item) => {
-                const Icon = item.icon
-                const active = isActive(item.href)
-                return (
-                  <Link key={item.href} href={item.href}>
-                    <div
-                      className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                        active
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
-                        sidebarCollapsed && "justify-center",
-                      )}
-                    >
-                      <Icon className="h-5 w-5 shrink-0" />
-                      {!sidebarCollapsed && <span>{item.title}</span>}
-                      {!sidebarCollapsed && item.badge && (
-                        <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
-                          {item.badge}
-                        </span>
-                      )}
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
-          ))}
-
-          {/* Project Navigation */}
-          {projectNavigation.length > 0 && (
-            <>
-              {!sidebarCollapsed && <Separator className="my-2" />}
-              {projectNavigation.map((group, groupIndex) => (
-                <div key={groupIndex} className="flex flex-col gap-1">
-                  {group.title && !sidebarCollapsed && (
-                    <h4 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      {group.title}
-                    </h4>
-                  )}
-                  {group.items.map((item) => {
-                    const Icon = item.icon
-                    const active = isActive(item.href)
-                    return (
-                      <Link key={item.href} href={item.href}>
-                        <div
-                          className={cn(
-                            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                            active
-                              ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                              : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
-                            sidebarCollapsed && "justify-center",
-                          )}
-                        >
-                          <Icon className="h-5 w-5 shrink-0" />
-                          {!sidebarCollapsed && <span>{item.title}</span>}
-                        </div>
-                      </Link>
-                    )
-                  })}
-                </div>
-              ))}
-            </>
+            </Button>
           )}
-        </nav>
-      </ScrollArea>
-
-      {/* Footer - Settings at bottom */}
-      {!sidebarCollapsed && selectedProjectId && (
-        <div className="border-t border-sidebar-border p-3">
-          <div className="text-xs text-muted-foreground px-3 mb-2">Project: {selectedProjectId.slice(0, 8)}...</div>
         </div>
-      )}
+
+        {/* Navigation */}
+        <nav
+          className={`flex-1 space-y-1 transition-all duration-300 ${
+            collapsed ? "p-2" : "p-4"
+          }`}
+        >
+          {navigation.map((item) => {
+            const isActive = pathname === item.href;
+
+            return (
+              <div key={item.name} className="relative group">
+                <Button
+                  variant="ghost"
+                  asChild
+                  className={`w-full transition-all duration-200 ${
+                    collapsed
+                      ? "justify-center h-12 px-0"
+                      : "justify-start px-3 py-2.5 h-11"
+                  } ${
+                    isActive
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  }`}
+                >
+                  <Link href={item.href} className="flex items-center">
+                    <item.icon
+                      className={`flex-shrink-0 transition-all duration-200 ${
+                        collapsed ? "h-6 w-6" : "h-5 w-5"
+                      }`}
+                    />
+
+                    {!collapsed && <span className="ml-3">{item.name}</span>}
+                  </Link>
+                </Button>
+
+                {/* Tooltip pour mode collapsed */}
+                {collapsed && (
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
+                    {item.name}
+                    <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </nav>
+
+         {/* Paramètres */}
+        <div
+          className={`border-t border-sidebar-border transition-[padding] duration-300 ease-in-out ${
+            collapsed ? "p-2" : "p-3"
+          }`}
+        >
+          <Button
+            asChild
+            variant="ghost"
+            className={`w-full transition-all duration-200 ${
+              collapsed
+                ? "justify-center h-12 px-0"
+                : "justify-start px-3 py-2.5 h-11"
+            } text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground`}
+          >
+            <Link href={`/admin/settings`} className="flex items-center">
+              <Settings
+                className={`flex-shrink-0 transition-all duration-200 ${
+                  collapsed ? "h-6 w-6" : "h-5 w-5"
+                }`}
+              />
+              {!collapsed && <span className="ml-3">Paramètres</span>}
+            </Link>
+          </Button>
+        </div>
+      </div>
     </div>
-  )
+  );
 }

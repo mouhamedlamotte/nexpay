@@ -119,6 +119,22 @@ export class UserController {
     };
   }
 
+  @Get('users/me')
+  @UseGuards(JwtAuthGuard())
+  @ApiOperation({ summary: 'Profile de l’administrateur connecté' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Administrateur supprimé avec succès',
+  })
+  async me(@Req() req: any) {
+    const admin = await this.user.findOne(req.user.id);
+    delete admin.password;
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Admin retrieved successfully',
+      admin,
+    };
+  }
   @Get('users/:id')
   @UseGuards(JwtAuthGuard())
   @ApiOperation({ summary: 'Récupérer un administrateur par son ID' })
@@ -148,23 +164,6 @@ export class UserController {
     return {
       statusCode: HttpStatus.OK,
       message: 'Admin deleted successfully',
-      admin,
-    };
-  }
-
-  @Get('users/me')
-  @UseGuards(JwtAuthGuard())
-  @ApiOperation({ summary: 'Profile de l’administrateur connecté' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Administrateur supprimé avec succès',
-  })
-  async me(@Req() req: any) {
-    const admin = await this.user.findOne(req.user.id);
-    delete admin.password;
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'Admin retrieved successfully',
       admin,
     };
   }
