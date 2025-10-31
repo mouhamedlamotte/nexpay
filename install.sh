@@ -269,7 +269,7 @@ sleep 2
 log_info "Génération des secrets de sécurité..."
 
 JWT_SECRET=$(openssl rand -base64 32)
-DB_PASSWORD=$(openssl rand -base64 16)
+DB_PASSWORD=postgres
 REDIS_PASSWORD=$(openssl rand -base64 32)
 ENCRYPTION_KEY=$(openssl rand -hex 32)
 ADMIN_PASSWORD=$(openssl rand -hex 16)
