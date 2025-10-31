@@ -104,7 +104,7 @@ export class OMService implements PaymentAdapter {
         providerTransactionId: response.data.id,
         expiresAt: new Date(response.data.validFor?.endDateTime),
       });
-      const THUMB_URL = `${process.env.APP_DOMAIN}/${process.env.GLOBAL_PREFIX}/media/images/thumbs`;
+      const THUMB_URL = `https://${process.env.APP_DOMAIN}/${process.env.GLOBAL_PREFIX}/media/images/thumbs`;
 
       return {
         amount,

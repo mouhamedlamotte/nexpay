@@ -9,7 +9,7 @@ type Provider = {
   secretsFields: string[];
 };
 
-const LOGO_URL = `${process.env.APP_DOMAIN}/${process.env.GLOBAL_PREFIX}/media/images/logos`;
+const LOGO_URL = `https://${process.env.APP_DOMAIN}/${process.env.GLOBAL_PREFIX}/media/images/logos`;
 
 const SEED_PROVIDERS: Provider[] = [
   {
