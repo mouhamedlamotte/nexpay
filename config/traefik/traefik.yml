@@ -15,7 +15,7 @@ entryPoints:
 certificatesResolvers:
   letsencrypt:
     acme:
-      email: '{{ env "ADMIN_EMAIL" }}'
+      email: ${ADMIN_EMAIL}
       storage: /letsencrypt/acme.json
       httpChallenge:
         entryPoint: web
