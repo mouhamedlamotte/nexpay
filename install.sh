@@ -1,6 +1,6 @@
 #!/bin/bash
 ## Nexpay Installation Script
-## Usage: curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- pay.yourdomain.com
+## Usage: curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- yourdomain.com
 
 set -e # Exit on error
 set -o pipefail
@@ -19,6 +19,9 @@ CDN_URL="https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main"
 DATE=$(date +"%Y%m%d-%H%M%S")
 LOG_FILE="$INSTALL_DIR/installation-${DATE}.log"
 
+# Récupérer le domaine passé en paramètre
+DOMAIN_ARG="$1"
+
 # Vérifier si root
 if [ $EUID != 0 ]; then
     echo -e "${RED}❌ Veuillez exécuter ce script avec sudo${NC}"
@@ -31,7 +34,7 @@ cat << "EOF"
 ╔════════════════════════════════════════╗
 ║   🚀 Nexpay Installation               ║
 ║   Payment Gateway Self-Hosted          ║
-╔════════════════════════════════════════╗
+╚════════════════════════════════════════╝
 EOF
 echo -e "${NC}"
 
@@ -57,6 +60,7 @@ log_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
+# Fonction pour vérifier si un domaine pointe vers ce serveur
 check_domain_dns() {
     local domain=$1
     local server_ip=$2
@@ -110,7 +114,6 @@ check_domain_dns() {
         return 1
     fi
 }
-
 
 # 1. Détection du système
 log_info "Détection du système d'exploitation..."
@@ -227,13 +230,12 @@ else
     log_info "Configuration avec IP: $APP_DOMAIN (sans SSL)"
 fi
 
-
-# 5. Création de la structure des dossiers
+# 7. Création de la structure des dossiers
 log_info "Création de la structure..."
 mkdir -p $INSTALL_DIR/{config/traefik/dynamic,database,api,web,logs,backups}
 cd $INSTALL_DIR
 
-# 6. Clonage du repository
+# 8. Clonage du repository
 log_info "Téléchargement de Nexpay depuis GitHub..."
 
 REPO_URL="https://github.com/mouhamedlamotte/nexpay.git"
@@ -248,14 +250,13 @@ rm -rf "$TEMP_DIR"
 
 log_success "Code source téléchargé"
 
-# 7. Configuration automatique
+# 9. Configuration automatique
 echo ""
 log_info "Configuration automatique de Nexpay"
 echo ""
 
 # Email admin
 ADMIN_EMAIL="admin@nexpay.com"
-
 log_info "Email admin: $ADMIN_EMAIL (par défaut)"
 
 # Nom de l'app
@@ -271,21 +272,19 @@ log_warn "Configuration par défaut appliquée. Vous pourrez modifier ces param�
 echo ""
 sleep 2
 
-# 8. Génération des secrets
+# 10. Génération des secrets
 log_info "Génération des secrets de sécurité..."
 
 JWT_SECRET=$(openssl rand -base64 32)
-DB_PASSWORD=portgres
+DB_PASSWORD=$(openssl rand -base64 16)
 REDIS_PASSWORD=$(openssl rand -base64 32)
 ENCRYPTION_KEY=$(openssl rand -hex 32)
-ADMIN_PASSWORD=$(openssl rand -hex 32)
+ADMIN_PASSWORD=$(openssl rand -hex 16)
 TRAEFIK_AUTH=$(echo $(htpasswd -nb admin "$TRAEFIK_PASSWORD") | sed -e 's/\$/\$\$/g')
 
 log_success "Secrets générés"
 
-
-
-# 9. Création du fichier .env
+# 11. Création du fichier .env
 log_info "Configuration de l'environnement..."
 
 cat > .env << EOF
@@ -299,7 +298,7 @@ APP_VERSION=1.0.0
 ADMIN_EMAIL=$ADMIN_EMAIL
 ADMIN_PASSWORD=$ADMIN_PASSWORD
 NODE_ENV=production
-
+USE_SSL=$USE_SSL
 
 # Security
 JWT_SECRET=$JWT_SECRET
@@ -319,22 +318,28 @@ EOF
 
 log_success "Fichier .env créé"
 
-# 10. Configuration de Traefik pour SSL
-mkdir -p config/traefik/letsencrypt
-touch config/traefik/letsencrypt/acme.json
-chmod 600 config/traefik/letsencrypt/acme.json
+# 12. Configuration de Traefik pour SSL
+if [ "$USE_SSL" = true ]; then
+    log_info "Configuration SSL activée pour: $APP_DOMAIN"
+    mkdir -p config/traefik/letsencrypt
+    touch config/traefik/letsencrypt/acme.json
+    chmod 600 config/traefik/letsencrypt/acme.json
+    log_success "Configuration SSL prête (Let's Encrypt)"
+else
+    log_info "Configuration sans SSL (HTTP uniquement)"
+fi
 
-# 11. Démarrage des containers
+# 13. Démarrage des containers
 log_info "Démarrage de Nexpay..."
 docker compose pull 2>&1 | grep -v "Pulling" || true
 docker compose up -d --build
 
-# 12. Attente du démarrage
+# 14. Attente du démarrage
 log_info "Attente du démarrage des services..."
 sleep 15
 
 # Vérifier que les containers tournent
-RUNNING_CONTAINERS=$(docker compose ps 2>/dev/null | grep -c "Up" || echo "0")
+RUNNING_CONTAINERS=$(docker compose ps --status running 2>/dev/null | grep -c "Up" || echo "0")
 if [ "$RUNNING_CONTAINERS" -ge 3 ]; then
     log_success "Tous les services sont démarrés ($RUNNING_CONTAINERS containers actifs)"
 else
@@ -342,7 +347,7 @@ else
     docker compose ps
 fi
 
-# 13. Test de santé
+# 15. Test de santé
 log_info "Test de connectivité..."
 sleep 5
 
@@ -352,7 +357,7 @@ else
     log_warn "API ne répond pas encore (peut prendre 1-2 minutes)"
 fi
 
-# 14. Affichage des informations finales
+# 16. Affichage des informations finales
 echo ""
 echo -e "${PURPLE}"
 cat << "EOF"
@@ -363,21 +368,35 @@ EOF
 echo -e "${NC}"
 echo ""
 echo -e "${GREEN}🌐 URLs disponibles:${NC}"
-echo "   • API:   http://$APP_DOMAIN/api/v1"
-echo "   • WEB:  http://$APP_DOMAIN"
 
+if [ "$USE_SSL" = true ]; then
+    echo "   • API:     https://$APP_DOMAIN/api/v1"
+    echo "   • WEB:     https://$APP_DOMAIN"
+    echo "   • Traefik: https://$APP_DOMAIN:8080"
+else
+    echo "   • API:     http://$APP_DOMAIN/api/v1"
+    echo "   • WEB:     http://$APP_DOMAIN"
+    echo "   • Traefik: http://$APP_DOMAIN:8080"
+fi
+
+echo ""
 echo -e "${GREEN}🔑 Identifiants par défaut:${NC}"
-echo "   • Traefik utilisateur: admin"
-echo "   • Traefik mot de passe: $TRAEFIK_PASSWORD"
+echo "   • Admin:    admin / $ADMIN_PASSWORD"
+echo "   • Traefik:  admin / $TRAEFIK_PASSWORD"
 echo ""
-echo ""
-echo -e "${YELLOW}⚠️  IMPORTANT:${NC}"
+
+if [ "$USE_SSL" = false ]; then
+    echo -e "${YELLOW}⚠️  IMPORTANT - Installation sans SSL:${NC}"
+    echo "   • Votre installation utilise HTTP (non sécurisé)"
+    echo "   • Pour passer en HTTPS, configurez un domaine avec:"
+    echo "     ./configure-domain.sh"
+    echo ""
+fi
+
+echo -e "${YELLOW}⚠️  SÉCURITÉ:${NC}"
 echo "   1. Sauvegardez le fichier: $INSTALL_DIR/.env"
-echo "   2. Pour configurer un domaine personnalisé:"
-echo "      - Éditez le fichier: nano $INSTALL_DIR/.env"
-echo "      - Modifiez la variable APP_DOMAIN"
-echo "      - Redémarrez: cd $INSTALL_DIR && docker compose restart"
-echo "   3. Changez le mot de passe Traefik par défaut !"
+echo "   2. CHANGEZ le mot de passe admin immédiatement !"
+echo "   3. CHANGEZ le mot de passe Traefik !"
 echo ""
 echo -e "${BLUE}📚 Commandes utiles:${NC}"
 echo "   • Voir les logs:     cd $INSTALL_DIR && docker compose logs -f"
@@ -388,16 +407,13 @@ echo "   • Mettre à jour:     cd $INSTALL_DIR && ./update.sh"
 echo ""
 echo -e "${BLUE}📝 Configuration du domaine:${NC}"
 echo "   Pour ajouter un domaine personnalisé plus tard:"
-echo "   1. cd $INSTALL_DIR"
-echo "   2. nano .env"
-echo "   3. Modifier APP_DOMAIN=votre-domaine.com"
-echo "   4. docker compose restart"
+echo "   cd $INSTALL_DIR && ./configure-domain.sh"
 echo ""
 echo -e "${BLUE}📖 Documentation:${NC} https://nexpay.thenexcom.com"
 echo -e "${BLUE}💬 Support:${NC} https://github.com/mouhamedlamotte/nexpay/issues"
 echo ""
 
-# 15. Créer un script de mise à jour
+# 17. Créer un script de mise à jour
 cat > update.sh << 'UPDATE_SCRIPT'
 #!/bin/bash
 set -e
@@ -423,35 +439,71 @@ UPDATE_SCRIPT
 
 chmod +x update.sh
 
-# 16. Créer un script de configuration du domaine
+# 18. Créer un script de configuration du domaine amélioré
 cat > configure-domain.sh << 'DOMAIN_SCRIPT'
 #!/bin/bash
 set -e
 
-echo "🌐 Configuration du domaine personnalisé"
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+echo -e "${BLUE}🌐 Configuration du domaine personnalisé${NC}"
 echo ""
 
 read -p "Entrez votre nom de domaine (ex: pay.example.com): " NEW_DOMAIN
 
 if [ -z "$NEW_DOMAIN" ]; then
-    echo "❌ Domaine vide, annulation"
+    echo -e "${RED}❌ Domaine vide, annulation${NC}"
     exit 1
 fi
+
+# Détecter l'IP du serveur
+SERVER_IP=$(hostname -I | awk '{print $1}')
+
+echo ""
+echo -e "${YELLOW}⏳ Vérification DNS en cours...${NC}"
+
+# Vérifier le DNS
+if command -v dig &> /dev/null; then
+    RESOLVED_IP=$(dig +short "$NEW_DOMAIN" A | tail -n1)
+elif command -v nslookup &> /dev/null; then
+    RESOLVED_IP=$(nslookup "$NEW_DOMAIN" | grep -A1 "Name:" | grep "Address:" | awk '{print $2}' | tail -n1)
+else
+    echo -e "${RED}❌ Impossible de vérifier le DNS${NC}"
+    exit 1
+fi
+
+if [ "$RESOLVED_IP" != "$SERVER_IP" ]; then
+    echo -e "${RED}❌ Le domaine $NEW_DOMAIN ne pointe pas vers ce serveur${NC}"
+    echo -e "${YELLOW}   Domaine pointe vers: $RESOLVED_IP${NC}"
+    echo -e "${YELLOW}   Serveur IP: $SERVER_IP${NC}"
+    echo ""
+    echo "Veuillez configurer votre DNS avant de continuer."
+    exit 1
+fi
+
+echo -e "${GREEN}✅ DNS correctement configuré${NC}"
 
 # Backup du .env
 cp .env .env.backup-$(date +%Y%m%d-%H%M%S)
 
 # Modifier le domaine dans .env
 sed -i "s/^APP_DOMAIN=.*/APP_DOMAIN=$NEW_DOMAIN/" .env
+sed -i "s/^USE_SSL=.*/USE_SSL=true/" .env
 
-echo "✅ Domaine configuré: $NEW_DOMAIN"
-echo "🔄 Redémarrage des services..."
+echo -e "${GREEN}✅ Domaine configuré: $NEW_DOMAIN${NC}"
+echo -e "${BLUE}🔄 Redémarrage des services...${NC}"
 
 docker compose restart
 
-echo "✅ Configuration terminée!"
 echo ""
-echo "Votre application est maintenant accessible sur: http://$NEW_DOMAIN"
+echo -e "${GREEN}✅ Configuration terminée!${NC}"
+echo ""
+echo -e "${GREEN}Votre application est maintenant accessible sur: https://$NEW_DOMAIN${NC}"
+echo -e "${YELLOW}Note: Le certificat SSL peut prendre 1-2 minutes à être généré${NC}"
 DOMAIN_SCRIPT
 
 chmod +x configure-domain.sh
@@ -459,6 +511,4 @@ chmod +x configure-domain.sh
 log_success "Script d'installation terminé!"
 echo ""
 echo -e "${GREEN}🎉 Nexpay est maintenant prêt à l'emploi!${NC}"
-echo -e "${YELLOW} MOT DE PASSE ADMIN : $ADMIN_PASSWORD , changez-le !${NC}"
-echo -e "${BLUE}💡 Conseil: Exécutez ./configure-domain.sh pour configurer un domaine personnalisé${NC}"
 echo ""
