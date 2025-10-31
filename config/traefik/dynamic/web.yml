@@ -15,4 +15,4 @@ http:
     web:
       loadBalancer:
         servers:
-          - url: "http://web:9001"
+          - url: "http://nexpay-web:9001"

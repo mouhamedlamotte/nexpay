@@ -1,6 +1,6 @@
 #!/bin/bash
 ## Nexpay Installation Script
-## Usage: curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash
+## Usage: curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- pay.yourdomain.com
 
 set -e # Exit on error
 set -o pipefail
@@ -57,6 +57,61 @@ log_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
+check_domain_dns() {
+    local domain=$1
+    local server_ip=$2
+    
+    log_info "Vérification DNS pour: $domain"
+    
+    # Essayer avec dig en premier
+    if command -v dig &> /dev/null; then
+        RESOLVED_IP=$(dig +short "$domain" A | tail -n1)
+    # Sinon essayer avec nslookup
+    elif command -v nslookup &> /dev/null; then
+        RESOLVED_IP=$(nslookup "$domain" | grep -A1 "Name:" | grep "Address:" | awk '{print $2}' | tail -n1)
+    else
+        log_error "Ni 'dig' ni 'nslookup' ne sont disponibles"
+        return 1
+    fi
+    
+    if [ -z "$RESOLVED_IP" ]; then
+        log_error "Impossible de résoudre le domaine: $domain"
+        return 1
+    fi
+    
+    log_info "Domaine $domain pointe vers: $RESOLVED_IP"
+    log_info "Adresse IP du serveur: $server_ip"
+    
+    if [ "$RESOLVED_IP" = "$server_ip" ]; then
+        log_success "✓ Le domaine pointe correctement vers ce serveur"
+        return 0
+    else
+        log_error "✗ Le domaine ne pointe PAS vers ce serveur"
+        echo ""
+        echo -e "${RED}╔════════════════════════════════════════════════════════════╗${NC}"
+        echo -e "${RED}║  ⚠️  ERREUR DE CONFIGURATION DNS                          ║${NC}"
+        echo -e "${RED}╚════════════════════════════════════════════════════════════╝${NC}"
+        echo ""
+        echo -e "${YELLOW}Le domaine '$domain' pointe vers: $RESOLVED_IP${NC}"
+        echo -e "${YELLOW}Mais ce serveur a l'IP: $server_ip${NC}"
+        echo ""
+        echo -e "${BLUE}📋 Pour corriger cela:${NC}"
+        echo "   1. Connectez-vous à votre registrar de domaine (OVH, Cloudflare, etc.)"
+        echo "   2. Créez un enregistrement DNS de type A:"
+        echo "      Nom: $domain (ou @ pour le domaine racine)"
+        echo "      Type: A"
+        echo "      Valeur: $server_ip"
+        echo "      TTL: 300 (ou minimum disponible)"
+        echo ""
+        echo "   3. Attendez la propagation DNS (5-30 minutes généralement)"
+        echo "   4. Vérifiez avec: dig +short $domain"
+        echo "   5. Relancez l'installation une fois le DNS configuré"
+        echo ""
+        return 1
+    fi
+}
+
+
 # 1. Détection du système
 log_info "Détection du système d'exploitation..."
 OS_TYPE=$(grep -w "ID" /etc/os-release | cut -d "=" -f 2 | tr -d '"')
@@ -88,13 +143,13 @@ log_info "Installation des dépendances..."
 case "$OS_TYPE" in
     ubuntu|debian|raspbian)
         apt-get update -y >/dev/null 2>&1
-        apt-get install -y curl wget git jq openssl apache2-utils >/dev/null 2>&1
+        apt-get install -y curl wget git jq openssl apache2-utils dnsutils >/dev/null 2>&1
         ;;
     centos|fedora|rhel)
-        dnf install -y curl wget git jq openssl httpd-tools >/dev/null 2>&1
+        dnf install -y curl wget git jq openssl httpd-tools bind-utils >/dev/null 2>&1
         ;;
     arch)
-        pacman -Sy --noconfirm curl wget git jq openssl apache-tools >/dev/null 2>&1
+        pacman -Sy --noconfirm curl wget git jq openssl apache-tools bind-tools >/dev/null 2>&1
         ;;
 esac
 
@@ -118,6 +173,60 @@ if ! docker compose version &> /dev/null; then
     log_error "Docker Compose V2 requis mais non trouvé"
     exit 1
 fi
+
+# 5. Détection de l'IP du serveur
+DETECTED_IP=$(hostname -I | awk '{print $1}')
+
+if [ -z "$DETECTED_IP" ]; then
+    log_error "Impossible de détecter l'adresse IP du serveur"
+    exit 1
+fi
+
+log_success "Adresse IP du serveur détectée: $DETECTED_IP"
+
+# 6. Vérification du domaine ou configuration par défaut
+if [ -n "$DOMAIN_ARG" ]; then
+    log_info "Domaine fourni: $DOMAIN_ARG"
+    
+    # Vérifier que le domaine pointe vers ce serveur
+    if ! check_domain_dns "$DOMAIN_ARG" "$DETECTED_IP"; then
+        log_error "Installation annulée: Le domaine ne pointe pas vers ce serveur"
+        exit 1
+    fi
+    
+    APP_DOMAIN="$DOMAIN_ARG"
+    USE_SSL=true
+    log_success "Domaine validé: $APP_DOMAIN (SSL sera configuré)"
+else
+    log_warn "Aucun domaine fourni, utilisation de l'IP du serveur"
+    echo ""
+    echo -e "${YELLOW}╔════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${YELLOW}║  ⚠️  INSTALLATION SANS DOMAINE                            ║${NC}"
+    echo -e "${YELLOW}╚════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "${BLUE}Vous installez Nexpay sans domaine personnalisé.${NC}"
+    echo -e "${BLUE}L'application sera accessible via: http://$DETECTED_IP${NC}"
+    echo ""
+    echo -e "${YELLOW}⚠️  Limitations sans domaine:${NC}"
+    echo "   • Pas de certificat SSL (pas de HTTPS)"
+    echo "   • Webhooks de paiement non fonctionnels"
+    echo "   • Non recommandé pour la production"
+    echo ""
+    echo -e "${GREEN}💡 Pour une installation avec domaine:${NC}"
+    echo "   curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- votre-domaine.com"
+    echo ""
+    read -p "Continuer sans domaine? (oui/non): " CONFIRM
+    
+    if [ "$CONFIRM" != "oui" ] && [ "$CONFIRM" != "yes" ] && [ "$CONFIRM" != "o" ] && [ "$CONFIRM" != "y" ]; then
+        log_info "Installation annulée par l'utilisateur"
+        exit 0
+    fi
+    
+    APP_DOMAIN="$DETECTED_IP"
+    USE_SSL=false
+    log_info "Configuration avec IP: $APP_DOMAIN (sans SSL)"
+fi
+
 
 # 5. Création de la structure des dossiers
 log_info "Création de la structure..."
@@ -143,23 +252,6 @@ log_success "Code source téléchargé"
 echo ""
 log_info "Configuration automatique de Nexpay"
 echo ""
-
-# Détection automatique du hostname/IP
-DETECTED_HOSTNAME=$(hostname -f 2>/dev/null || hostname)
-DETECTED_IP=$(hostname -I | awk '{print $1}')
-
-# Utiliser l'IP par défaut si disponible, sinon le hostname
-if [ -n "$DETECTED_IP" ]; then
-    APP_DOMAIN="$DETECTED_IP"
-    log_info "Domaine détecté: $APP_DOMAIN (IP du serveur)"
-else
-    APP_DOMAIN="$DETECTED_HOSTNAME"
-    log_info "Domaine détecté: $APP_DOMAIN (hostname du serveur)"
-fi
-
-echo ""
-log_info "Adresse IP détectée: $DETECTED_IP"
-
 
 # Email admin
 ADMIN_EMAIL="admin@nexpay.com"
@@ -242,7 +334,7 @@ log_info "Attente du démarrage des services..."
 sleep 15
 
 # Vérifier que les containers tournent
-RUNNING_CONTAINERS=$(docker compose ps --status running 2>/dev/null | grep -c "Up" || echo "0")
+RUNNING_CONTAINERS=$(docker compose ps 2>/dev/null | grep -c "Up" || echo "0")
 if [ "$RUNNING_CONTAINERS" -ge 3 ]; then
     log_success "Tous les services sont démarrés ($RUNNING_CONTAINERS containers actifs)"
 else

@@ -73,7 +73,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    container_name: api-nexpay
+    container_name: nexpay-api
     environment:
       - NODE_ENV=production
       - APP_PORT=9000
