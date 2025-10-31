@@ -5,7 +5,7 @@ http:
       service: api-service
       entryPoints:
         - websecure
-      priority: 100
+      priority: 120
       middlewares:
         - cors-middleware@file
       tls:
