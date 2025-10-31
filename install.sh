@@ -38,6 +38,29 @@ cat << "EOF"
 EOF
 echo -e "${NC}"
 
+# Vérifier que le domaine est fourni
+if [ -z "$DOMAIN_ARG" ]; then
+    echo ""
+    echo -e "${RED}╔════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${RED}║  ❌ ERREUR: DOMAINE REQUIS                                ║${NC}"
+    echo -e "${RED}╚════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "${YELLOW}Un nom de domaine est obligatoire pour installer Nexpay.${NC}"
+    echo ""
+    echo -e "${BLUE}Usage:${NC}"
+    echo "  curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- votre-domaine.com"
+    echo ""
+    echo -e "${BLUE}Exemple:${NC}"
+    echo "  curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- pay.example.com"
+    echo ""
+    echo -e "${BLUE}Prérequis:${NC}"
+    echo "  • Vous devez posséder un nom de domaine"
+    echo "  • Le domaine doit pointer vers l'IP de ce serveur (enregistrement DNS de type A)"
+    echo "  • Le certificat SSL sera automatiquement généré via Let's Encrypt"
+    echo ""
+    exit 1
+fi
+
 # Créer le dossier d'installation AVANT le logging
 mkdir -p "$INSTALL_DIR"
 
@@ -187,45 +210,18 @@ fi
 
 log_success "Adresse IP du serveur détectée: $DETECTED_IP"
 
-# 6. Vérification du domaine ou configuration par défaut
-if [ -n "$DOMAIN_ARG" ]; then
-    log_info "Domaine fourni: $DOMAIN_ARG"
-    
-    # Vérifier que le domaine pointe vers ce serveur
-    if ! check_domain_dns "$DOMAIN_ARG" "$DETECTED_IP"; then
-        log_error "Installation annulée: Le domaine ne pointe pas vers ce serveur"
-        exit 1
-    fi
-    
-    APP_DOMAIN="$DOMAIN_ARG"
-    USE_SSL=true
-    log_success "Domaine validé: $APP_DOMAIN (SSL sera configuré)"
-else
-    log_warn "Aucun domaine fourni, utilisation de l'IP du serveur"
-    echo ""
-    echo -e "${YELLOW}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${YELLOW}║  ⚠️  INSTALLATION SANS DOMAINE                            ║${NC}"
-    echo -e "${YELLOW}╚════════════════════════════════════════════════════════════╝${NC}"
-    echo ""
-    echo -e "${BLUE}Vous installez Nexpay sans domaine personnalisé.${NC}"
-    echo -e "${BLUE}L'application sera accessible via: http://$DETECTED_IP${NC}"
-    echo ""
-    echo -e "${YELLOW}⚠️  Limitations sans domaine:${NC}"
-    echo "   • Pas de certificat SSL (pas de HTTPS)"
-    echo "   • Webhooks de paiement non fonctionnels"
-    echo "   • Non recommandé pour la production"
-    echo ""
-    echo -e "${GREEN}💡 Pour une installation avec domaine:${NC}"
-    echo "   curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- votre-domaine.com"
-    echo ""
-    
-    log_warn "⏳ Installation automatique sans domaine (mode HTTP uniquement)"
-    sleep 3
-    
-    APP_DOMAIN="$DETECTED_IP"
-    USE_SSL=false
-    log_info "Configuration avec IP: $APP_DOMAIN (sans SSL)"
+# 6. Validation du domaine
+log_info "Domaine fourni: $DOMAIN_ARG"
+
+# Vérifier que le domaine pointe vers ce serveur
+if ! check_domain_dns "$DOMAIN_ARG" "$DETECTED_IP"; then
+    log_error "Installation annulée: Le domaine ne pointe pas vers ce serveur"
+    exit 1
 fi
+
+APP_DOMAIN="$DOMAIN_ARG"
+USE_SSL=true
+log_success "Domaine validé: $APP_DOMAIN (SSL sera configuré automatiquement)"
 
 # 7. Création de la structure des dossiers
 log_info "Création de la structure..."
@@ -253,8 +249,8 @@ log_info "Configuration automatique de Nexpay"
 echo ""
 
 # Email admin
-ADMIN_EMAIL="admin@nexpay.com"
-log_info "Email admin: $ADMIN_EMAIL (par défaut)"
+ADMIN_EMAIL="admin@$APP_DOMAIN"
+log_info "Email admin: $ADMIN_EMAIL"
 
 # Nom de l'app
 APP_NAME="Nexpay"
@@ -295,7 +291,7 @@ APP_VERSION=1.0.0
 ADMIN_EMAIL=$ADMIN_EMAIL
 ADMIN_PASSWORD=$ADMIN_PASSWORD
 NODE_ENV=production
-USE_SSL=$USE_SSL
+USE_SSL=true
 
 # Security
 JWT_SECRET=$JWT_SECRET
@@ -315,188 +311,12 @@ EOF
 
 log_success "Fichier .env créé"
 
-# 12. Configuration de Traefik
-log_info "Configuration de Traefik..."
-
-if [ "$USE_SSL" = true ]; then
-    log_info "Mode HTTPS activé pour: $APP_DOMAIN"
-    
-    # Créer la config Traefik pour HTTPS
-    mkdir -p config/traefik/letsencrypt
-    touch config/traefik/letsencrypt/acme.json
-    chmod 600 config/traefik/letsencrypt/acme.json
-    
-    # Traefik.yml pour HTTPS
-    cat > config/traefik/traefik.yml << 'TRAEFIK_HTTPS'
-entryPoints:
-  web:
-    address: ":80"
-    http:
-      redirections:
-        entryPoint:
-          to: websecure
-          scheme: https
-          permanent: true
-  websecure:
-    address: ":443"
-
-certificatesResolvers:
-  letsencrypt:
-    acme:
-      email: ${ADMIN_EMAIL}
-      storage: /letsencrypt/acme.json
-      httpChallenge:
-        entryPoint: web
-
-providers:
-  file:
-    directory: /etc/traefik/dynamic
-    watch: true
-
-api:
-  dashboard: true
-  insecure: false
-
-log:
-  level: INFO
-
-accessLog:
-  filePath: "/var/log/traefik/access.log"
-TRAEFIK_HTTPS
-
-    # Routes dynamiques pour HTTPS
-    cat > config/traefik/dynamic/routes.yml << 'ROUTES_HTTPS'
-http:
-  routers:
-    api-router:
-      rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/api/v1`)'
-      service: api-service
-      entryPoints:
-        - websecure
-      priority: 100
-      middlewares:
-        - cors-middleware@file
-      tls:
-        certResolver: letsencrypt
-
-    web-router:
-      rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/`) && !PathPrefix(`/api/v1`)'
-      service: web-service
-      entryPoints:
-        - websecure
-      priority: 99
-      middlewares:
-        - cors-middleware@file
-      tls:
-        certResolver: letsencrypt
-
-  services:
-    api-service:
-      loadBalancer:
-        servers:
-          - url: "http://nexpay-api:9000"
-
-    web-service:
-      loadBalancer:
-        servers:
-          - url: "http://nexpay-web:9001"
-
-  middlewares:
-    cors-middleware:
-      headers:
-        accessControlAllowMethods:
-          - GET
-          - POST
-          - PUT
-          - DELETE
-          - OPTIONS
-        accessControlAllowHeaders:
-          - "*"
-        accessControlAllowOriginList:
-          - "*"
-        accessControlMaxAge: 100
-        addVaryHeader: true
-ROUTES_HTTPS
-
-    log_success "Configuration HTTPS créée"
-    
-else
-    log_info "Mode HTTP activé (sans SSL)"
-    
-    # Traefik.yml pour HTTP uniquement
-    cat > config/traefik/traefik.yml << 'TRAEFIK_HTTP'
-entryPoints:
-  web:
-    address: ":80"
-
-providers:
-  file:
-    directory: /etc/traefik/dynamic
-    watch: true
-
-api:
-  dashboard: true
-  insecure: true
-
-log:
-  level: INFO
-
-accessLog:
-  filePath: "/var/log/traefik/access.log"
-TRAEFIK_HTTP
-
-    # Routes dynamiques pour HTTP
-    cat > config/traefik/dynamic/routes.yml << 'ROUTES_HTTP'
-http:
-  routers:
-    api-router:
-      rule: 'PathPrefix(`/api/v1`)'
-      service: api-service
-      entryPoints:
-        - web
-      priority: 100
-      middlewares:
-        - cors-middleware@file
-
-    web-router:
-      rule: 'PathPrefix(`/`)'
-      service: web-service
-      entryPoints:
-        - web
-      priority: 99
-      middlewares:
-        - cors-middleware@file
-
-  services:
-    api-service:
-      loadBalancer:
-        servers:
-          - url: "http://nexpay-api:9000"
-
-    web-service:
-      loadBalancer:
-        servers:
-          - url: "http://nexpay-web:9001"
-
-  middlewares:
-    cors-middleware:
-      headers:
-        accessControlAllowMethods:
-          - GET
-          - POST
-          - PUT
-          - DELETE
-          - OPTIONS
-        accessControlAllowHeaders:
-          - "*"
-        accessControlAllowOriginList:
-          - "*"
-        accessControlMaxAge: 100
-        addVaryHeader: true
-ROUTES_HTTP
-
-    log_success "Configuration HTTP créée"
-fi
+# 12. Configuration SSL avec Let's Encrypt
+log_info "Configuration SSL activée pour: $APP_DOMAIN"
+mkdir -p config/traefik/letsencrypt
+touch config/traefik/letsencrypt/acme.json
+chmod 600 config/traefik/letsencrypt/acme.json
+log_success "Configuration SSL prête (Let's Encrypt)"
 
 # 13. Démarrage des containers
 log_info "Démarrage de Nexpay..."
@@ -537,16 +357,9 @@ EOF
 echo -e "${NC}"
 echo ""
 echo -e "${GREEN}🌐 URLs disponibles:${NC}"
-
-if [ "$USE_SSL" = true ]; then
-    echo "   • API:     https://$APP_DOMAIN/api/v1"
-    echo "   • WEB:     https://$APP_DOMAIN"
-    echo "   • Traefik: https://$APP_DOMAIN:8080"
-else
-    echo "   • API:     http://$APP_DOMAIN/api/v1"
-    echo "   • WEB:     http://$APP_DOMAIN"
-    echo "   • Traefik: http://$APP_DOMAIN:8080"
-fi
+echo "   • API:     https://$APP_DOMAIN/api/v1"
+echo "   • WEB:     https://$APP_DOMAIN"
+echo "   • Traefik: https://$APP_DOMAIN:8080"
 
 echo ""
 echo -e "${GREEN}🔑 Identifiants par défaut:${NC}"
@@ -554,29 +367,24 @@ echo "   • Admin:    admin / $ADMIN_PASSWORD"
 echo "   • Traefik:  admin / $TRAEFIK_PASSWORD"
 echo ""
 
-if [ "$USE_SSL" = false ]; then
-    echo -e "${YELLOW}⚠️  IMPORTANT - Installation sans SSL:${NC}"
-    echo "   • Votre installation utilise HTTP (non sécurisé)"
-    echo "   • Pour passer en HTTPS, configurez un domaine avec:"
-    echo "     ./configure-domain.sh"
-    echo ""
-fi
-
 echo -e "${YELLOW}⚠️  SÉCURITÉ:${NC}"
 echo "   1. Sauvegardez le fichier: $INSTALL_DIR/.env"
 echo "   2. CHANGEZ le mot de passe admin immédiatement !"
 echo "   3. CHANGEZ le mot de passe Traefik !"
 echo ""
+
+echo -e "${BLUE}🔒 Certificat SSL:${NC}"
+echo "   • Le certificat SSL sera généré automatiquement par Let's Encrypt"
+echo "   • Cela peut prendre 1-2 minutes"
+echo "   • Vérifiez l'état: docker compose logs traefik | grep acme"
+echo ""
+
 echo -e "${BLUE}📚 Commandes utiles:${NC}"
 echo "   • Voir les logs:     cd $INSTALL_DIR && docker compose logs -f"
 echo "   • Redémarrer:        cd $INSTALL_DIR && docker compose restart"
 echo "   • Arrêter:           cd $INSTALL_DIR && docker compose down"
 echo "   • Voir les services: cd $INSTALL_DIR && docker compose ps"
 echo "   • Mettre à jour:     cd $INSTALL_DIR && ./update.sh"
-echo ""
-echo -e "${BLUE}📝 Configuration du domaine:${NC}"
-echo "   Pour ajouter un domaine personnalisé plus tard:"
-echo "   cd $INSTALL_DIR && ./configure-domain.sh"
 echo ""
 echo -e "${BLUE}📖 Documentation:${NC} https://nexpay.thenexcom.com"
 echo -e "${BLUE}💬 Support:${NC} https://github.com/mouhamedlamotte/nexpay/issues"
@@ -666,8 +474,7 @@ sed -i "s/^USE_SSL=.*/USE_SSL=true/" .env
 echo -e "${GREEN}✅ Domaine configuré: $NEW_DOMAIN${NC}"
 echo -e "${BLUE}🔄 Redémarrage des services...${NC}"
 
-docker compose down -v
-docker compose up -d
+docker compose restart
 
 echo ""
 echo -e "${GREEN}✅ Configuration terminée!${NC}"
