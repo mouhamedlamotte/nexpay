@@ -72,7 +72,7 @@ export class WaveService implements PaymentAdapter {
         providerTransactionId: response.data.id,
         expiresAt: new Date(response.data.when_expires),
       });
-      const THUMB_URL = `${process.env.APP_URL}/${process.env.GLOBAL_PREFIX}/media/images/thumbs`;
+      const THUMB_URL = `${process.env.APP_DOMAIN}/${process.env.GLOBAL_PREFIX}/media/images/thumbs`;
 
       return {
         provider: {

@@ -44,7 +44,7 @@ DATABASE_URL="postgresql://user:password@localhost:5432/nexpay"
 # Application
 PORT=9090
 NODE_ENV=production
-APP_URL=https://your-domain.com
+APP_DOMAIN=https://your-domain.com
 
 # JWT Secret
 JWT_SECRET=your-super-secret-jwt-key
