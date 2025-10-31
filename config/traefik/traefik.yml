@@ -15,7 +15,7 @@ entryPoints:
 certificatesResolvers:
   letsencrypt:
     acme:
-      email: ${ADMIN_EMAIL}
+      email: admin@nexpay.com
       storage: /letsencrypt/acme.json
       httpChallenge:
         entryPoint: web
