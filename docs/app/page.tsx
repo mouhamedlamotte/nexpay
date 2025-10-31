@@ -70,7 +70,7 @@ export default function HomePage() {
           <div className="pt-8">
             <pre className="inline-block bg-card border border-border rounded-lg px-6 py-4 text-left text-sm">
               <code className="text-muted-foreground">
-                <span className="text-secondary">$</span> npm install @nexpay/sdk
+                <span className="text-secondary">$</span> curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- pay.yourdomain.com
               </code>
             </pre>
           </div>
