@@ -33,9 +33,9 @@ services:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
-  nexpay-db:
+  nexpay_db:
     image: postgres:17-alpine
-    container_name: nexpay-db
+    container_name: nexpay_db
     environment:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
@@ -80,14 +80,14 @@ services:
       - APP_NAME=${APP_NAME}
       - APP_DOMAIN=${APP_DOMAIN}
       - GLOBAL_PREFIX=api/v1
-      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@nexpay-db:5432/${DB_NAME}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@nexpay_db:5432/${DB_NAME}
       - REDIS_URL=redis://:${REDIS_PASSWORD}@nexpay-cache:6379
       - JWT_SECRET=${JWT_SECRET}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - ADMIN_EMAIL=admin@nexpay.com
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     depends_on:
-      nexpay-db:
+      nexpay_db:
         condition: service_healthy
       nexpay-cache:
         condition: service_started
