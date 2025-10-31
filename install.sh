@@ -666,7 +666,8 @@ sed -i "s/^USE_SSL=.*/USE_SSL=true/" .env
 echo -e "${GREEN}✅ Domaine configuré: $NEW_DOMAIN${NC}"
 echo -e "${BLUE}🔄 Redémarrage des services...${NC}"
 
-docker compose restart
+docker compose down -v
+docker compose up -d
 
 echo ""
 echo -e "${GREEN}✅ Configuration terminée!${NC}"
