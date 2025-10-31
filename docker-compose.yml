@@ -15,10 +15,9 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./config/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-      - ./config/traefik/dynamic:/etc/traefik/dynamic:ro
-      - ./config/traefik/certs:/etc/traefik/certs:ro
-      - /var/log/traefik:/var/log/traefik
+      - ./config/traefik/traefik.yml:/etc/traefik/traefik.yml
+      - ./config/traefik/dynamic:/etc/traefik/dynamic
+      - ./config/traefik/letsencrypt/acme.json:/letsencrypt/acme.json
     environment:
       - APP_DOMAIN=${APP_DOMAIN}
       - ADMIN_EMAIL=${ADMIN_EMAIL}
