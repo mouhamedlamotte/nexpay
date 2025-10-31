@@ -301,6 +301,7 @@ ENCRYPTION_KEY=$ENCRYPTION_KEY
 DB_NAME=nexpay
 DB_USER=nexpay
 DB_PASSWORD=$DB_PASSWORD
+DATABASE_URL=postgresql://nexpay:postgres@nexpay-db:5432/nexpay
 
 # Redis
 REDIS_PASSWORD=$REDIS_PASSWORD
