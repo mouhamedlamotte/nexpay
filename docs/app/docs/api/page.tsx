@@ -6,38 +6,39 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 export default function APIReferencePage() {
   return (
     <div className="max-w-4xl prose prose-invert">
-      <h1>API Reference</h1>
+      <h1>Référence API</h1>
       <p className="lead">
-        Complete reference for the NexPay API. All API requests require authentication using an API key.
+        Référence complète pour l'API NexPay. Toutes les requêtes API nécessitent une authentification par clé API.
       </p>
 
-      <h2 id="authentication">Authentication</h2>
+      <h2 id="authentication">Authentification</h2>
       <p>
-        NexPay uses API keys to authenticate requests. You can generate API keys from your dashboard under Project
-        Settings.
+        NexPay utilise des clés API pour authentifier les requêtes. Vous pouvez générer des clés API depuis votre
+        tableau de bord dans les Paramètres du Projet.
       </p>
 
       <Alert className="my-6">
         <Shield className="h-4 w-4" />
         <AlertDescription>
-          Include your API key in the <code>Authorization</code> header as a Bearer token for all API requests.
+          Incluez votre clé API dans l'en-tête <code>Authorization</code> en tant que token Bearer pour toutes les
+          requêtes API.
         </AlertDescription>
       </Alert>
 
       <CodeBlock
         language="bash"
-        code={`curl https://your-domain.com/api/v1/payment/initiate \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
+        code={`curl https://votredomaine.com/api/v1/payment/initiate \\
+  -H "Authorization: Bearer VOTRE_CLE_API" \\
   -H "Content-Type: application/json"`}
       />
 
-      <h2 id="base-url">Base URL</h2>
-      <CodeBlock language="text" code={`https://your-domain.com/api/v1`} />
+      <h2 id="base-url">URL de Base</h2>
+      <CodeBlock language="text" code={`https://votredomaine.com/api/v1`} />
 
       <h2 id="endpoints">Endpoints</h2>
 
-      <h3 id="health-check">Health Check</h3>
-      <p>Check if the API is running and healthy.</p>
+      <h3 id="health-check">Vérification de Santé</h3>
+      <p>Vérifiez si l'API fonctionne correctement.</p>
       <div className="not-prose">
         <div className="bg-card border border-border rounded-lg p-4 mb-4">
           <div className="flex items-center gap-3">
@@ -49,7 +50,7 @@ export default function APIReferencePage() {
 
       <Tabs defaultValue="response" className="my-6">
         <TabsList>
-          <TabsTrigger value="response">Response</TabsTrigger>
+          <TabsTrigger value="response">Réponse</TabsTrigger>
         </TabsList>
         <TabsContent value="response">
           <CodeBlock
@@ -63,8 +64,8 @@ export default function APIReferencePage() {
         </TabsContent>
       </Tabs>
 
-      <h3 id="initiate-payment">Initiate Payment</h3>
-      <p>Create a new payment transaction with a specific provider.</p>
+      <h3 id="initiate-payment">Initier un Paiement</h3>
+      <p>Créez une nouvelle transaction de paiement avec un provider spécifique.</p>
       <div className="not-prose">
         <div className="bg-card border border-border rounded-lg p-4 mb-4">
           <div className="flex items-center gap-3">
@@ -76,8 +77,8 @@ export default function APIReferencePage() {
 
       <Tabs defaultValue="request" className="my-6">
         <TabsList>
-          <TabsTrigger value="request">Request</TabsTrigger>
-          <TabsTrigger value="response">Response</TabsTrigger>
+          <TabsTrigger value="request">Requête</TabsTrigger>
+          <TabsTrigger value="response">Réponse</TabsTrigger>
           <TabsTrigger value="curl">cURL</TabsTrigger>
           <TabsTrigger value="javascript">JavaScript</TabsTrigger>
         </TabsList>
@@ -96,7 +97,7 @@ export default function APIReferencePage() {
   "projectId": "proj_abc123",
   "metadata": {
     "orderId": "789",
-    "productName": "Premium Plan"
+    "productName": "Plan Premium"
   }
 }`}
           />
@@ -113,7 +114,7 @@ export default function APIReferencePage() {
       "id": "prov_123",
       "name": "Orange Money",
       "code": "om",
-      "logoUrl": "https://your-domain.com/api/v1/media/images/logos/om.png"
+      "logoUrl": "https://votredomaine.com/api/v1/media/images/logos/om.png"
     },
     "currency": "XOF",
     "reference": "NEXPAY_TX_A819BE1284654995",
@@ -127,7 +128,7 @@ export default function APIReferencePage() {
       {
         "name": "Orange Money",
         "url": "https://orange-money-prod-flowlinks.web.app/om/xyz123",
-        "thumb": "https://your-domain.com/api/v1/media/images/thumbs/om.png"
+        "thumb": "https://votredomaine.com/api/v1/media/images/thumbs/om.png"
       }
     ],
     "qr_code": {
@@ -141,8 +142,8 @@ export default function APIReferencePage() {
         <TabsContent value="curl">
           <CodeBlock
             language="bash"
-            code={`curl -X POST https://your-domain.com/api/v1/payment/initiate \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
+            code={`curl -X POST https://votredomaine.com/api/v1/payment/initiate \\
+  -H "Authorization: Bearer VOTRE_CLE_API" \\
   -H "Content-Type: application/json" \\
   -d '{
     "amount": 5000,
@@ -160,10 +161,10 @@ export default function APIReferencePage() {
         <TabsContent value="javascript">
           <CodeBlock
             language="javascript"
-            code={`const response = await fetch('https://your-domain.com/api/v1/payment/initiate', {
+            code={`const response = await fetch('https://votredomaine.com/api/v1/payment/initiate', {
   method: 'POST',
   headers: {
-    'Authorization': 'Bearer YOUR_API_KEY',
+    'Authorization': 'Bearer VOTRE_CLE_API',
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -185,10 +186,13 @@ console.log(data);`}
         </TabsContent>
       </Tabs>
 
-      <h3 id="payment-sessions">Payment Sessions</h3>
-      <p>Payment sessions provide a hosted checkout page where users can select their preferred payment method.</p>
+      <h3 id="payment-sessions">Sessions de Paiement</h3>
+      <p>
+        Les sessions de paiement fournissent une page de paiement hébergée où les utilisateurs peuvent sélectionner leur
+        méthode de paiement préférée.
+      </p>
 
-      <h4>Create Payment Session</h4>
+      <h4>Créer une Session de Paiement</h4>
       <div className="not-prose">
         <div className="bg-card border border-border rounded-lg p-4 mb-4">
           <div className="flex items-center gap-3">
@@ -200,8 +204,8 @@ console.log(data);`}
 
       <Tabs defaultValue="request" className="my-6">
         <TabsList>
-          <TabsTrigger value="request">Request</TabsTrigger>
-          <TabsTrigger value="response">Response</TabsTrigger>
+          <TabsTrigger value="request">Requête</TabsTrigger>
+          <TabsTrigger value="response">Réponse</TabsTrigger>
         </TabsList>
         <TabsContent value="request">
           <CodeBlock
@@ -215,8 +219,8 @@ console.log(data);`}
   "email": "john@example.com",
   "client_reference": "order_789",
   "projectId": "proj_abc123",
-  "successUrl": "https://yourapp.com/success",
-  "cancelUrl": "https://yourapp.com/cancel",
+  "successUrl": "https://votreapp.com/success",
+  "cancelUrl": "https://votreapp.com/cancel",
   "metadata": {
     "orderId": "789"
   }
@@ -231,7 +235,7 @@ console.log(data);`}
   "message": "Payment session successfully initiated",
   "data": {
     "sessionId": "session_xyz123",
-    "checkoutUrl": "https://your-domain.com/checkout/session_xyz123",
+    "checkoutUrl": "https://votredomaine.com/checkout/session_xyz123",
     "status": "opened",
     "expiresAt": "2025-10-30T18:46:25.053Z"
   }
@@ -240,7 +244,7 @@ console.log(data);`}
         </TabsContent>
       </Tabs>
 
-      <h4>Get Payment Session</h4>
+      <h4>Obtenir une Session de Paiement</h4>
       <div className="not-prose">
         <div className="bg-card border border-border rounded-lg p-4 mb-4">
           <div className="flex items-center gap-3">
@@ -252,30 +256,30 @@ console.log(data);`}
 
       <CodeBlock
         language="bash"
-        code={`curl https://your-domain.com/api/v1/payment/session/session_xyz123 \\
-  -H "Authorization: Bearer YOUR_API_KEY"`}
+        code={`curl https://votredomaine.com/api/v1/payment/session/session_xyz123 \\
+  -H "Authorization: Bearer VOTRE_CLE_API"`}
       />
 
-      <h2 id="errors">Error Handling</h2>
-      <p>NexPay uses conventional HTTP response codes to indicate success or failure:</p>
+      <h2 id="errors">Gestion des Erreurs</h2>
+      <p>NexPay utilise des codes de réponse HTTP conventionnels pour indiquer le succès ou l'échec :</p>
       <ul>
         <li>
-          <code>200</code> - Success
+          <code>200</code> - Succès
         </li>
         <li>
-          <code>201</code> - Created
+          <code>201</code> - Créé
         </li>
         <li>
-          <code>400</code> - Bad Request (invalid parameters)
+          <code>400</code> - Mauvaise Requête (paramètres invalides)
         </li>
         <li>
-          <code>401</code> - Unauthorized (invalid API key)
+          <code>401</code> - Non Autorisé (clé API invalide)
         </li>
         <li>
-          <code>404</code> - Not Found
+          <code>404</code> - Non Trouvé
         </li>
         <li>
-          <code>500</code> - Internal Server Error
+          <code>500</code> - Erreur Serveur Interne
         </li>
       </ul>
 

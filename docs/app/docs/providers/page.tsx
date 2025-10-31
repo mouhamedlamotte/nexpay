@@ -5,151 +5,141 @@ import { Info } from "lucide-react"
 export default function ProvidersPage() {
   return (
     <div className="max-w-4xl prose prose-invert">
-      <h1>Payment Providers</h1>
+      <h1>Providers de Paiement</h1>
       <p className="lead">
-        Configure payment providers to start accepting payments. NexPay supports multiple providers with a single,
-        unified configuration.
+        Configurez les providers de paiement pour commencer à accepter des paiements. NexPay prend en charge plusieurs
+        providers avec une configuration unique et unifiée.
       </p>
 
-      <h2 id="overview">Overview</h2>
+      <h2 id="overview">Vue d'ensemble</h2>
       <p>
-        NexPay uses a centralized provider configuration system. You configure each provider once, and all your projects
-        can use the same provider credentials.
+        NexPay utilise un système de configuration centralisé des providers. Vous configurez chaque provider une fois,
+        et tous vos projets peuvent utiliser les mêmes identifiants de provider.
       </p>
 
       <Alert className="my-6">
         <Info className="h-4 w-4" />
         <AlertDescription>
-          Provider configurations are shared across all projects. This means you only need to set up Orange Money, Wave,
-          etc. once.
+          Les configurations des providers sont partagées entre tous les projets. Cela signifie que vous n'avez besoin
+          de configurer Orange Money, Wave, etc. qu'une seule fois.
         </AlertDescription>
       </Alert>
 
-      <h2 id="configuration">Provider Configuration</h2>
-      <p>To configure a payment provider:</p>
+      <h2 id="configuration">Configuration des Providers</h2>
+      <p>Pour configurer un provider de paiement :</p>
       <ol>
         <li>
-          Navigate to <strong>Providers</strong> in your dashboard
+          Accédez à <strong>Providers</strong> dans votre tableau de bord
         </li>
         <li>
-          Click <strong>Configure</strong> next to the provider you want to set up
+          Cliquez sur <strong>Configurer</strong> à côté du provider que vous souhaitez configurer
         </li>
-        <li>Enter your API credentials from the provider</li>
-        <li>Save the configuration</li>
+        <li>Entrez vos identifiants API du provider</li>
+        <li>Sauvegardez la configuration</li>
       </ol>
 
       <img
-        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%20from%202025-10-30%2018-00-19-4h28b96RYuazJ45WmmBtA07YpoJaCH.png"
-        alt="Provider Configuration"
+        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%20from%202025-10-31%2011-02-57-fibOOuVN9k9HWdaHELCmMQgGyBhrG5.png"
+        alt="Configuration des Providers"
         className="rounded-lg border border-border"
       />
 
       <h2 id="orange-money">Orange Money</h2>
-      <p>Orange Money is a mobile money service available in West and Central Africa.</p>
+      <p>Orange Money est un service de mobile money disponible en Afrique de l'Ouest et Centrale.</p>
 
-      <h3>Required Credentials</h3>
+      <h3>Identifiants Requis</h3>
       <ul>
         <li>
-          <strong>Client ID:</strong> Your Orange Money API client ID
+          <strong>Client ID :</strong> Votre identifiant client API Orange Money
         </li>
         <li>
-          <strong>Client Secret:</strong> Your Orange Money API client secret
+          <strong>Client Secret :</strong> Votre secret client API Orange Money
         </li>
         <li>
-          <strong>Name:</strong> Display name (e.g., "Orange Money")
+          <strong>Name :</strong> Nom d'affichage (ex: "Orange Money")
         </li>
         <li>
-          <strong>Code:</strong> Provider code (<code>om</code>)
+          <strong>Code :</strong> Code du provider (<code>om</code>)
         </li>
       </ul>
 
-      <h3>Obtaining Credentials</h3>
+      <h3>Obtention des Identifiants</h3>
       <ol>
         <li>
-          Visit the{" "}
-          <a href="https://developer.orange.com" target="_blank" rel="noreferrer noopener">
-            Orange Developer Portal
+          Visitez le{" "}
+          <a href="https://developer.orange-sonatel.com/" target="_blank" rel="noreferrer noopener">
+            Portail Développeur Orange
           </a>
         </li>
-        <li>Create an account or log in</li>
-        <li>Create a new application</li>
-        <li>Subscribe to the Orange Money API</li>
-        <li>Copy your Client ID and Client Secret</li>
+        <li>Créez un compte ou connectez-vous</li>
+        <li>Créez une nouvelle application</li>
+        <li>Abonnez-vous à l'API Orange Money</li>
+        <li>Copiez votre Client ID et Client Secret</li>
       </ol>
 
-      <h3>Webhook Configuration</h3>
-      <p>Configure Orange Money to send webhooks to NexPay:</p>
-      <CodeBlock language="text" code={`Webhook URL: https://your-domain.com/api/v1/webhook/om`} />
+      <h3>Configuration du Webhook</h3>
+      <p>Configurez Orange Money pour envoyer des webhooks à NexPay :</p>
+      <CodeBlock language="text" code={`URL du Webhook: https://votre-domaine.com/api/v1/webhook/om`} />
 
-      <h3>Testing</h3>
-      <p>Orange Money provides a sandbox environment for testing:</p>
+      <h3>Tests</h3>
+      <p>Orange Money fournit un environnement sandbox pour les tests :</p>
       <CodeBlock
         language="json"
         code={`{
-  "client_id": "your_sandbox_client_id",
-  "client_secret": "your_sandbox_client_secret"
+  "client_id": "votre_client_id_sandbox",
+  "client_secret": "votre_client_secret_sandbox"
 }`}
       />
 
       <h2 id="wave">Wave</h2>
-      <p>Wave is a mobile money platform operating in several African countries.</p>
+      <p>Wave est une plateforme de mobile money opérant dans plusieurs pays africains.</p>
 
-      <h3>Required Credentials</h3>
+      <h3>Identifiants Requis</h3>
       <ul>
         <li>
-          <strong>API Key:</strong> Your Wave API key
+          <strong>API Key :</strong> Votre clé API Wave
         </li>
         <li>
-          <strong>Name:</strong> Display name (e.g., "Wave")
+          <strong>Name :</strong> Nom d'affichage (ex: "Wave")
         </li>
         <li>
-          <strong>Code:</strong> Provider code (<code>wave</code>)
+          <strong>Code :</strong> Code du provider (<code>wave</code>)
         </li>
       </ul>
 
-      <h3>Obtaining Credentials</h3>
+      <h3>Obtention des Identifiants</h3>
       <ol>
         <li>
-          Visit the{" "}
-          <a href="https://developer.wave.com" target="_blank" rel="noreferrer noopener">
-            Wave Developer Portal
+          Visitez le{" "}
+          <a href="https://business.wave.com/" target="_blank" rel="noreferrer noopener">
+            Portail Développeur Wave
           </a>
         </li>
-        <li>Create a business account</li>
-        <li>Navigate to API settings</li>
-        <li>Generate an API key</li>
+        <li>Créez un compte professionnel</li>
+        <li>Accédez aux paramètres API</li>
+        <li>Générez une clé API</li>
       </ol>
 
-      <h3>Webhook Configuration</h3>
-      <p>Configure Wave to send webhooks to NexPay:</p>
-      <CodeBlock language="text" code={`Webhook URL: https://your-domain.com/api/v1/webhook/wave`} />
+      <h3>Configuration du Webhook</h3>
+      <p>Configurez Wave pour envoyer des webhooks à NexPay :</p>
+      <CodeBlock language="text" code={`URL du Webhook: https://votre-domaine.com/api/v1/webhook/wave`} />
 
-      <h3>Supported Events</h3>
-      <ul>
-        <li>
-          <code>checkout.session.completed</code> - Payment successful
-        </li>
-        <li>
-          <code>checkout.session.payment_failed</code> - Payment failed
-        </li>
-      </ul>
-
-      <h2 id="multiple-projects">Using Providers Across Projects</h2>
+      <h2 id="multiple-projects">Utilisation des Providers sur Plusieurs Projets</h2>
       <p>
-        Once you've configured a provider, it's automatically available to all your projects. You don't need to
-        reconfigure credentials for each project.
+        Une fois que vous avez configuré un provider, il est automatiquement disponible pour tous vos projets. Vous
+        n'avez pas besoin de reconfigurer les identifiants pour chaque projet.
       </p>
 
-      <h3>Example: Using Orange Money in Multiple Projects</h3>
+      <h3>Exemple : Utilisation d'Orange Money sur Plusieurs Projets</h3>
       <ol>
-        <li>Configure Orange Money once in the Providers section</li>
-        <li>Create Project A and Project B</li>
-        <li>Both projects can now accept Orange Money payments</li>
-        <li>Each project can have different redirect URLs and webhooks</li>
+        <li>Configurez Orange Money une fois dans la section Providers</li>
+        <li>Créez le Projet A et le Projet B</li>s
+        <li>Les deux projets peuvent maintenant accepter les paiements Orange Money</li>
+        <li>Chaque projet peut avoir des URLs de redirection et des webhooks différents</li>
       </ol>
 
-      <h2 id="provider-codes">Provider Codes</h2>
-      <p>Use these codes when initiating payments via the API:</p>
+      <h2 id="provider-codes">Codes des Providers</h2>
+      <p>Utilisez ces codes lors de l'initiation de paiements via l'API :</p>
       <ul>
         <li>
           <code>om</code> - Orange Money
@@ -164,29 +154,29 @@ export default function ProvidersPage() {
         code={`{
   "amount": 5000,
   "currency": "XOF",
-  "provider": "om",  // Use provider code here
+  "provider": "om",  // Utilisez le code du provider ici
   "userId": "user_123",
-  // ... other fields
+  // ... autres champs
 }`}
       />
 
-      <h2 id="troubleshooting">Troubleshooting</h2>
+      <h2 id="troubleshooting">Dépannage</h2>
 
-      <h3>Provider Not Available</h3>
-      <p>If a provider doesn't appear in your payment options:</p>
+      <h3>Provider Non Disponible</h3>
+      <p>Si un provider n'apparaît pas dans vos options de paiement :</p>
       <ul>
-        <li>Verify the provider is configured in the Providers section</li>
-        <li>Check that the provider status is "Active"</li>
-        <li>Ensure your API credentials are correct</li>
+        <li>Vérifiez que le provider est configuré dans la section Providers</li>
+        <li>Vérifiez que le statut du provider est "Actif"</li>
+        <li>Assurez-vous que vos identifiants API sont corrects</li>
       </ul>
 
-      <h3>Webhook Not Receiving Events</h3>
-      <p>If you're not receiving webhook events from a provider:</p>
+      <h3>Webhook Ne Reçoit Pas d'Événements</h3>
+      <p>Si vous ne recevez pas d'événements webhook d'un provider :</p>
       <ul>
-        <li>Verify the webhook URL is correctly configured in the provider's dashboard</li>
-        <li>Check that your server is accessible from the internet</li>
-        <li>Ensure SSL is properly configured (providers require HTTPS)</li>
-        <li>Check webhook logs in the provider's dashboard</li>
+        <li>Vérifiez que l'URL du webhook est correctement configurée dans le tableau de bord du provider</li>
+        <li>Vérifiez que votre serveur est accessible depuis Internet</li>
+        <li>Assurez-vous que SSL est correctement configuré (les providers nécessitent HTTPS)</li>
+        <li>Vérifiez les logs des webhooks dans le tableau de bord du provider</li>
       </ul>
     </div>
   )

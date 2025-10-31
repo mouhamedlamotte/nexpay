@@ -5,22 +5,18 @@ import { Button } from "@/components/ui/button"
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">N</span>
-              </div>
-              <span className="font-bold text-xl">NexPay</span>
+              <span className="font-bold text-xl text-primary">NEXPAY</span>
             </Link>
             <nav className="hidden md:flex items-center gap-6">
               <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Docs
+                Documentation
               </Link>
               <Link href="/docs/api" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                API Reference
+                Référence API
               </Link>
               <Link
                 href="/docs/guides"
@@ -35,58 +31,58 @@ export default function HomePage() {
               <Link href="/docs">Documentation</Link>
             </Button>
             <Button size="sm" asChild>
-              <Link href="/docs/getting-started">Get Started</Link>
+              <Link href="/docs/getting-started">Commencer</Link>
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
       <section className="container mx-auto px-4 py-24 text-center">
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-6xl mx-auto space-y-8">
           <div className="inline-block px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-sm text-primary mb-4">
-            Self-hosted Payment Gateway
+            Passerelle de Paiement Auto-Hébergée
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-            Accept Payments with{" "}
+            Acceptez des Paiements avec{" "}
             <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-              NexPay
+              NEXPAY
             </span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            A powerful, self-hosted payment gateway supporting Orange Money, Wave, and more. Complete control over your
-            payment infrastructure.
+            Une passerelle de paiement puissante et auto-hébergée supportant Orange Money, Wave et plus encore. Contrôle
+            total sur votre infrastructure de paiement.
           </p>
           <div className="flex items-center justify-center gap-4 pt-4">
             <Button size="lg" asChild>
               <Link href="/docs/getting-started">
-                Get Started <ArrowRight className="ml-2 h-4 w-4" />
+                Commencer <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link href="/docs/api">View API Docs</Link>
+              <Link href="/docs/api">Voir la Documentation API</Link>
             </Button>
           </div>
           <div className="pt-8">
-            <pre className="inline-block bg-card border border-border rounded-lg px-6 py-4 text-left text-sm">
-              <code className="text-muted-foreground">
-                <span className="text-secondary">$</span> curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- pay.yourdomain.com
+            <pre className="inline-block bg-card border border-border rounded-lg px-6 py-4 text-sm overflow-x-auto max-w-sm md:max-w-md lg:max-w-none">
+              <code className="text-muted-foreground overflow-x-auto">
+                <span className="text-secondary">$</span> curl -fsSL
+                https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s --
+                pay.votredomaine.com
               </code>
             </pre>
           </div>
         </div>
       </section>
 
-      {/* Features Grid */}
       <section className="container mx-auto px-4 py-24">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition-colors">
             <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
               <Zap className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="font-semibold text-lg mb-2">Fast Integration</h3>
+            <h3 className="font-semibold text-lg mb-2">Intégration Rapide</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Get started in minutes with our simple API and comprehensive documentation.
+              Démarrez en quelques minutes avec notre API simple et notre documentation complète.
             </p>
           </div>
 
@@ -94,9 +90,9 @@ export default function HomePage() {
             <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4">
               <Shield className="h-6 w-6 text-secondary" />
             </div>
-            <h3 className="font-semibold text-lg mb-2">Secure & Reliable</h3>
+            <h3 className="font-semibold text-lg mb-2">Sécurisé & Fiable</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Built with security in mind. Webhook verification and API key authentication.
+              Conçu avec la sécurité à l'esprit. Vérification des webhooks et authentification par clé API.
             </p>
           </div>
 
@@ -104,9 +100,9 @@ export default function HomePage() {
             <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
               <Globe className="h-6 w-6 text-accent" />
             </div>
-            <h3 className="font-semibold text-lg mb-2">Self-Hosted</h3>
+            <h3 className="font-semibold text-lg mb-2">Auto-Hébergé</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Complete control over your infrastructure. Deploy on your own servers.
+              Contrôle total sur votre infrastructure. Déployez sur vos propres serveurs.
             </p>
           </div>
 
@@ -114,92 +110,86 @@ export default function HomePage() {
             <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
               <Code className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="font-semibold text-lg mb-2">Developer First</h3>
+            <h3 className="font-semibold text-lg mb-2">Orienté Développeur</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Clean API design, detailed docs, and code examples in multiple languages.
+              Design d'API propre, documentation détaillée et exemples de code en plusieurs langages.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Quick Start */}
       <section className="container mx-auto px-4 py-24">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold mb-4 text-center">Quick Start</h2>
-          <p className="text-muted-foreground text-center mb-12">
-            Get up and running with NexPay in three simple steps
-          </p>
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold mb-4 text-center">Démarrage Rapide</h2>
+          <p className="text-muted-foreground text-center mb-12">Lancez-vous avec NexPay en trois étapes simples</p>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="space-y-3">
               <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">
                 1
               </div>
-              <h3 className="font-semibold">Install & Configure</h3>
+              <h3 className="font-semibold">Installer & Configurer</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Deploy NexPay on your server and configure environment variables
+                Déployez NexPay sur votre serveur et configurez les variables d'environnement
               </p>
             </div>
             <div className="space-y-3">
               <div className="w-10 h-10 bg-secondary/10 rounded-full flex items-center justify-center text-secondary font-bold">
                 2
               </div>
-              <h3 className="font-semibold">Setup Providers</h3>
+              <h3 className="font-semibold">Configurer les Providers</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Add your payment provider credentials and configure webhooks
+                Ajoutez vos identifiants de providers de paiement et configurez les webhooks
               </p>
             </div>
             <div className="space-y-3">
               <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center text-accent font-bold">
                 3
               </div>
-              <h3 className="font-semibold">Start Accepting Payments</h3>
+              <h3 className="font-semibold">Accepter les Paiements</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Integrate the API into your application and start processing payments
+                Intégrez l'API dans votre application et commencez à traiter les paiements
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="container mx-auto px-4 py-24">
-        <div className="max-w-4xl mx-auto bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 border border-primary/20 rounded-2xl p-12 text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to get started?</h2>
+        <div className="max-w-4xl mx-auto bg-linear-to-r from-primary/10 via-secondary/10 to-accent/10 border border-primary/20 rounded-2xl p-12 text-center">
+          <h2 className="text-3xl font-bold mb-4">Prêt à commencer ?</h2>
           <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Explore our comprehensive documentation and start integrating NexPay into your application today.
+            Explorez notre documentation complète et commencez à intégrer NexPay dans votre application dès aujourd'hui.
           </p>
           <Button size="lg" asChild>
             <Link href="/docs/getting-started">
-              Read the Documentation <ArrowRight className="ml-2 h-4 w-4" />
+              Lire la Documentation <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-border bg-card/50">
         <div className="container mx-auto px-4 py-12">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">N</span>
-                </div>
-                <span className="font-bold text-lg">NexPay</span>
+                <span className="font-bold text-lg text-primary">NEXPAY</span>
               </div>
-              <p className="text-sm text-muted-foreground">Self-hosted payment gateway for modern applications.</p>
+              <p className="text-sm text-muted-foreground">
+                Passerelle de paiement auto-hébergée pour applications modernes.
+              </p>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Documentation</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <Link href="/docs/getting-started" className="hover:text-foreground transition-colors">
-                    Getting Started
+                    Démarrage
                   </Link>
                 </li>
                 <li>
                   <Link href="/docs/api" className="hover:text-foreground transition-colors">
-                    API Reference
+                    Référence API
                   </Link>
                 </li>
                 <li>
@@ -210,7 +200,7 @@ export default function HomePage() {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Resources</h4>
+              <h4 className="font-semibold mb-4">Ressources</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <Link href="/docs/webhooks" className="hover:text-foreground transition-colors">
@@ -224,7 +214,7 @@ export default function HomePage() {
                 </li>
                 <li>
                   <Link href="/docs/dashboard" className="hover:text-foreground transition-colors">
-                    Dashboard
+                    Tableau de Bord
                   </Link>
                 </li>
               </ul>
@@ -234,19 +224,19 @@ export default function HomePage() {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <Link href="/docs" className="hover:text-foreground transition-colors">
-                    Help Center
+                    Centre d'Aide
                   </Link>
                 </li>
                 <li>
                   <Link href="/docs" className="hover:text-foreground transition-colors">
-                    Community
+                    Communauté
                   </Link>
                 </li>
               </ul>
             </div>
           </div>
           <div className="border-t border-border mt-12 pt-8 text-center text-sm text-muted-foreground">
-            © 2025 NexPay. All rights reserved.
+            © 2025 NexPay. Tous droits réservés.
           </div>
         </div>
       </footer>

@@ -4,240 +4,260 @@ import { Info } from "lucide-react"
 export default function DashboardPage() {
   return (
     <div className="max-w-4xl prose prose-invert">
-      <h1>Dashboard Guide</h1>
+      <h1>Guide du Tableau de Bord</h1>
       <p className="lead">
-        Learn how to use the NexPay dashboard to manage your payment infrastructure, configure providers, and monitor
-        transactions.
+        Apprenez à utiliser le tableau de bord NexPay pour gérer votre infrastructure de paiement, configurer les
+        providers et surveiller les transactions.
       </p>
 
-      <h2 id="overview">Overview</h2>
+      <h2 id="overview">Vue d'ensemble</h2>
       <p>
-        The NexPay dashboard is your central hub for managing all aspects of your payment gateway. From here, you can:
+        Le tableau de bord NexPay est votre hub central pour gérer tous les aspects de votre passerelle de paiement.
+        Depuis ici, vous pouvez :
       </p>
       <ul>
-        <li>Configure payment providers</li>
-        <li>Manage multiple projects</li>
-        <li>Set up webhooks and redirect URLs</li>
-        <li>Monitor transactions and payments</li>
-        <li>Generate API keys</li>
+        <li>Configurer les providers de paiement</li>
+        <li>Gérer plusieurs projets</li>
+        <li>Configurer les webhooks et les URLs de redirection</li>
+        <li>Surveiller les transactions et les paiements</li>
+        <li>Générer des clés API</li>
       </ul>
 
-      <h2 id="projects">Projects</h2>
+      <img
+        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%20from%202025-10-31%2011-02-48-RpXkQDVhGpKTHwyiEFoJoMwl0FVZXP.png"
+        alt="Tableau de Bord NexPay"
+        className="rounded-lg border border-border"
+      />
+
+      <h2 id="projects">Projets</h2>
       <p>
-        Projects allow you to organize payments for different applications or environments. Each project has its own:
+        Les projets vous permettent d'organiser les paiements pour différentes applications ou environnements. Chaque
+        projet a ses propres :
       </p>
       <ul>
-        <li>API keys</li>
-        <li>Webhook configurations</li>
-        <li>Redirect URLs</li>
-        <li>Transaction history</li>
+        <li>Clés API</li>
+        <li>Configurations de webhooks</li>
+        <li>URLs de redirection</li>
+        <li>Historique des transactions</li>
       </ul>
 
       <Alert className="my-6">
         <Info className="h-4 w-4" />
         <AlertDescription>
-          All projects share the same provider configurations. You only need to set up Orange Money, Wave, etc. once.
+          Tous les projets partagent les mêmes configurations de providers. Vous n'avez besoin de configurer Orange
+          Money, Wave, etc. qu'une seule fois.
         </AlertDescription>
       </Alert>
 
-      <h3>Creating a Project</h3>
+      <h3>Création d'un Projet</h3>
       <ol>
         <li>
-          Navigate to <strong>Projects</strong> in the sidebar
+          Accédez à <strong>Projets</strong> dans la barre latérale
         </li>
         <li>
-          Click <strong>New Project</strong>
+          Cliquez sur <strong>Nouveau Projet</strong>
         </li>
-        <li>Enter a project name and description</li>
-        <li>Optionally add metadata (key-value pairs)</li>
+        <li>Entrez un nom et une description du projet</li>
+        <li>Ajoutez optionnellement des métadonnées (paires clé-valeur)</li>
         <li>
-          Click <strong>Create Project</strong>
+          Cliquez sur <strong>Créer le Projet</strong>
         </li>
       </ol>
 
-      <h3>Project Settings</h3>
-      <p>Each project has the following settings:</p>
+      <h3>Paramètres du Projet</h3>
+      <p>Chaque projet a les paramètres suivants :</p>
       <ul>
         <li>
-          <strong>General:</strong> Name, description, and metadata
+          <strong>Général :</strong> Nom, description et métadonnées
         </li>
         <li>
-          <strong>API Keys:</strong> Generate and manage API keys
+          <strong>Clés API :</strong> Générer et gérer les clés API
         </li>
         <li>
-          <strong>Webhooks:</strong> Configure webhook endpoints
+          <strong>Webhooks :</strong> Configurer les endpoints de webhooks
         </li>
         <li>
-          <strong>Redirects:</strong> Set success, failure, and cancel URLs
+          <strong>Redirections :</strong> Définir les URLs de succès, d'échec et d'annulation
         </li>
       </ul>
 
       <h2 id="providers">Providers</h2>
       <p>
-        The Providers section allows you to configure payment providers that will be available across all your projects.
+        La section Providers vous permet de configurer les providers de paiement qui seront disponibles pour tous vos
+        projets.
       </p>
 
-      <h3>Configuring a Provider</h3>
+      <h3>Configuration d'un Provider</h3>
       <ol>
         <li>
-          Navigate to <strong>Providers</strong>
+          Accédez à <strong>Providers</strong>
         </li>
-        <li>Find the provider you want to configure (Orange Money, Wave, etc.)</li>
+        <li>Trouvez le provider que vous souhaitez configurer (Orange Money, Wave, etc.)</li>
         <li>
-          Click <strong>Configure</strong>
+          Cliquez sur <strong>Configurer</strong>
         </li>
-        <li>Enter your API credentials</li>
+        <li>Entrez vos identifiants API</li>
         <li>
-          Click <strong>Save Configuration</strong>
+          Cliquez sur <strong>Sauvegarder la Configuration</strong>
         </li>
       </ol>
 
       <img
-        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%20from%202025-10-30%2018-00-19-4h28b96RYuazJ45WmmBtA07YpoJaCH.png"
-        alt="Provider Configuration"
+        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%20from%202025-10-31%2011-02-57-fibOOuVN9k9HWdaHELCmMQgGyBhrG5.png"
+        alt="Configuration des Providers"
         className="rounded-lg border border-border"
       />
 
-      <h3>Provider Status</h3>
-      <p>Providers can have the following statuses:</p>
+      <h3>Statut des Providers</h3>
+      <p>Les providers peuvent avoir les statuts suivants :</p>
       <ul>
         <li>
-          <strong>Active:</strong> Configured and ready to accept payments
+          <strong>Actif :</strong> Configuré et prêt à accepter des paiements
         </li>
         <li>
-          <strong>Inactive:</strong> Not configured or disabled
+          <strong>Inactif :</strong> Non configuré ou désactivé
         </li>
       </ul>
 
       <h2 id="webhooks">Webhooks</h2>
-      <p>Configure webhooks to receive real-time notifications about payment events in your application.</p>
+      <p>
+        Configurez les webhooks pour recevoir des notifications en temps réel sur les événements de paiement dans votre
+        application.
+      </p>
 
-      <h3>Setting Up Webhooks</h3>
+      <h3>Configuration des Webhooks</h3>
       <ol>
         <li>
-          Navigate to <strong>Settings → Webhooks</strong>
+          Accédez à <strong>Paramètres → Webhooks</strong>
         </li>
         <li>
-          Click <strong>New Webhook</strong>
+          Cliquez sur <strong>Nouveau webhook</strong>
         </li>
-        <li>Enter your webhook URL</li>
+        <li>Entrez votre URL de webhook</li>
         <li>
-          Set a header name (e.g., <code>x-webhook-secret</code>)
+          Définissez un nom d'en-tête (ex: <code>x-webhook-secret</code>)
         </li>
-        <li>Generate or enter a secret key</li>
+        <li>Générez ou entrez une clé secrète</li>
         <li>
-          Click <strong>Create Webhook</strong>
+          Cliquez sur <strong>Créer le Webhook</strong>
         </li>
       </ol>
 
       <img
-        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%20from%202025-10-30%2018-00-08-gSa3QGljAge6ACctwIdBilhtUkf2KY.png"
-        alt="Webhook Configuration"
+        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%20from%202025-10-31%2011-03-15-s4OG7yTTwUy0Izq5An9S7lJS4U224y.png"
+        alt="Configuration des Webhooks"
         className="rounded-lg border border-border"
       />
 
       <Alert className="my-6">
         <Info className="h-4 w-4" />
         <AlertDescription>
-          Save your secret key securely. You'll need it to verify webhook signatures in your application.
+          Sauvegardez votre clé secrète en toute sécurité. Vous en aurez besoin pour vérifier les signatures des
+          webhooks dans votre application.
         </AlertDescription>
       </Alert>
 
-      <h2 id="redirects">Redirect URLs</h2>
-      <p>Configure where users should be redirected after completing, canceling, or failing a payment.</p>
+      <h2 id="redirects">URLs de Redirection</h2>
+      <p>Configurez où les utilisateurs doivent être redirigés après avoir complété, annulé ou échoué un paiement.</p>
 
-      <h3>Configuring Redirects</h3>
+      <h3>Configuration des Redirections</h3>
       <ol>
         <li>
-          Navigate to <strong>Settings → Callbacks</strong>
+          Accédez à <strong>Paramètres → Callbacks de redirection</strong>
         </li>
         <li>
-          Enter your redirect URLs:
+          Entrez vos URLs de redirection :
           <ul>
             <li>
-              <strong>Success URL:</strong> Where to redirect after successful payment
+              <strong>URL de Succès :</strong> Où rediriger après un paiement réussi
             </li>
             <li>
-              <strong>Failure URL:</strong> Where to redirect after failed payment
+              <strong>URL d'Échec :</strong> Où rediriger après un paiement échoué
             </li>
             <li>
-              <strong>Cancel URL:</strong> Where to redirect if user cancels
+              <strong>URL d'Annulation :</strong> Où rediriger si l'utilisateur annule
             </li>
           </ul>
         </li>
         <li>
-          Click <strong>Save Changes</strong>
+          Cliquez sur <strong>Sauvegarder les Modifications</strong>
         </li>
       </ol>
 
       <img
         src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%20from%202025-10-30%2017-59-59-6dJGPwAF7wunaYbxz6bAI54JPv8Djs.png"
-        alt="Redirect Configuration"
+        alt="Configuration des Redirections"
         className="rounded-lg border border-border"
       />
 
-      <h3>URL Parameters</h3>
-      <p>NexPay appends the following query parameters to your redirect URLs:</p>
+      <h3>Paramètres d'URL</h3>
+      <p>NexPay ajoute les paramètres de requête suivants à vos URLs de redirection :</p>
       <ul>
         <li>
-          <code>session_id</code> - The payment session ID
+          <code>session_id</code> - L'ID de la session de paiement
         </li>
         <li>
-          <code>status</code> - Payment status (succeeded, failed, canceled)
+          <code>status</code> - Statut du paiement (succeeded, failed, canceled)
         </li>
         <li>
-          <code>reference</code> - Your client reference
+          <code>reference</code> - Votre référence client
         </li>
       </ul>
 
-      <h2 id="api-keys">API Keys</h2>
-      <p>API keys are used to authenticate requests to the NexPay API. Each project can have multiple API keys.</p>
+      <h2 id="api-keys">Clés API</h2>
+      <p>
+        Les clés API sont utilisées pour authentifier les requêtes à l'API NexPay. Chaque projet peut avoir plusieurs
+        clés API.
+      </p>
 
-      <h3>Generating an API Key</h3>
+      <h3>Génération d'une Clé API</h3>
       <ol>
-        <li>Navigate to your project settings</li>
+        <li>Accédez aux paramètres de votre projet</li>
         <li>
-          Go to the <strong>API Keys</strong> tab
+          Allez dans l'onglet <strong>Clés API</strong>
         </li>
         <li>
-          Click <strong>Generate New Key</strong>
+          Cliquez sur <strong>Générer une Nouvelle Clé</strong>
         </li>
-        <li>Give your key a name (e.g., "Production", "Development")</li>
-        <li>Copy and save the key securely</li>
+        <li>Donnez un nom à votre clé (ex: "Production", "Développement")</li>
+        <li>Copiez et sauvegardez la clé en toute sécurité</li>
       </ol>
 
       <Alert className="my-6">
         <Info className="h-4 w-4" />
-        <AlertDescription>API keys are only shown once. Make sure to copy and store them securely.</AlertDescription>
+        <AlertDescription>
+          Les clés API ne sont affichées qu'une seule fois. Assurez-vous de les copier et de les stocker en toute
+          sécurité.
+        </AlertDescription>
       </Alert>
 
-      <h3>Revoking API Keys</h3>
+      <h3>Révocation des Clés API</h3>
       <p>
-        If an API key is compromised, you can revoke it immediately from the API Keys section. Revoked keys will no
-        longer work for API requests.
+        Si une clé API est compromise, vous pouvez la révoquer immédiatement depuis la section Clés API. Les clés
+        révoquées ne fonctionneront plus pour les requêtes API.
       </p>
 
       <h2 id="transactions">Transactions</h2>
-      <p>View and monitor all payment transactions across your projects.</p>
+      <p>Visualisez et surveillez toutes les transactions de paiement sur vos projets.</p>
 
-      <h3>Transaction Details</h3>
-      <p>Each transaction shows:</p>
+      <h3>Détails des Transactions</h3>
+      <p>Chaque transaction affiche :</p>
       <ul>
-        <li>Amount and currency</li>
-        <li>Payment status</li>
-        <li>Provider used</li>
-        <li>Payer information</li>
-        <li>Timestamps</li>
-        <li>Metadata</li>
+        <li>Montant et devise</li>
+        <li>Statut du paiement</li>
+        <li>Provider utilisé</li>
+        <li>Informations du payeur</li>
+        <li>Horodatages</li>
+        <li>Métadonnées</li>
       </ul>
 
-      <h3>Filtering Transactions</h3>
-      <p>Filter transactions by:</p>
+      <h3>Filtrage des Transactions</h3>
+      <p>Filtrez les transactions par :</p>
       <ul>
-        <li>Date range</li>
-        <li>Status (succeeded, failed, pending)</li>
+        <li>Plage de dates</li>
+        <li>Statut (succeeded, failed, pending)</li>
         <li>Provider</li>
-        <li>Project</li>
+        <li>Projet</li>
       </ul>
     </div>
   )
