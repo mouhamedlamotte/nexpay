@@ -218,12 +218,9 @@ else
     echo -e "${GREEN}💡 Pour une installation avec domaine:${NC}"
     echo "   curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- votre-domaine.com"
     echo ""
-    read -p "Continuer sans domaine? (oui/non): " CONFIRM
     
-    if [ "$CONFIRM" != "oui" ] && [ "$CONFIRM" != "yes" ] && [ "$CONFIRM" != "o" ] && [ "$CONFIRM" != "y" ]; then
-        log_info "Installation annulée par l'utilisateur"
-        exit 0
-    fi
+    log_warn "⏳ Installation automatique sans domaine (mode HTTP uniquement)"
+    sleep 3
     
     APP_DOMAIN="$DETECTED_IP"
     USE_SSL=false
@@ -318,15 +315,187 @@ EOF
 
 log_success "Fichier .env créé"
 
-# 12. Configuration de Traefik pour SSL
+# 12. Configuration de Traefik
+log_info "Configuration de Traefik..."
+
 if [ "$USE_SSL" = true ]; then
-    log_info "Configuration SSL activée pour: $APP_DOMAIN"
+    log_info "Mode HTTPS activé pour: $APP_DOMAIN"
+    
+    # Créer la config Traefik pour HTTPS
     mkdir -p config/traefik/letsencrypt
     touch config/traefik/letsencrypt/acme.json
     chmod 600 config/traefik/letsencrypt/acme.json
-    log_success "Configuration SSL prête (Let's Encrypt)"
+    
+    # Traefik.yml pour HTTPS
+    cat > config/traefik/traefik.yml << 'TRAEFIK_HTTPS'
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: ":443"
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: ${ADMIN_EMAIL}
+      storage: /letsencrypt/acme.json
+      httpChallenge:
+        entryPoint: web
+
+providers:
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+api:
+  dashboard: true
+  insecure: false
+
+log:
+  level: INFO
+
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+TRAEFIK_HTTPS
+
+    # Routes dynamiques pour HTTPS
+    cat > config/traefik/dynamic/routes.yml << 'ROUTES_HTTPS'
+http:
+  routers:
+    api-router:
+      rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/api/v1`)'
+      service: api-service
+      entryPoints:
+        - websecure
+      priority: 100
+      middlewares:
+        - cors-middleware@file
+      tls:
+        certResolver: letsencrypt
+
+    web-router:
+      rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/`) && !PathPrefix(`/api/v1`)'
+      service: web-service
+      entryPoints:
+        - websecure
+      priority: 99
+      middlewares:
+        - cors-middleware@file
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    api-service:
+      loadBalancer:
+        servers:
+          - url: "http://nexpay-api:9000"
+
+    web-service:
+      loadBalancer:
+        servers:
+          - url: "http://nexpay-web:9001"
+
+  middlewares:
+    cors-middleware:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        accessControlAllowHeaders:
+          - "*"
+        accessControlAllowOriginList:
+          - "*"
+        accessControlMaxAge: 100
+        addVaryHeader: true
+ROUTES_HTTPS
+
+    log_success "Configuration HTTPS créée"
+    
 else
-    log_info "Configuration sans SSL (HTTP uniquement)"
+    log_info "Mode HTTP activé (sans SSL)"
+    
+    # Traefik.yml pour HTTP uniquement
+    cat > config/traefik/traefik.yml << 'TRAEFIK_HTTP'
+entryPoints:
+  web:
+    address: ":80"
+
+providers:
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+api:
+  dashboard: true
+  insecure: true
+
+log:
+  level: INFO
+
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+TRAEFIK_HTTP
+
+    # Routes dynamiques pour HTTP
+    cat > config/traefik/dynamic/routes.yml << 'ROUTES_HTTP'
+http:
+  routers:
+    api-router:
+      rule: 'PathPrefix(`/api/v1`)'
+      service: api-service
+      entryPoints:
+        - web
+      priority: 100
+      middlewares:
+        - cors-middleware@file
+
+    web-router:
+      rule: 'PathPrefix(`/`)'
+      service: web-service
+      entryPoints:
+        - web
+      priority: 99
+      middlewares:
+        - cors-middleware@file
+
+  services:
+    api-service:
+      loadBalancer:
+        servers:
+          - url: "http://nexpay-api:9000"
+
+    web-service:
+      loadBalancer:
+        servers:
+          - url: "http://nexpay-web:9001"
+
+  middlewares:
+    cors-middleware:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        accessControlAllowHeaders:
+          - "*"
+        accessControlAllowOriginList:
+          - "*"
+        accessControlMaxAge: 100
+        addVaryHeader: true
+ROUTES_HTTP
+
+    log_success "Configuration HTTP créée"
 fi
 
 # 13. Démarrage des containers
