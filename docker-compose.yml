@@ -107,13 +107,16 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: "https://${APP_DOMAIN}/api/v1"
     container_name: nexpay-web
     environment:
-      - NEXT_PUBLIC_API_URL=http://${APP_DOMAIN}/api/v1
+      - NEXT_PUBLIC_API_URL=https://${APP_DOMAIN}/api/v1
     expose:
       - 9001
     networks:
       - nexpay-web
+
 
 
 networks:

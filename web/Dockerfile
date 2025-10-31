@@ -3,8 +3,10 @@
 FROM node:22-slim AS base
 
 ARG PORT=9001
+ARG NEXT_PUBLIC_API_URL   # ✅ Ajout ici
 
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 WORKDIR /app
 
@@ -20,14 +22,21 @@ RUN pnpm install --frozen-lockfile
 # Build
 FROM base AS build
 
+ARG NEXT_PUBLIC_API_URL   # ✅ Re-déclaré ici (chaque stage doit le connaître)
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 
+# 🧠 Log de contrôle (utile en build)
+RUN echo "⚙️ Building with NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL"
 RUN pnpm run build
 
 # Run
 FROM base AS run
 
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NODE_ENV=production
 ENV PORT=$PORT
 
