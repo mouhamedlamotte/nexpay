@@ -1,60 +1,18 @@
 http:
   routers:
-    # Router HTTP (redirection vers HTTPS si SSL activé)
-    web-router-http:
+    web-router:
       rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/`) && !PathPrefix(`/api/v1`)'
-      service: web-service
-      entryPoints:
-        - web
-      priority: 101
-      {{- if eq (env "SSL_CONFIGURED") "true" }}
-      middlewares:
-        - redirect-to-https@file
-      {{- else }}
-      middlewares:
-        - cors-middleware@file
-      {{- end }}
-
-    {{- if eq (env "SSL_CONFIGURED") "true" }}
-    # Router HTTPS (uniquement si SSL configuré)
-    web-router-https:
-      rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/`) && !PathPrefix(`/api/v1`)'
-      service: web-service
+      service: web
       entryPoints:
         - websecure
-      priority: 101
+      priority: 100
       middlewares:
         - cors-middleware@file
       tls:
         certResolver: letsencrypt
-    {{- end }}
 
   services:
-    web-service:
+    web:
       loadBalancer:
         servers:
-          - url: "http://nexpay_web:9001"
-
-  middlewares:
-    {{- if eq (env "SSL_CONFIGURED") "true" }}
-    redirect-to-https:
-      redirectScheme:
-        scheme: https
-        permanent: true
-    {{- end }}
-
-    cors-middleware:
-      headers:
-        accessControlAllowMethods:
-          - GET
-          - POST
-          - PUT
-          - DELETE
-          - PATCH
-          - OPTIONS
-        accessControlAllowHeaders:
-          - "*"
-        accessControlAllowOriginList:
-          - "*"
-        accessControlMaxAge: 100
-        addVaryHeader: true
+          - url: "http://web:9001"

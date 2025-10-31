@@ -1,7 +1,7 @@
 services:
-  traefik_nexpay:
+  traefik:
     image: traefik:v3.5
-    container_name: traefik_nexpay
+    container_name: traefik
     command:
       - "--api.dashboard=true"
       - "--providers.docker=true"
@@ -12,9 +12,8 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.storage=/acme.json"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
     ports:
-      - "${HTTP_PORT:-9090}:80"
-      - "${HTTPS_PORT:-9091}:443"
-      - "${TRAEFIK_DASHBOARD_PORT:-9092}:8080"
+      - "80:80"
+      - "443:443"
     volumes:
       - ./config/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./config/traefik/dynamic:/etc/traefik/dynamic:ro
@@ -23,7 +22,6 @@ services:
     environment:
       - APP_DOMAIN=${APP_DOMAIN}
       - ADMIN_EMAIL=${ADMIN_EMAIL}
-      - SSL_CONFIGURED=${SSL_CONFIGURED:-false}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.traefik.rule=Host(`traefik.${APP_DOMAIN}`)"
@@ -31,25 +29,25 @@ services:
       - "traefik.http.routers.traefik.middlewares=traefik-auth"
       - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_AUTH}"
     networks:
-      - web_nexpay
+      - nexpay-web
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
-  postgres_nexpay:
-    image: postgres:15-alpine
-    container_name: postgres_nexpay
+  nexpay-db:
+    image: postgres:17-alpine
+    container_name: nexpay-db
     environment:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     ports:
-      - "54321:5432"   # Port Postgres différent (au lieu de 5432)
+      - "5432:5432"
     volumes:
       - postgres_data_nexpay:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
-      - backend_nexpay
+      - nexpay-backend
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
@@ -57,74 +55,74 @@ services:
       timeout: 5s
       retries: 5
 
-  redis_nexpay:
+  nexpay-cache:
     image: redis:7-alpine
-    container_name: redis_nexpay
+    container_name: nexpay-cache
     command: /bin/sh -c "redis-server --requirepass $$REDIS_PASSWORD"
-    hostname: redis_nexpay
+    hostname: nexpay-cache
     ports:
       - "63791:6379"   # Port Redis différent (au lieu de 6379)
     volumes:
       - redis_data_nexpay:/data
     networks:
-      - backend_nexpay
+      - nexpay-backend
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     restart: unless-stopped
 
-  api_nexpay:
+  nexpay-api:
     build:
       context: ./api
       dockerfile: Dockerfile
-    container_name: api_nexpay
+    container_name: api-nexpay
     environment:
       - NODE_ENV=production
       - APP_PORT=9000
       - APP_NAME=${APP_NAME}
       - APP_DOMAIN=${APP_DOMAIN}
       - GLOBAL_PREFIX=api/v1
-      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres_nexpay:5432/${DB_NAME}
-      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis_nexpay:6379
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@nexpay-db:5432/${DB_NAME}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@nexpay-cache:6379
       - JWT_SECRET=${JWT_SECRET}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
-      - ADMIN_EMAIL=admin@nexpay.command
+      - ADMIN_EMAIL=admin@nexpay.com
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     depends_on:
-      postgres_nexpay:
+      nexpay-db:
         condition: service_healthy
-      redis_nexpay:
+      nexpay-cache:
         condition: service_started
     command: sh -c "npx prisma migrate deploy && npm run prod"
-    ports:
-      - "9093:9000"    # Port API exposé
+    expose:
+      - "9000"
     networks:
-      - web_nexpay
-      - backend_nexpay
+      - nexpay-web
+      - nexpay-backend
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-  web:
+  nexpay-web:
     build:
       context: ./web
       dockerfile: Dockerfile
-    container_name: nexpay_web
+    container_name: nexpay-web
     environment:
       - NEXT_PUBLIC_API_URL=http://${APP_DOMAIN}/api/v1
     expose:
       - 9001
     networks:
-      - web_nexpay
+      - nexpay-web
 
 
 networks:
-  web_nexpay:
-    name: web_nexpay
+  nexpay-web:
+    name: nexpay-web
     driver: bridge
-  backend_nexpay:
-    name: backend_nexpay
+  nexpay-backend:
+    name: nexpay-backend
     driver: bridge
     internal: true
 

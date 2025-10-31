@@ -2,9 +2,23 @@
 entryPoints:
   web:
     address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
   websecure:
     address: ":443"
 
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: '{{ env "ADMIN_EMAIL" }}'
+      storage: /letsencrypt/acme.json
+      httpChallenge:
+        entryPoint: web
 
 providers:
   file:

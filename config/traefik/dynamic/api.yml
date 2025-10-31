@@ -1,23 +1,6 @@
 http:
   routers:
-    # Router HTTP (redirection vers HTTPS si SSL activé)
-    api-router-http:
-      rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/api/v1`)'
-      service: api-service
-      entryPoints:
-        - web
-      priority: 100
-      {{- if eq (env "SSL_CONFIGURED") "true" }}
-      middlewares:
-        - redirect-to-https@file
-      {{- else }}
-      middlewares:
-        - cors-middleware@file
-      {{- end }}
-
-    {{- if eq (env "SSL_CONFIGURED") "true" }}
-    # Router HTTPS (uniquement si SSL configuré)
-    api-router-https:
+    api-router:
       rule: 'Host(`{{ env "APP_DOMAIN" }}`) && PathPrefix(`/api/v1`)'
       service: api-service
       entryPoints:
@@ -25,35 +8,11 @@ http:
       priority: 100
       middlewares:
         - cors-middleware@file
-      tls: {}
-    {{- end }}
-        
+      tls:
+        certResolver: letsencrypt
+
   services:
     api-service:
       loadBalancer:
         servers:
-          - url: "http://api_nexpay:9000"
-
-  middlewares:
-    {{- if eq (env "SSL_CONFIGURED") "true" }}
-    redirect-to-https:
-      redirectScheme:
-        scheme: https
-        permanent: true
-    {{- end }}
-    
-    cors-middleware:
-      headers:
-        accessControlAllowMethods:
-          - GET
-          - POST
-          - PUT
-          - DELETE
-          - PATCH
-          - OPTIONS
-        accessControlAllowHeaders:
-          - "*"
-        accessControlAllowOriginList:
-          - "*"
-        accessControlMaxAge: 100
-        addVaryHeader: true
+          - url: "http:/api:9000"

@@ -121,7 +121,7 @@ fi
 
 # 5. Création de la structure des dossiers
 log_info "Création de la structure..."
-mkdir -p $INSTALL_DIR/{config/traefik/dynamic,database,api,logs,backups}
+mkdir -p $INSTALL_DIR/{config/traefik/dynamic,database,api,web,logs,backups}
 cd $INSTALL_DIR
 
 # 6. Clonage du repository
@@ -159,54 +159,10 @@ fi
 
 echo ""
 log_info "Adresse IP détectée: $DETECTED_IP"
-echo ""
-read -p "Voulez-vous configurer un nom de domaine personnalisé ? (o/N): " SETUP_DOMAIN
 
-if [[ "$SETUP_DOMAIN" =~ ^[Oo]$ ]]; then
-    read -p "Entrez votre nom de domaine (ex: pay.example.com): " CUSTOM_DOMAIN
-    
-    if [ -n "$CUSTOM_DOMAIN" ] && [[ "$CUSTOM_DOMAIN" =~ ^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$ ]]; then
-        APP_DOMAIN="$CUSTOM_DOMAIN"
-        
-        echo ""
-        log_info "Domaine configuré: $APP_DOMAIN"
-        log_warn "⚠️  Assurez-vous que votre domaine pointe vers $DETECTED_IP"
-        echo ""
-        
-        read -p "Voulez-vous générer un certificat SSL Let's Encrypt ? (o/N): " SETUP_SSL
-        
-        if [[ "$SETUP_SSL" =~ ^[Oo]$ ]]; then
-            log_warn "⚠️  Configuration SSL nécessite:"
-            log_warn "   - Les ports 80 et 443 temporairement disponibles"
-            log_warn "   - Votre domaine doit déjà pointer vers ce serveur"
-            echo ""
-            read -p "Les prérequis sont-ils remplis ? (o/N): " CONFIRM_SSL
-            
-            if [[ "$CONFIRM_SSL" =~ ^[Oo]$ ]]; then
-                USE_SSL="true"
-            else
-                USE_SSL="false"
-                log_info "Pas de SSL configuré (peut être fait plus tard avec ./configure-domain.sh)"
-            fi
-        fi
-    else
-        log_warn "Domaine invalide, utilisation de l'IP: $DETECTED_IP"
-        APP_DOMAIN="$DETECTED_IP"
-        USE_SSL="false"
-    fi
-else
-    log_info "Utilisation de l'IP: $APP_DOMAIN"
-    USE_SSL="false"
-fi
 
 # Email admin
-ADMIN_EMAIL="admin@nexpay.local"
-if [ "$USE_SSL" = "true" ]; then
-    read -p "Email pour Let's Encrypt (ex: admin@$APP_DOMAIN): " LE_EMAIL
-    if [ -n "$LE_EMAIL" ]; then
-        ADMIN_EMAIL="$LE_EMAIL"
-    fi
-fi
+ADMIN_EMAIL="admin@nexpay.com"
 
 log_info "Email admin: $ADMIN_EMAIL (par défaut)"
 
@@ -229,74 +185,12 @@ log_info "Génération des secrets de sécurité..."
 JWT_SECRET=$(openssl rand -base64 32)
 DB_PASSWORD=portgres
 REDIS_PASSWORD=$(openssl rand -base64 32)
-ADMIN_EMAIL="admin@nexpay.com"
 ENCRYPTION_KEY=$(openssl rand -hex 32)
 ADMIN_PASSWORD=$(openssl rand -hex 32)
 TRAEFIK_AUTH=$(echo $(htpasswd -nb admin "$TRAEFIK_PASSWORD") | sed -e 's/\$/\$\$/g')
 
 log_success "Secrets générés"
 
-
-# ssl conf
-
-if [ "$USE_SSL" = "true" ]; then
-    log_info "Installation de Certbot..."
-
-    case "$OS_TYPE" in
-        ubuntu|debian|raspbian)
-            apt-get install -y certbot >/dev/null 2>&1
-            ;;
-        centos|fedora|rhel)
-            dnf install -y certbot >/dev/null 2>&1
-            ;;
-        arch)
-            pacman -Sy --noconfirm certbot >/dev/null 2>&1
-            ;;
-    esac
-
-    log_info "Génération du certificat SSL pour $APP_DOMAIN..."
-    log_warn "⚠️  Arrêt temporaire des services sur ports 80/443 si existants..."
-
-    # Arrêter temporairement les services qui bloquent les ports
-    DOCKER_WAS_RUNNING=false
-    if docker ps | grep -q "80->80"; then
-        log_info "Arrêt temporaire de Docker..."
-        systemctl stop docker
-        DOCKER_WAS_RUNNING=true
-        sleep 5
-    fi
-
-    # Générer le certificat
-    if certbot certonly --standalone -d "$APP_DOMAIN" --email "$ADMIN_EMAIL" --agree-tos --non-interactive; then
-        log_success "Certificat SSL généré avec succès"
-
-        # Créer le dossier des certificats
-        mkdir -p config/traefik/certs
-
-        # Copier les certificats
-        cp /etc/letsencrypt/live/$APP_DOMAIN/fullchain.pem config/traefik/certs/$APP_DOMAIN.crt
-        cp /etc/letsencrypt/live/$APP_DOMAIN/privkey.pem config/traefik/certs/$APP_DOMAIN.key
-        chmod 644 config/traefik/certs/$APP_DOMAIN.crt
-        chmod 600 config/traefik/certs/$APP_DOMAIN.key
-
-        SSL_CONFIGURED="true"
-    else
-        log_error "Échec de la génération du certificat SSL"
-        log_warn "NexPay sera installé sans SSL (vous pourrez le configurer plus tard)"
-        USE_SSL="false"
-        SSL_CONFIGURED="false"
-    fi
-
-    # Redémarrer Docker si on l'avait arrêté
-    if [ "$DOCKER_WAS_RUNNING" = true ]; then
-        log_info "Redémarrage de Docker..."
-        systemctl start docker
-        sleep 5
-    fi
-else
-    SSL_CONFIGURED="false"
-    log_info "Installation sans SSL"
-fi
 
 
 # 9. Création du fichier .env
@@ -314,8 +208,6 @@ ADMIN_EMAIL=$ADMIN_EMAIL
 ADMIN_PASSWORD=$ADMIN_PASSWORD
 NODE_ENV=production
 
-USE_SSL=$USE_SSL
-SSL_CONFIGURED=$SSL_CONFIGURED
 
 # Security
 JWT_SECRET=$JWT_SECRET
@@ -331,22 +223,14 @@ REDIS_PASSWORD=$REDIS_PASSWORD
 
 # Traefik
 TRAEFIK_AUTH=$TRAEFIK_AUTH
-
-# Ports (you can change these)
-HTTP_PORT=9090
-HTTPS_PORT=9091
-TRAEFIK_DASHBOARD_PORT=9092
-POSTGRES_PORT=54321
-REDIS_PORT=63791
-API_PORT=9093
 EOF
 
 log_success "Fichier .env créé"
 
 # 10. Configuration de Traefik pour SSL
 mkdir -p config/traefik/letsencrypt
-touch config/traefik/letsencrypt/acme-nexpay.json
-chmod 600 config/traefik/letsencrypt/acme-nexpay.json
+touch config/traefik/letsencrypt/acme.json
+chmod 600 config/traefik/letsencrypt/acme.json
 
 # 11. Démarrage des containers
 log_info "Démarrage de Nexpay..."
@@ -370,10 +254,8 @@ fi
 log_info "Test de connectivité..."
 sleep 5
 
-if curl -f http://localhost:9093/api/v1/health > /dev/null 2>&1; then
+if curl -f http://localhost:9000/api/v1/health > /dev/null 2>&1; then
     log_success "API répond correctement"
-elif curl -f http://localhost:9000/api/v1/health > /dev/null 2>&1; then
-    log_success "API répond correctement (port interne)"
 else
     log_warn "API ne répond pas encore (peut prendre 1-2 minutes)"
 fi
@@ -389,24 +271,13 @@ EOF
 echo -e "${NC}"
 echo ""
 echo -e "${GREEN}🌐 URLs disponibles:${NC}"
-if [ "$SSL_CONFIGURED" = "true" ]; then
-    echo "   • HTTPS: https://$APP_DOMAIN:9091"
-    echo "   • API:   https://$APP_DOMAIN:9091/api/v1"
-else
-    echo "   • HTTP:  http://$APP_DOMAIN:9090"
-    echo "   • API:   http://$APP_DOMAIN:9090/api/v1"
-fi
+echo "   • API:   http://$APP_DOMAIN/api/v1"
+echo "   • WEB:  http://$APP_DOMAIN"
+
 echo -e "${GREEN}🔑 Identifiants par défaut:${NC}"
 echo "   • Traefik utilisateur: admin"
 echo "   • Traefik mot de passe: $TRAEFIK_PASSWORD"
 echo ""
-echo -e "${GREEN}🔌 Ports exposés:${NC}"
-echo "   • HTTP (Traefik):    9090"
-echo "   • HTTPS (Traefik):   9091"
-echo "   • Dashboard:         9092"
-echo "   • API:               9093"
-echo "   • PostgreSQL:        54321"
-echo "   • Redis:             63791"
 echo ""
 echo -e "${YELLOW}⚠️  IMPORTANT:${NC}"
 echo "   1. Sauvegardez le fichier: $INSTALL_DIR/.env"
@@ -430,7 +301,7 @@ echo "   2. nano .env"
 echo "   3. Modifier APP_DOMAIN=votre-domaine.com"
 echo "   4. docker compose restart"
 echo ""
-echo -e "${BLUE}📖 Documentation:${NC} https://docs.nexpay.com"
+echo -e "${BLUE}📖 Documentation:${NC} https://nexpay.thenexcom.com"
 echo -e "${BLUE}💬 Support:${NC} https://github.com/mouhamedlamotte/nexpay/issues"
 echo ""
 
@@ -488,7 +359,7 @@ docker compose restart
 
 echo "✅ Configuration terminée!"
 echo ""
-echo "Votre application est maintenant accessible sur: http://$NEW_DOMAIN:9093"
+echo "Votre application est maintenant accessible sur: http://$NEW_DOMAIN"
 DOMAIN_SCRIPT
 
 chmod +x configure-domain.sh
