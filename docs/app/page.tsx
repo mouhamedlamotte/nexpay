@@ -40,11 +40,11 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-24 text-center">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="inline-block px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-sm text-primary mb-4">
-            Passerelle de Paiement Auto-Hébergée
+Bêta
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
             Acceptez des Paiements avec{" "}
-            <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
               NEXPAY
             </span>
           </h1>
