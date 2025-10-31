@@ -15,7 +15,7 @@ NexPay est une solution de paiement mobile auto-hébergée qui permet d'accepter
 ## Prérequis
 
 - Un serveur Linux (Ubuntu 20.04+ recommandé)
-- Docker et Docker Compose installés
+- Port 80 et 443 libres
 - Un nom de domaine pointant vers votre serveur
 - Accès root ou sudo sur le serveur
 
