@@ -15,4 +15,4 @@ http:
     api-service:
       loadBalancer:
         servers:
-          - url: "http:/nexpay-api:9000"
+          - url: "http://nexpay-api:9000"
