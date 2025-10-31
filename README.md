@@ -25,9 +25,9 @@ L'installation de NexPay est simple et automatisée grâce à notre script d'ins
 
 ### Installation en une commande
 
-\`\`\`bash
+```bash
 curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- pay.yourdomain.com
-\`\`\`
+```
 
 Remplacez `pay.yourdomain.com` par votre propre domaine.
 
@@ -44,9 +44,9 @@ Remplacez `pay.yourdomain.com` par votre propre domaine.
 
 Une fois l'installation terminée, vous pouvez accéder à votre instance NexPay à l'adresse :
 
-\`\`\`
+```
 https://pay.yourdomain.com
-\`\`\`
+```
 
 ## Configuration
 
@@ -54,7 +54,7 @@ https://pay.yourdomain.com
 
 Le script d'installation crée automatiquement un fichier `.env` avec les variables nécessaires. Vous pouvez les modifier selon vos besoins :
 
-\`\`\`env
+```env
 # Base de données
 DATABASE_URL=postgresql://user:password@postgres:5432/nexpay
 
@@ -69,7 +69,7 @@ SMTP_HOST=smtp.example.com
 SMTP_PORT=587
 SMTP_USER=your-email@example.com
 SMTP_PASSWORD=your-password
-\`\`\`
+```
 
 ### Configuration des providers
 
@@ -77,7 +77,7 @@ SMTP_PASSWORD=your-password
 2. Accédez à la section **Providers**
 3. Cliquez sur **Configure** pour chaque provider
 
-![Configuration des providers](https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%20from%202025-10-31%2011-02-57-fibOOuVN9k9HWdaHELCmMQgGyBhrG5.png)
+![Configuration des providers](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/providers.png)
 
 #### Exemple : Configuration Wave
 
@@ -95,11 +95,13 @@ SMTP_PASSWORD=your-password
 Pour recevoir les notifications de paiement des providers, vous devez configurer les webhooks chez chaque provider :
 
 **URL du webhook à configurer chez le provider :**
-\`\`\`
+
+```
 https://pay.yourdomain.com/api/v1/webhook/<provider>
-\`\`\`
+```
 
 Exemples :
+
 - Wave : `https://pay.yourdomain.com/api/v1/webhook/wave`
 - Orange Money : `https://pay.yourdomain.com/api/v1/webhook/om`
 
@@ -107,7 +109,7 @@ Exemples :
 
 Pour recevoir les notifications de NexPay dans votre application, configurez un webhook dans le dashboard :
 
-![Configuration des webhooks](https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%20from%202025-10-30%2018-00-08-gSa3QGljAge6ACctwIdBilhtUkf2KY.png)
+![Configuration des webhooks](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/webhook.png)
 
 1. Accédez à **Paramètres du compte** > **Webhooks**
 2. Cliquez sur **Nouveau webhook**
@@ -120,7 +122,7 @@ Pour recevoir les notifications de NexPay dans votre application, configurez un 
 
 Configurez les URLs de redirection après paiement :
 
-![Configuration des redirections](https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%20from%202025-10-30%2017-59-59-6dJGPwAF7wunaYbxz6bAI54JPv8Djs.png)
+![Configuration des redirections](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/callback.png))
 
 - **Success URL** : Redirection après paiement réussi
 - **Failure URL** : Redirection après échec de paiement
@@ -132,7 +134,7 @@ Configurez les URLs de redirection après paiement :
 
 Le dashboard vous donne un aperçu complet de votre activité :
 
-![Dashboard NexPay](https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%20from%202025-10-31%2011-02-48-RpXkQDVhGpKTHwyiEFoJoMwl0FVZXP.png)
+![Dashboard NexPay](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/dashboard.png)
 
 - **Volume Total** : Montant total des transactions
 - **Transactions** : Nombre de transactions
@@ -145,15 +147,16 @@ Le dashboard vous donne un aperçu complet de votre activité :
 
 #### 1. Sélection du mode de paiement
 
-![Sélection du mode de paiement](https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%20from%202025-10-31%2011-04-25-SPUwIQNtpnpPWQlRphnm7YZN3bcyjO.png)
+![Sélection du mode de paiement](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/chekout.png)
 
 Le client choisit son mode de paiement préféré (Wave, Orange Money, etc.)
 
 #### 2. Paiement via QR Code ou lien direct
 
-![Paiement Wave](https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%20from%202025-10-31%2011-04-32-bVC98TKMEgo9wkEsxiCVwgrZ8xfbLB.png)
+![Paiement Wave](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/scan.png)
 
 Le client peut :
+
 - Scanner le QR code avec son application de paiement
 - Cliquer sur le lien direct pour ouvrir l'application
 - Voir la référence de paiement et la date d'expiration
@@ -164,13 +167,13 @@ Le client peut :
 
 Toutes les requêtes API nécessitent une clé API dans le header :
 
-\`\`\`bash
+```bash
 Authorization: Bearer YOUR_API_KEY
-\`\`\`
+```
 
 ### Initier un paiement
 
-\`\`\`bash
+```bash
 POST /api/v1/payment/initiate
 Content-Type: application/json
 Authorization: Bearer YOUR_API_KEY
@@ -188,11 +191,11 @@ Authorization: Bearer YOUR_API_KEY
     "custom_field": "value"
   }
 }
-\`\`\`
+```
 
 ### Créer une session de paiement
 
-\`\`\`bash
+```bash
 POST /api/v1/payment/session/initiate
 Content-Type: application/json
 Authorization: Bearer YOUR_API_KEY
@@ -208,20 +211,20 @@ Authorization: Bearer YOUR_API_KEY
   "success_url": "https://yourapp.com/success",
   "cancel_url": "https://yourapp.com/cancel"
 }
-\`\`\`
+```
 
 ### Vérifier le statut d'une session
 
-\`\`\`bash
+```bash
 GET /api/v1/payment/session/{sessionId}
 Authorization: Bearer YOUR_API_KEY
-\`\`\`
+```
 
 ## Webhooks
 
 ### Structure d'un événement webhook
 
-\`\`\`json
+```json
 {
   "type": "payment.succeeded",
   "data": {
@@ -247,7 +250,7 @@ Authorization: Bearer YOUR_API_KEY
     }
   }
 }
-\`\`\`
+```
 
 ### Types d'événements
 
@@ -260,7 +263,7 @@ Authorization: Bearer YOUR_API_KEY
 
 Vérifiez toujours la signature des webhooks pour garantir leur authenticité :
 
-\`\`\`javascript
+```javascript
 const crypto = require('crypto');
 
 function verifyWebhookSignature(payload, signature, secret) {
@@ -287,7 +290,7 @@ app.post('/webhook', (req, res) => {
   
   res.status(200).send('OK');
 });
-\`\`\`
+```
 
 ## Gestion multi-projets
 
@@ -300,8 +303,8 @@ NexPay permet de gérer plusieurs projets avec une seule instance :
 
 ## Support et Documentation
 
-- **Documentation complète** : Consultez la documentation en ligne à `https://pay.yourdomain.com/docs`
-- **API Reference** : Documentation détaillée de tous les endpoints API
+- **Documentation complète** : Consultez la documentation en ligne à `https://nexpay.thenexcom.com`
+- **API Reference** : Documentation détaillée de tous les endpoints API `https://yourdomain.com/api/v1/docs`
 - **Exemples d'intégration** : Code samples en JavaScript, Python, PHP
 
 ## Sécurité
@@ -317,26 +320,28 @@ NexPay permet de gérer plusieurs projets avec une seule instance :
 
 Pour mettre à jour NexPay vers la dernière version :
 
-\`\`\`bash
+```bash
 cd /path/to/nexpay
 git pull origin main
 docker-compose down
 docker-compose up -d --build
-\`\`\`
+```
 
 ## Sauvegarde
 
 Il est recommandé de sauvegarder régulièrement :
 
-1. **Base de données** : 
-\`\`\`bash
+1. **Base de données** :
+
+```bash
 docker-compose exec postgres pg_dump -U user nexpay > backup.sql
-\`\`\`
+```
 
 2. **Variables d'environnement** :
-\`\`\`bash
+
+```bash
 cp .env .env.backup
-\`\`\`
+```
 
 ## Dépannage
 
@@ -354,7 +359,7 @@ Traefik gère automatiquement les certificats SSL. Si vous rencontrez des probl�
 2. Vérifiez les logs Traefik : `docker-compose logs traefik`
 3. Attendez quelques minutes pour la génération du certificat
 
-### Impossible d'accéder au dashboard
+### impossible d'accéder au dashboard
 
 1. Vérifiez que tous les services sont démarrés : `docker-compose ps`
 2. Vérifiez les logs : `docker-compose logs -f`
@@ -370,4 +375,4 @@ Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou un
 
 ---
 
-Développé avec ❤️ pour faciliter les paiements mobiles en Afrique
+Développé avec ❤️ par [Mouhamed Lamotte](https://mouhamedlamotte.thenexcom.com).
