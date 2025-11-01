@@ -24,8 +24,11 @@ RUN pnpm install --frozen-lockfile
 # Build
 FROM base AS build
 
-ARG NEXT_PUBLIC_API_URL   # ✅ Re-déclaré ici (chaque stage doit le connaître)
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_READ_API_KEY
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_READ_API_KEY=$NEXT_PUBLIC_READ_API_KEY
+
 
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
