@@ -35,6 +35,7 @@ COPY . .
 
 # 🧠 Log de contrôle (utile en build)
 RUN echo "⚙️ Building with NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL"
+RUN echo "⚙️ Building with NEXT_PUBLIC_READ_API_KEY=$NEXT_PUBLIC_READ_API_KEY"
 RUN pnpm run build
 
 # Run

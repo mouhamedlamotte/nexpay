@@ -107,6 +107,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: "https://${APP_DOMAIN}/api/v1"
+        NEXT_PUBLIC_READ_API_KEY: ${X_READ_KEY}
     container_name: nexpay-web
     environment:
       - NEXT_PUBLIC_API_URL=https://${APP_DOMAIN}/api/v1
