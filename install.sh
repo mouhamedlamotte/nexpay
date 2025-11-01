@@ -46,15 +46,15 @@ readonly C_ACCENT='\033[38;5;51m'       # Cyan
 readonly C_MUTED='\033[38;5;245m'       # Gris
 
 # Icônes
-readonly ICON_SUCCESS="✓"
-readonly ICON_ERROR="✗"
-readonly ICON_WARNING="⚠"
-readonly ICON_INFO="ℹ"
-readonly ICON_ROCKET="🚀"
-readonly ICON_LOCK="🔒"
-readonly ICON_GEAR="⚙"
-readonly ICON_CHECK="✔"
-readonly ICON_ARROW="→"
+readonly ICON_SUCCESS="[OK]"
+readonly ICON_ERROR="[X]"
+readonly ICON_WARNING="[!]"
+readonly ICON_INFO="[i]"
+readonly ICON_ROCKET="[*]"
+readonly ICON_LOCK="[#]"
+readonly ICON_GEAR="[+]"
+readonly ICON_CHECK="[v]"
+readonly ICON_ARROW="=>"
 
 ################################################################################
 # FONCTIONS UTILITAIRES - AFFICHAGE
@@ -68,16 +68,14 @@ center_text() {
     printf "%${padding}s%s%${padding}s\n" "" "$text" ""
 }
 
-# Ligne de séparation stylée
 print_separator() {
-    local char="${1:-─}"
+    local char="${1:--}"
     local width="${2:-80}"
     printf "${C_MUTED}%${width}s${C_RESET}\n" | tr ' ' "$char"
 }
 
-# Ligne double pour sections importantes
 print_double_separator() {
-    printf "${C_PRIMARY}%80s${C_RESET}\n" | tr ' ' '═'
+    printf "${C_PRIMARY}%80s${C_RESET}\n" | tr ' ' '='
 }
 
 # Box avec titre
@@ -85,12 +83,11 @@ print_box() {
     local title="$1"
     local color="${2:-$C_PRIMARY}"
     echo ""
-    echo -e "${color}╔════════════════════════════════════════════════════════════════════════════╗${C_RESET}"
-    echo -e "${color}║$(center_text "$title" 76)║${C_RESET}"
-    echo -e "${color}╚════════════════════════════════════════════════════════════════════════════╝${C_RESET}"
+    echo -e "${color}+============================================================================+${C_RESET}"
+    echo -e "${color}|$(center_text "$title" 76)|${C_RESET}"
+    echo -e "${color}+============================================================================+${C_RESET}"
     echo ""
 }
-
 ################################################################################
 # FONCTIONS UTILITAIRES - LOGGING
 ################################################################################
@@ -160,34 +157,19 @@ spinner() {
     printf "\r${C_SUCCESS}${ICON_SUCCESS}${C_RESET}  %s\n" "$message"
 }
 
+# Exécution avec animation
 execute_with_progress() {
     local message="$1"
     shift
     local command="$@"
 
-    local frames=('/' '-' '\' '|')
-    local frame_index=0
+    printf "${C_INFO}${ICON_GEAR}${C_RESET}  ${C_DIM}%s...${C_RESET}" "$message"
 
-    # Lancer la commande en arrière-plan
-    eval "$command" >> "$LOG_FILE" 2>&1 &
-    local cmd_pid=$!
-
-    # Afficher le spinner pendant l'exécution
-    while kill -0 $cmd_pid 2>/dev/null; do
-        printf "\r${C_INFO}[${frames[$frame_index]}]${C_RESET} ${C_DIM}%s...${C_RESET}" "$message"
-        frame_index=$(( (frame_index + 1) % 4 ))
-        sleep 0.1
-    done
-
-    # Vérifier le résultat
-    wait $cmd_pid
-    local exit_code=$?
-
-    if [ $exit_code -eq 0 ]; then
-        printf "\r${C_SUCCESS}[#]${C_RESET} %-70s\n" "$message"
+    if eval "$command" >> "$LOG_FILE" 2>&1; then
+        printf "\r${C_SUCCESS}${ICON_SUCCESS}${C_RESET}  %s\n" "$message"
         return 0
     else
-        printf "\r${C_ERROR}[X]${C_RESET} %-70s\n" "$message"
+        printf "\r${C_ERROR}${ICON_ERROR}${C_RESET}  %s\n" "$message"
         return 1
     fi
 }
