@@ -84,8 +84,10 @@ services:
       - REDIS_URL=redis://:${REDIS_PASSWORD}@nexpay-cache:6379
       - JWT_SECRET=${JWT_SECRET}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
-      - ADMIN_EMAIL=admin@nexpay.com
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - X_WRITE_API=${X_WRITE_API}
+      - X_READ_API=${X_READ_API}
     depends_on:
       nexpay-db:
         condition: service_healthy
@@ -98,7 +100,7 @@ services:
       - nexpay-web
       - nexpay-backend
 
-      
+
   nexpay-web:
     build:
       context: ./web
@@ -108,6 +110,7 @@ services:
     container_name: nexpay-web
     environment:
       - NEXT_PUBLIC_API_URL=https://${APP_DOMAIN}/api/v1
+      - NEXT_PUBLIC_READ_API_KEY=${X_READ_API}
     expose:
       - 9001
     networks:

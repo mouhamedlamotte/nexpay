@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Get,
   Param,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { SessionService } from './session.service';
@@ -16,13 +17,20 @@ import {
   SessionPaymentDetailsResponse,
   SessionPaymentResponse,
 } from './responses/session-payment.reponse';
+import {
+  ApiKeyGuard,
+  ApiKeyPermission,
+  RequireApiKey,
+} from 'src/guards/api-key.guard';
 
 @Controller('payment/session')
+@UseGuards(ApiKeyGuard)
 export class SessionController {
   constructor(private readonly service: SessionService) {}
 
   @Post('/initiate')
   @HttpCode(HttpStatus.CREATED)
+  @RequireApiKey(ApiKeyPermission.WRITE)
   @ApiOperation({ summary: 'Initiate a new payment session' })
   @ApiResponse({
     status: 201,
@@ -41,6 +49,7 @@ export class SessionController {
 
   @Get('/:id')
   @HttpCode(HttpStatus.OK)
+  @RequireApiKey(ApiKeyPermission.READ)
   @ApiOperation({ summary: 'Get a payment session' })
   @ApiResponse({
     status: 201,
@@ -59,6 +68,7 @@ export class SessionController {
 
   @Post('/:id/checkout')
   @HttpCode(HttpStatus.OK)
+  @RequireApiKey(ApiKeyPermission.READ, ApiKeyPermission.WRITE)
   @ApiOperation({ summary: 'Checkout a payment session' })
   @ApiResponse({
     status: 201,

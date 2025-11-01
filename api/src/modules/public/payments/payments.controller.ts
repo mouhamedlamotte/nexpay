@@ -1,16 +1,30 @@
-import { Body, HttpCode, Controller, Post, HttpStatus } from '@nestjs/common';
+import {
+  Body,
+  HttpCode,
+  Controller,
+  Post,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { InitiatePaymentDto } from './dto/initiate-payment.dto';
 import { ApiOperation, ApiTags, ApiResponse } from '@nestjs/swagger';
 import { paymentResponse } from './responses/payment.reponse';
+import {
+  ApiKeyGuard,
+  ApiKeyPermission,
+  RequireApiKey,
+} from 'src/guards/api-key.guard';
 
 @ApiTags('Payment')
 @Controller('payment')
+@UseGuards(ApiKeyGuard)
 export class PaymentsController {
   constructor(private readonly service: PaymentsService) {}
 
   @Post('/initiate')
   @HttpCode(HttpStatus.CREATED)
+  @RequireApiKey(ApiKeyPermission.WRITE)
   @ApiOperation({ summary: 'Initiate a new payment' })
   @ApiResponse({
     status: 201,

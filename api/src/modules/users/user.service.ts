@@ -52,8 +52,8 @@ export class UserService implements OnModuleInit {
       },
       create: {
         email: this.env.get('ADMIN_EMAIL'),
-        firstName: 'Mouhamed',
-        lastName: 'Lamotte',
+        firstName: 'NEXPAY',
+        lastName: 'ADMIN',
         password: password,
       },
     });
