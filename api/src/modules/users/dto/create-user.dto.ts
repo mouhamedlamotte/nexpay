@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, IsBoolean, IsOptional } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  IsBoolean,
+  IsOptional,
+  MinLength,
+} from 'class-validator';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -17,6 +23,16 @@ export class CreateUserDto {
   lastName: string;
 
   @ApiProperty({
+    example: 'passer123',
+    description: 'Passe du user',
+  })
+  @IsString()
+  @MinLength(6, {
+    message: 'Le mot de passe doit contenir au moins 6 caractères',
+  })
+  password: string;
+
+  @ApiProperty({
     example: 'admin@nexcom.com',
     description: 'Adresse email unique de l’admin',
   })
@@ -24,11 +40,11 @@ export class CreateUserDto {
   email: string;
 
   @ApiProperty({
-    example: true,
-    description: 'Statut actif de l’admin (par défaut: true)',
+    example: false,
+    description: 'Est-ce un super user',
     required: false,
   })
   @IsOptional()
   @IsBoolean()
-  isActive?: boolean;
+  isSuperUser?: boolean;
 }

@@ -8,6 +8,10 @@ model User {
   email     String  @unique
   password  String
 
+  createdById String?
+  isSuperUser Boolean @default(false)
+
+  hasDefaultPassword Boolean @default(false)
 
   isActive  Boolean  @default(true)
 

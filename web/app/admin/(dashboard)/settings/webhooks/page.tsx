@@ -87,7 +87,7 @@ export default function WebhooksPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                
+
                 data?.data.map((webhook) => (
                   <TableRow key={webhook.id}>
                     <TableCell className="font-mono text-sm">{webhook.url}</TableCell>

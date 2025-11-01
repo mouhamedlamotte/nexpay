@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  OnModuleInit,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
 
 import {
   FilterConfig,
@@ -14,11 +9,10 @@ import {
   PrismaService,
 } from 'src/lib';
 import { ConfigService } from '@nestjs/config';
-import { TokensService } from 'src/lib/services/tokens.service';
-import Keyv from 'keyv';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUserDto } from './dto/get-users-dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -29,9 +23,6 @@ export class UserService implements OnModuleInit {
     private readonly pagination: PaginationService,
     private readonly filter: FilterService,
     private readonly env: ConfigService,
-    @Inject('KEYV') private keyv: Keyv,
-    // private readonly otp: OtpService,
-    private readonly tokens: TokensService,
   ) {
     this.logger.setContext(UserService.name);
   }
@@ -49,11 +40,15 @@ export class UserService implements OnModuleInit {
       where: { email: this.env.get('ADMIN_EMAIL') },
       update: {
         password: password,
+        hasDefaultPassword: true,
+        isSuperUser: true,
       },
       create: {
         email: this.env.get('ADMIN_EMAIL'),
-        firstName: 'NEXPAY',
-        lastName: 'ADMIN',
+        firstName: '',
+        isSuperUser: true,
+        lastName: '',
+        hasDefaultPassword: true,
         password: password,
       },
     });
@@ -75,13 +70,13 @@ export class UserService implements OnModuleInit {
   }
 
   async create(createdById: string, data: CreateUserDto) {
-    const defaultPassword = process.env.DEFAUL_PASSWORD;
-    const password = await this.hash.hashPassword(defaultPassword);
+    const password = await this.hash.hashPassword(data.password);
     try {
       const user = await this.prisma.user.create({
         data: {
           ...data,
           password: password,
+          createdById: createdById,
         },
       });
 
@@ -223,20 +218,24 @@ export class UserService implements OnModuleInit {
   //   }
   // }
 
-  async resetPassword(token: string, password: string) {
+  async resetPassword(id: string, dto: ResetPasswordDto) {
     try {
-      const email = await this.keyv.get(token);
-      if (!email) {
-        throw new Error('Invalid token');
+      const user = await this.prisma.user.findUnique({ where: { id } });
+      const isPasswordValid = await this.hash.verifyPassword(
+        dto.currentPassword,
+        user.password,
+      );
+      if (!isPasswordValid) {
+        throw new BadRequestException('Password is incorrect');
       }
-      const hashedPassword = await this.hash.hashPassword(password);
-      const user = await this.prisma.user.update({
-        where: { email },
+      const hashedPassword = await this.hash.hashPassword(dto.newPassword);
+      return await this.prisma.user.update({
+        where: { id },
         data: {
+          hasDefaultPassword: false,
           password: hashedPassword,
         },
       });
-      return user;
     } catch (error) {
       this.logger.error(error.message, error.stack);
       throw error;

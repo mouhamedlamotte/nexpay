@@ -1,10 +1,11 @@
 /* eslint-disable */
-import { ApiError, AuthApi, AuthCredentials, UserData } from "@/lib/api/auth"
+import { ApiError, AuthApi, AuthCredentials } from "@/lib/api/auth"
+import { User } from "@/lib/api/users.query"
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
 interface AuthState {
-  user: UserData | null
+  user: User | null
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
@@ -13,7 +14,7 @@ interface AuthState {
   // Actions
   login: (credentials: AuthCredentials) => Promise<any>
   checkAuth: () => Promise<void | any>
-  updateUser: (userData: Partial<UserData>) => void
+  updateUser: (userData: Partial<User>) => void
   logout: () => void
   setLoading: (loading?: boolean) => void
   setError: (error: string) => void
@@ -83,7 +84,7 @@ export const useAuthStore = create<AuthState>()(
           user: {
             ...state.user!,
             ...userData,
-          } as UserData,
+          } as User,
         })),
 
       logout: () =>

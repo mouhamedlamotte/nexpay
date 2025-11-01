@@ -10,8 +10,8 @@
 
 #### WEB
 
-* [ ] check if its first login and propose to change the password
-* [ ] add admin crud, and change password and email verifications
+* [X] check if its first login and propose to change the password
+* [X] add admin crud, and change password and email verifications
 * [ ] add list users
 * [X] let only one toast on webhook creation
 * [X] add webhook description

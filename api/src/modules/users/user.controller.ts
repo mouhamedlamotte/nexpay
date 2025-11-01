@@ -28,15 +28,17 @@ import { JwtAuthGuard } from 'src/guards/auth/jwt/jwt.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUserDto } from './dto/get-users-dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
-@ApiTags('Authentication')
 @Controller('')
+@ApiTags('Users')
 export class UserController {
   constructor(
     private readonly user: UserService,
     private readonly tokens: TokensService,
   ) {}
 
+  @ApiTags('Authentication')
   @Post('auth/login')
   @UseGuards(AuthGuard('local'))
   @ApiOperation({ summary: 'Authentifier un administrateur' })
@@ -58,7 +60,7 @@ export class UserController {
     };
   }
 
-  @Post('users/create')
+  @Post('users')
   @ApiOperation({ summary: 'Créer un administrateur' })
   @ApiBody({ type: CreateUserDto })
   @ApiResponse({
@@ -75,7 +77,7 @@ export class UserController {
     };
   }
 
-  @Put('users/update')
+  @Put('users')
   @UseGuards(JwtAuthGuard())
   @ApiOperation({ summary: 'Modifier ladmin connecté' })
   @ApiBody({ type: UpdateUserDto })
@@ -119,6 +121,23 @@ export class UserController {
     };
   }
 
+  @Put('users/password/reset')
+  @UseGuards(JwtAuthGuard())
+  @ApiOperation({ summary: 'Change connected user password' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Administrateur supprimé avec succès',
+  })
+  async resetPassword(@Req() req: any, @Body() dto: ResetPasswordDto) {
+    const data = await this.user.resetPassword(req.user.id, dto);
+    delete data.password;
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Password updated successfully',
+      data,
+    };
+  }
+
   @Get('users/me')
   @UseGuards(JwtAuthGuard())
   @ApiOperation({ summary: 'Profile de l’administrateur connecté' })
@@ -135,6 +154,24 @@ export class UserController {
       data,
     };
   }
+
+  @Put('users/:id')
+  @UseGuards(JwtAuthGuard())
+  @ApiOperation({ summary: 'Modifier un user' })
+  @ApiBody({ type: UpdateUserDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Utilisateur mis à jour avec succès',
+  })
+  async updateUser(@Body() dto: UpdateUserDto, @Param('id') id: string) {
+    const data = await this.user.update(id, dto);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'User updated successfully',
+      data,
+    };
+  }
+
   @Get('users/:id')
   @UseGuards(JwtAuthGuard())
   @ApiOperation({ summary: 'Récupérer un administrateur par son ID' })

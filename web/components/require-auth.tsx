@@ -6,7 +6,7 @@ import { useAuthStore } from "@/app/admin/(dashboard)/stores/auth/auth-store";
 import { useAppStore } from "@/stores/app.store";
 
   export const RequireAuth = ({ children }: { children: React.ReactNode }) => {
-    const { isAuthenticated, isLoading, checkAuth, hasCheckedAuth } = useAuthStore();
+    const { isAuthenticated, user, isLoading, checkAuth, hasCheckedAuth } = useAuthStore();
     const {setLoadingPhase} = useAppStore()
     const router = useRouter();
 

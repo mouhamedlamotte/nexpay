@@ -83,7 +83,7 @@ export interface PaymentProvider {
   id: string;
   name: string;
   code: string;
-  secretsFields: string[]
+  secretsFields: string[];
   secrets: Record<string, any>;
   isActive: boolean;
   createdAt: string;
@@ -136,7 +136,7 @@ export interface Transaction {
     phone: string;
     userId: string;
     metadata?: Record<string, any>;
-  }
+  };
 }
 
 export interface TransactionFilters extends PaginationParams {
@@ -146,4 +146,16 @@ export interface TransactionFilters extends PaginationParams {
   providerTransactionId?: string;
   createdAfter?: string;
   createdBefore?: string;
+}
+
+export interface CreateUserDto {
+  firstName: string;
+  lastName: string;
+  password: string;
+  isSuperUser: boolean;
+  email: string;
+}
+
+export interface UpdateUserDto extends Partial<CreateUserDto> {
+  isActive?: boolean;
 }

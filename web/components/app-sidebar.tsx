@@ -9,16 +9,15 @@ import {
   CreditCard,
   BarChart3,
   Settings,
-  Users,
   ChevronLeft,
   ChevronRight,
-  UserPlus,
-  Key,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Tableau de bord", href: "/admin", icon: BarChart3 },
+  { name: "Utilisateurs", href: "/admin/users", icon: Users },
   { name: "Methodes de paiement", href: "/admin/providers", icon: Package },
   { name: "Transactions", href: "/admin/transactions", icon: CreditCard },
 ];

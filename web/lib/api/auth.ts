@@ -1,25 +1,16 @@
 import { apiClient } from "../api-client";
 import { ApiResponse } from "../types";
+import { User } from "./users.query";
 
 export interface AuthCredentials {
   email: string;
   password: string;
 }
 
-export interface UserData {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  // Ajoutez d'autres propriétés selon vos besoins
-}
 
 export interface AuthResponse {
   message: string;
-  user: UserData;
+  user: User;
   access_token: string;
   refresh_token: string;
 }
@@ -43,7 +34,7 @@ export const AuthApi = {
   },
 
   getProfile: async () => {
-    const { data } = await apiClient.get<ApiResponse<UserData>>(
+    const { data } = await apiClient.get<ApiResponse<User>>(
       "/users/me"
     );
     console.log("data getProfile", data);
