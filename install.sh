@@ -131,6 +131,15 @@ progress_bar() {
     printf "]${C_RESET} ${C_BOLD}%3d%%${C_RESET}" $percentage
 }
 
+TOTAL_STEPS=6
+CURRENT_STEP=0
+
+next_step() {
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    progress_bar $CURRENT_STEP $TOTAL_STEPS
+}
+
+
 # Spinner animé
 spinner() {
     local pid=$1
@@ -731,8 +740,8 @@ main() {
     exec > >(tee -a "$LOG_FILE") 2>&1
 
     # Étapes d'installation
-    check_prerequisites
-    detect_system
+    check_prerequisites; next_step
+    detect_system; next_step
     install_dependencies
     install_docker
     # check_ports
