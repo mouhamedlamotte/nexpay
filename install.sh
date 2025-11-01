@@ -131,7 +131,7 @@ progress_bar() {
     printf "]${C_RESET} ${C_BOLD}%3d%%${C_RESET}" $percentage
 }
 
-TOTAL_STEPS=6
+TOTAL_STEPS=10
 CURRENT_STEP=0
 
 next_step() {
@@ -742,16 +742,16 @@ main() {
     # Étapes d'installation
     check_prerequisites; next_step
     detect_system; next_step
-    install_dependencies
-    install_docker
+    install_dependencies; next_step
+    install_docker; next_step
     # check_ports
-    validate_dns "$DOMAIN_ARG"
-    download_source
-    generate_config
-    create_utility_scripts
-    start_services
-    health_check
-    show_completion
+    validate_dns "$DOMAIN_ARG"; next_step
+    download_source; next_step
+    generate_config; next_step
+    create_utility_scripts; next_step
+    start_services; next_step
+    health_check; next_step
+    show_completion;
 
     log SUCCESS "Installation complétée - Log: ${C_BOLD}$LOG_FILE${C_RESET}"
 }
