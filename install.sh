@@ -165,14 +165,17 @@ execute_with_progress() {
     local message="$1"
     shift
     local command="$@"
-
-    printf "${C_INFO}${ICON_GEAR}${C_RESET}  ${C_DIM}%s...${C_RESET}" "$message"
-
+    
+    # Affichage initial (sans emojis compliqués)
+    printf "${C_INFO}[⋯]${C_RESET} ${C_DIM}%s...${C_RESET}" "$message"
+    
     if eval "$command" >> "$LOG_FILE" 2>&1; then
-        printf "\r${C_SUCCESS}${ICON_SUCCESS}${C_RESET}  %s\n" "$message"
+        # Succès - efface la ligne et réécrit
+        printf "\r${C_SUCCESS}[${ICON_SUCCESS}]${C_RESET} %-70s\n" "$message"
         return 0
     else
-        printf "\r${C_ERROR}${ICON_ERROR}${C_RESET}  %s\n" "$message"
+        # Erreur - efface la ligne et réécrit
+        printf "\r${C_ERROR}[${ICON_ERROR}]${C_RESET} %-70s\n" "$message"
         return 1
     fi
 }
