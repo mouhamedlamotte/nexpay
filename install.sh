@@ -288,21 +288,38 @@ check_ports() {
     log STEP "Vérification des ports réseau"
 
     local ports_busy=0
+    local traefik_running=false
+
+    # Vérifier si le container Traefik de Nexpay tourne déjà
+    if docker ps --filter "name=traefik" --filter "status=running" --format '{{.Names}}' 2>/dev/null | grep -q '^traefik$'; then
+        traefik_running=true
+        log INFO "Traefik de Nexpay déjà en cours d'exécution (réinstallation)"
+    fi
 
     # Vérifier le port 80
     if lsof -Pi :80 -sTCP:LISTEN -t >/dev/null 2>&1 || netstat -tuln 2>/dev/null | grep -q ':80 '; then
-        log ERROR "Le port 80 est déjà utilisé"
-        lsof -Pi :80 -sTCP:LISTEN 2>/dev/null | grep LISTEN || netstat -tuln | grep ':80 '
-        ports_busy=1
+        if [ "$traefik_running" = true ]; then
+            log SUCCESS "Port 80 utilisé par Traefik Nexpay (OK pour réinstallation)"
+        else
+            local port80_process=$(lsof -Pi :80 -sTCP:LISTEN 2>/dev/null | grep LISTEN | awk '{print $1}' | head -1)
+            log ERROR "Le port 80 est déjà utilisé par: ${C_BOLD}$port80_process${C_RESET}"
+            lsof -Pi :80 -sTCP:LISTEN 2>/dev/null | grep LISTEN || netstat -tuln | grep ':80 '
+            ports_busy=1
+        fi
     else
         log SUCCESS "Port 80 disponible"
     fi
 
     # Vérifier le port 443
     if lsof -Pi :443 -sTCP:LISTEN -t >/dev/null 2>&1 || netstat -tuln 2>/dev/null | grep -q ':443 '; then
-        log ERROR "Le port 443 est déjà utilisé"
-        lsof -Pi :443 -sTCP:LISTEN 2>/dev/null | grep LISTEN || netstat -tuln | grep ':443 '
-        ports_busy=1
+        if [ "$traefik_running" = true ]; then
+            log SUCCESS "Port 443 utilisé par Traefik Nexpay (OK pour réinstallation)"
+        else
+            local port443_process=$(lsof -Pi :443 -sTCP:LISTEN 2>/dev/null | grep LISTEN | awk '{print $1}' | head -1)
+            log ERROR "Le port 443 est déjà utilisé par: ${C_BOLD}$port443_process${C_RESET}"
+            lsof -Pi :443 -sTCP:LISTEN 2>/dev/null | grep LISTEN || netstat -tuln | grep ':443 '
+            ports_busy=1
+        fi
     else
         log SUCCESS "Port 443 disponible"
     fi
@@ -310,12 +327,20 @@ check_ports() {
     if [ $ports_busy -eq 1 ]; then
         echo ""
         log ERROR "Traefik nécessite les ports 80 et 443 libres"
-        echo -e "${C_WARNING}Arrêtez les services utilisant ces ports (Apache, Nginx, etc.)${C_RESET}"
-        echo -e "${C_MUTED}Exemple: sudo systemctl stop apache2 nginx${C_RESET}"
+        echo ""
+        echo -e "${C_WARNING}Services à arrêter potentiellement:${C_RESET}"
+        echo -e "  ${C_DIM}• Apache:  sudo systemctl stop apache2${C_RESET}"
+        echo -e "  ${C_DIM}• Nginx:   sudo systemctl stop nginx${C_RESET}"
+        echo -e "  ${C_DIM}• Autre:   sudo lsof -i :80 -i :443${C_RESET}"
+        echo ""
         exit 1
     fi
 
-    log SUCCESS "Tous les ports requis sont disponibles"
+    if [ "$traefik_running" = true ]; then
+        log WARNING "Réinstallation détectée - Traefik sera redémarré"
+    else
+        log SUCCESS "Tous les ports requis sont disponibles"
+    fi
 }
 
 # Installation de Docker
