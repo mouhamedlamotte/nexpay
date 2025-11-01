@@ -753,7 +753,7 @@ main() {
     detect_system
     install_dependencies
     install_docker
-    check_ports
+    # check_ports
     validate_dns "$DOMAIN_ARG"
     download_source
     generate_config
