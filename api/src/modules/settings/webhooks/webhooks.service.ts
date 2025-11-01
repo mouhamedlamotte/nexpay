@@ -105,6 +105,9 @@ export class WebhooksService {
       if (data.secret) {
         data.secret = await this.hash.encryptSensitiveData(data.secret);
       }
+      if (!data.secret) {
+        delete data.secret;
+      }
       return await this.prisma.webhook.update({
         where: { projectId, id },
         data: {
