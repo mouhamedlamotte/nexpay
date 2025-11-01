@@ -273,8 +273,8 @@ DB_PASSWORD=postgres
 REDIS_PASSWORD=$(openssl rand -base64 32)
 ENCRYPTION_KEY=$(openssl rand -hex 32)
 ADMIN_PASSWORD=$(openssl rand -hex 16)
-X_WRITE_API=$(openssl rand -hex 32)
-X_READ_API=$(openssl rand -hex 32)
+X_WRITE_KEY=$(openssl rand -hex 32)
+X_READ_KEY=$(openssl rand -hex 32)
 TRAEFIK_AUTH=$(echo $(htpasswd -nb admin "$TRAEFIK_PASSWORD") | sed -e 's/\$/\$\$/g')
 
 log_success "Secrets générés"
@@ -298,8 +298,8 @@ USE_SSL=true
 # Security
 JWT_SECRET=$JWT_SECRET
 ENCRYPTION_KEY=$ENCRYPTION_KEY
-X_WRITE_API=$X_WRITE_API
-X_READ_API=$X_READ_API
+X_WRITE_KEY=$X_WRITE_KEY
+X_READ_KEY=$X_READ_KEY
 
 # Database
 DB_NAME=nexpay
@@ -368,7 +368,7 @@ echo "   • WEB:     https://$APP_DOMAIN"
 echo ""
 echo -e "${GREEN}🔑 Identifiants par défaut:${NC}"
 echo "   • Admin:    $ADMIN_EMAIL / $ADMIN_PASSWORD"
-echo "   • Admin:    $ADMIN_EMAIL / $ADMIN_PASSWORD"
+echo "   • API_KEY:    $X_WRITE_KEY / $X_WRITE_KEY"
 echo ""
 
 echo -e "${YELLOW}⚠️  SÉCURITÉ:${NC}"

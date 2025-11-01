@@ -49,7 +49,7 @@ export class SessionController {
 
   @Get('/:id')
   @HttpCode(HttpStatus.OK)
-  @RequireApiKey(ApiKeyPermission.READ)
+  @RequireApiKey(ApiKeyPermission.READ, ApiKeyPermission.WRITE)
   @ApiOperation({ summary: 'Get a payment session' })
   @ApiResponse({
     status: 201,
