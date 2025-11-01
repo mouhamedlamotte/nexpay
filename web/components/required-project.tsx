@@ -13,7 +13,9 @@ interface RequireProjectProps {
   children: React.ReactNode;
 }
 
-const IGNORED_PATH_PREFIXES = ["/admin/projects"] as const;
+const QUICKSETUP_PATH = "/admin/projects";
+
+const IGNORED_PATH_PREFIXES = [QUICKSETUP_PATH] as const;
 
 export const RequireProject = ({ children }: RequireProjectProps) => {
   const router = useRouter();
@@ -54,7 +56,7 @@ const isIgnoredPath = useMemo(() => {
       // Si aucun project n'est disponible, rediriger vers quicksetup
       if (!currentProject) {
         console.log('currentProject', currentProject);
-        // typeof window !== "undefined" && window.location.replace("/admin/projects");
+        typeof window !== "undefined" && window.location.replace(QUICKSETUP_PATH);
         return;
       }
 
@@ -65,7 +67,7 @@ const isIgnoredPath = useMemo(() => {
     } catch (error) {
       console.error("Erreur lors de la gestion de  project:", error);
       alert("Une erreur s'est produite lors de la gestion de  project. FIn");
-      router.push("/projects");
+      router.push(QUICKSETUP_PATH);
     }
   }, [
     isIgnoredPath,

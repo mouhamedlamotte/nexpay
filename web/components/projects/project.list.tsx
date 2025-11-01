@@ -17,7 +17,6 @@ import {
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Project } from "@/lib/types";
 import { useProjectStore } from "@/stores/project.store";
 import { Dispatch } from "react";
@@ -25,13 +24,14 @@ import { Dispatch } from "react";
 interface ProjectListProps {
   data: Project[];
   isLoading: boolean;
+  setCreateDialogOpen: Dispatch<boolean>;
   setDeleteProject: Dispatch<Project>;
   setEditProject: Dispatch<Project>;
 }
 
 
 
-export function ProjectList({data, isLoading, setDeleteProject, setEditProject}: ProjectListProps) {
+export function ProjectList({data, isLoading, setDeleteProject, setEditProject, setCreateDialogOpen}: ProjectListProps) {
 
   const setCurrentProject = useProjectStore(
     (state) => state.setCurrentProject,
@@ -39,8 +39,6 @@ export function ProjectList({data, isLoading, setDeleteProject, setEditProject}:
   const currentProjectId = useProjectStore(
     (state) => state.currentProject?.id,
   )
-  const router = useRouter();
-
     const handleProjectChange = (project: Project) => {
         setCurrentProject(project);
         window.location.href = '/admin';
@@ -116,12 +114,12 @@ export function ProjectList({data, isLoading, setDeleteProject, setEditProject}:
             <p className="text-muted-foreground mb-4">
               Commencez par créer votre premièr Projet
             </p>
-            <Link href="/app/organizations/new">
-              <Button>
+              <Button
+                onClick={() => setCreateDialogOpen(true)}
+              >
                 <Plus className="h-4 w-4" />
                 Nouveau Projet
               </Button>
-            </Link>
           </CardContent>
         </Card>
       )}

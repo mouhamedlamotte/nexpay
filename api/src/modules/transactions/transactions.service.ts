@@ -53,7 +53,9 @@ export class TransactionsService {
 
   private getTransactionInclude(): Prisma.TransactionInclude {
     return {
-      provider: true,
+      provider: {
+        omit: { secrets: true },
+      },
       project: true,
       payer: true,
     };

@@ -29,14 +29,13 @@ const Dashboard = () => {
   const projectId = useProjectStore((state) => state.currentProject?.id!);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'| '1d'>('7d');
 
-  const { data, refetch } = useQuery({
-    queryKey: ["dashboard"],
+  const { data } = useQuery({
+    queryKey: ["dashboard", timeRange],
     queryFn: () => dashboardApi.get(projectId, { timeRange }),
   });
 
   const handleTimeRangeChange = (range: '7d' | '30d' | '90d'| '1d') => {
     setTimeRange(range);
-    refetch();
   };
 
   const getProviderColor = (provider: string) => {

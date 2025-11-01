@@ -2,7 +2,7 @@ import axios from "axios";
 import { getCookie } from "cookies-next";
 
 export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:9090/api/v1",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000/api/v1",
   headers: {
     "Content-Type": "application/json",
     "x-api-key": process.env.NEXT_PUBLIC_READ_API_KEY || 'read',

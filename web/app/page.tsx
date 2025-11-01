@@ -1,14 +1,13 @@
 "use client"
 
 import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import AppLoading from "@/components/app-loading"
 
 export default function HomePage() {
-  const router = useRouter()
 
   useEffect(() => {
-    router.push("/admin")
-  }, [router])
+    typeof window !== "undefined" && window.location.replace("/admin")
+  }, [])
 
-  return null
+  return <AppLoading />
 }

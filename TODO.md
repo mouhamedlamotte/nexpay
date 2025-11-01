@@ -1,15 +1,19 @@
 #### API
 
-- [ ] ADD API KEY GUARD
+- [X] ADD API KEY GUARD
 - [ ] add indicator to say if provider is configured or not
 - [ ] add webhook secrets to set in providers dashbord
-- [ ] remove providers secrets on transations fetch enpoints
+- [X] remove providers secrets on transations fetch enpoints
 - [ ] reconsiliate payee Users by id
-- [ ] not update secret on webhook update
+- [X] not update secret on webhook update if secret not provided
+- [ ] add webhook description
 
 #### WEB
 
 * [ ] check if its first login and propose to change the password
 * [ ] add admin crud, and change password and email verifications
 * [ ] add list users
-* [ ] let only one toast on webhook creation
+* [X] let only one toast on webhook creation
+* [ ] add webhook description
+* [X] redirect to new project page if not project yet
+* [X] coriger les filtre de jours

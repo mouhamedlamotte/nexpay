@@ -4,7 +4,6 @@
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useAuthStore } from "../admin/(dashboard)/stores/auth/auth-store";
 import { useState } from "react";
 import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
 import { EditProjectDialog } from "@/components/projects/edit-project-dialog";
@@ -13,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { projectsApi } from "@/lib/api/projects";
 import { Project } from "@/lib/types";
 import { ProjectList } from "@/components/projects/project.list";
+import { useAuthStore } from "../(dashboard)/stores/auth/auth-store";
 
 export default function OrganizationsPage() {
   const user = useAuthStore((state) => state.user);
@@ -45,7 +45,7 @@ export default function OrganizationsPage() {
           </Button>
       </div>
 
-      <ProjectList data={data?.data || []} isLoading={isLoading} setDeleteProject={setDeleteProject} setEditProject={setEditProject} />
+      <ProjectList data={data?.data || []} isLoading={isLoading} setCreateDialogOpen={setCreateDialogOpen} setDeleteProject={setDeleteProject} setEditProject={setEditProject} />
     </div>
           {/* Dialogs */}
           <CreateProjectDialog

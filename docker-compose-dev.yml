@@ -14,7 +14,7 @@ services:
         # - "--certificatesresolvers.letsencrypt.acme.storage=/acme.json"
         # - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
       ports:
-        - "9093:80"
+        - "9090:80"
         - "9091:8080"
         # - "443:443"
       volumes:
