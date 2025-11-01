@@ -24,6 +24,7 @@ model Project {
 model Webhook {
   id        String   @id @default(cuid())
   url       String
+  description String?
   secret    String?
   header    String?
   projectId String
@@ -31,7 +32,7 @@ model Webhook {
   events    String[]
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
-  
+
   @@unique([projectId, url])
   @@map("webhooks")
 }

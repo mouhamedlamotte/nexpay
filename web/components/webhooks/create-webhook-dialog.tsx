@@ -18,9 +18,11 @@ import { Input } from "@/components/ui/input"
 import { settingsApi } from "@/lib/api/settings"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { Textarea } from "../ui/textarea"
 
 const formSchema = z.object({
   url: z.string().url("Must be a valid URL"),
+  description: z.string().optional(),
   header: z.string().min(1, "Header is required"),
   secret: z.string().min(1, "Secret is required"),
 })
@@ -39,6 +41,7 @@ export function CreateWebhookDialog({ projectId, open, onOpenChange, onSuccess }
     resolver: zodResolver(formSchema),
     defaultValues: {
       url: "",
+      description: "",
       header: "x-webhook-secret",
       secret: "",
     },
@@ -47,7 +50,6 @@ export function CreateWebhookDialog({ projectId, open, onOpenChange, onSuccess }
   const mutation = useMutation({
     mutationFn: (values: FormValues) => settingsApi.createWebhook(projectId, values),
     onSuccess: () => {
-      toast.success("Webhook created successfully")
       form.reset()
       onSuccess()
     },
@@ -75,6 +77,20 @@ export function CreateWebhookDialog({ projectId, open, onOpenChange, onSuccess }
                     <Input placeholder="https://example.com/webhook" {...field} />
                   </FormControl>
                   <FormDescription>The endpoint that will receive webhook events</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Webhook URL</FormLabel>
+                  <FormControl>
+                    <Textarea rows={3} placeholder="Webhook description" {...field} />
+                  </FormControl>
+                  <FormDescription>Add a description to help you remember what this webhook does</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

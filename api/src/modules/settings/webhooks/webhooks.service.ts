@@ -30,7 +30,7 @@ export class WebhooksService {
       },
       searchConfig: {
         searchKey: 'search',
-        searchFields: ['url', 'header'],
+        searchFields: ['url', 'header', 'description'],
         mode: 'insensitive',
         operator: 'contains',
       },
@@ -68,6 +68,7 @@ export class WebhooksService {
         select: {
           id: true,
           secret: false,
+          description: true,
           createdAt: true,
           url: true,
           header: true,

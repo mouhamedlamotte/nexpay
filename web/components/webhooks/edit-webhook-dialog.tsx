@@ -20,10 +20,12 @@ import { Loader2 } from "lucide-react"
 import type { Webhook } from "@/lib/types"
 import { useEffect } from "react"
 import { toast } from "sonner"
+import { Textarea } from "../ui/textarea"
 
 const formSchema = z.object({
   url: z.string().url("Must be a valid URL").optional(),
   header: z.string().min(1, "Header is required").optional(),
+  description: z.string().optional(),
   secret: z.string().optional(),
 })
 
@@ -43,6 +45,7 @@ export function EditWebhookDialog({ projectId, webhook, open, onOpenChange, onSu
     defaultValues: {
       url: webhook.url,
       header: webhook.header,
+      description: webhook.description,
       secret: "",
     },
   })
@@ -52,6 +55,7 @@ export function EditWebhookDialog({ projectId, webhook, open, onOpenChange, onSu
       url: webhook.url,
       header: webhook.header,
       secret: "",
+      description: webhook.description,
     })
   }, [webhook, form])
 
@@ -96,6 +100,19 @@ export function EditWebhookDialog({ projectId, webhook, open, onOpenChange, onSu
                   <FormLabel>Header Name</FormLabel>
                   <FormControl>
                     <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+                        <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Webhook URL</FormLabel>
+                  <FormControl>
+                    <Textarea rows={3} placeholder="Webhook description" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

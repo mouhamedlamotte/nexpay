@@ -33,7 +33,7 @@ export default function WebhooksPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => settingsApi.deleteWebhook(projectId, id),
     onSuccess: () => {
-      toast.success("Webhook deleted successfully")
+      toast.warning("Webhook deleted successfully")
       refetch()
     },
     onError: (error: any) => {

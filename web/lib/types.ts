@@ -60,6 +60,7 @@ export interface Webhook {
   url: string;
   header: string;
   secret: string;
+  description?: string;
   projectId: string;
   createdAt: string;
   updatedAt: string;

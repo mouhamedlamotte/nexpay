@@ -12,6 +12,14 @@ export class UpdateWebhooksConfigDto {
   url?: string;
 
   @ApiPropertyOptional({
+    description: 'Description of webhook',
+    example: 'Webhook to notify on envent',
+  })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional({
     description: 'Header to set secret',
     example: 'x-Webhook-Secret',
   })

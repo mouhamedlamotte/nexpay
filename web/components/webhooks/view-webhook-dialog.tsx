@@ -34,16 +34,24 @@ export function ViewWebhookDialog({ webhook, open, onOpenChange }: ViewWebhookDi
             <code className="mt-1 block rounded bg-muted px-2 py-1 text-sm">••••••••</code>
           </div>
           <Separator />
-          {/* <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Description</p>
+            <p className="mt-1 text-sm">{webhook.description || "No description"}</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Created At</p>
               <p className="mt-1 text-sm">{format(new Date(webhook.createdAt), "PPpp")}</p>
             </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Updated At</p>
-              <p className="mt-1 text-sm">{format(new Date(webhook.updatedAt), "PPpp")}</p>
-            </div>
-          </div> */}
+            {
+              webhook.updatedAt && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Updated At</p>
+                  <p className="mt-1 text-sm">{format(new Date(webhook.updatedAt), "PPpp")}</p>
+                </div>
+              )
+            }
+          </div>
         </div>
       </DialogContent>
     </Dialog>
