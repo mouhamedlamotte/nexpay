@@ -130,16 +130,6 @@ progress_bar() {
     printf "%${empty}s" | tr ' ' '.'
     printf "]${C_RESET} ${C_BOLD}%3d%%${C_RESET}" $percentage
 }
-
-TOTAL_STEPS=10
-CURRENT_STEP=0
-
-next_step() {
-    CURRENT_STEP=$((CURRENT_STEP + 1))
-    progress_bar $CURRENT_STEP $TOTAL_STEPS
-}
-
-
 # Spinner animé
 spinner() {
     local pid=$1
@@ -740,18 +730,18 @@ main() {
     exec > >(tee -a "$LOG_FILE") 2>&1
 
     # Étapes d'installation
-    check_prerequisites; next_step
-    detect_system; next_step
-    install_dependencies; next_step
-    install_docker; next_step
+    check_prerequisites
+    detect_system
+    install_dependencies
+    install_docker
     # check_ports
-    validate_dns "$DOMAIN_ARG"; next_step
-    download_source; next_step
-    generate_config; next_step
-    create_utility_scripts; next_step
-    start_services; next_step
-    health_check; next_step
-    show_completion;
+    validate_dns "$DOMAIN_ARG"
+    download_source
+    generate_config
+    create_utility_scripts
+    start_services
+    health_check
+    show_completion
 
     log SUCCESS "Installation complétée - Log: ${C_BOLD}$LOG_FILE${C_RESET}"
 }
