@@ -126,8 +126,8 @@ progress_bar() {
     local empty=$((width - filled))
 
     printf "\r${C_PRIMARY}["
-    printf "%${filled}s" | tr ' ' '█'
-    printf "%${empty}s" | tr ' ' '░'
+    printf "%${filled}s" | tr ' ' '+'
+    printf "%${empty}s" | tr ' ' '.'
     printf "]${C_RESET} ${C_BOLD}%3d%%${C_RESET}" $percentage
 }
 
