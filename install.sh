@@ -153,14 +153,29 @@ execute_with_progress() {
     local message="$1"
     shift
     local command="$@"
-
-    printf "${C_INFO}${ICON_GEAR}${C_RESET}  ${C_DIM}%s...${C_RESET}" "$message"
-
-    if eval "$command" >> "$LOG_FILE" 2>&1; then
-        printf "\r${C_SUCCESS}${ICON_SUCCESS}${C_RESET}  %s\n" "$message"
+    
+    # local frames=('.' 'o' 'O' 'o')  # Alternative simple
+    local frames=('|' '/' '-' '\\')
+    # Ou : local frames=('[   ]' '[=  ]' '[== ]' '[===]')
+    local frame_index=0
+    
+    eval "$command" >> "$LOG_FILE" 2>&1 &
+    local cmd_pid=$!
+    
+    while kill -0 $cmd_pid 2>/dev/null; do
+        printf "\r${C_INFO}[${frames[$frame_index]}]${C_RESET} ${C_DIM}%s...${C_RESET}" "$message"
+        frame_index=$(( (frame_index + 1) % 4 ))
+        sleep 0.1
+    done
+    
+    wait $cmd_pid
+    local exit_code=$?
+    
+    if [ $exit_code -eq 0 ]; then
+        printf "\r${C_SUCCESS}[OK]${C_RESET} %-70s\n" "$message"
         return 0
     else
-        printf "\r${C_ERROR}${ICON_ERROR}${C_RESET}  %s\n" "$message"
+        printf "\r${C_ERROR}[X]${C_RESET} %-70s\n" "$message"
         return 1
     fi
 }
