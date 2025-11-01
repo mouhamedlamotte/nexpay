@@ -62,11 +62,11 @@ export function ProjectList({data, isLoading, setDeleteProject, setEditProject, 
                   <div>
                     <CardTitle className="text-lg inline-flex items-center gap-2">
                       {project.name}
-                      {project.id === currentProjectId && (
+                      {project.isDefault && (
                           <Star className="h-4 w-4 text-yellow-500" />
                       )}
                     </CardTitle>
-                    <CardDescription>{project.name}</CardDescription>
+                    <CardDescription>{project.description || "Aucune description"}</CardDescription>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

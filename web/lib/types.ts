@@ -27,6 +27,7 @@ export interface ApiResponse<T> {
 export interface Project {
   id: string;
   name: string;
+  isDefault: boolean;
   description?: string;
   metadata?: Record<string, any>;
   createdAt: string;

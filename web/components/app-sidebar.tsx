@@ -74,6 +74,13 @@ export function AppSidebar() {
           >
             NEXPAY
           </div>
+                    <div
+            className={`transition-all duration-300 overflow-hidden text-primary text-xl font-bold ${
+              !collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+            }`}
+          >
+            NP
+          </div>
 
           {/* Toggle button - seulement sur grands écrans */}
           {isLargeScreen && (

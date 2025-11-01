@@ -46,13 +46,13 @@ export default function WebhooksPage() {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <Button onClick={() => setCreateDialogOpen(true)} className="ml-auto">
+    <div className="space-y-4 flex flex-col overflow-hidden">
+      <Button onClick={() => setCreateDialogOpen(true)} className="ml-auto w-full md:w-auto">
         <Plus className="mr-2 h-4 w-4" />
         Nouveau webhook
       </Button>
-      <div className="flex-1 space-y-4">
-        <Card>
+      <div>
+        <Card className="">
           <Table>
             <TableHeader>
               <TableRow>
@@ -87,6 +87,7 @@ export default function WebhooksPage() {
                   </TableCell>
                 </TableRow>
               ) : (
+                
                 data?.data.map((webhook) => (
                   <TableRow key={webhook.id}>
                     <TableCell className="font-mono text-sm">{webhook.url}</TableCell>

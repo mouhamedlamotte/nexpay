@@ -59,7 +59,7 @@ export function ProjectSwitcher() {
         <DropdownMenuLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Projects
         </DropdownMenuLabel>
-        <Link href="/projects">
+        <Link href="/admin/projects">
             <Button variant="ghost" className="hover:bg-secondary">
               <Cog className="h-4 w-4" />
               Gerer
