@@ -160,22 +160,19 @@ spinner() {
     printf "\r${C_SUCCESS}${ICON_SUCCESS}${C_RESET}  %s\n" "$message"
 }
 
-# Exécution avec animation
 execute_with_progress() {
     local message="$1"
     shift
     local command="$@"
     
-    # Affichage initial (sans emojis compliqués)
-    printf "${C_INFO}[⋯]${C_RESET} ${C_DIM}%s...${C_RESET}" "$message"
+    # Pas de retour chariot, affichage séquentiel
+    printf "${C_INFO}${ICON_GEAR}${C_RESET}  ${C_DIM}%s...${C_RESET} " "$message"
     
     if eval "$command" >> "$LOG_FILE" 2>&1; then
-        # Succès - efface la ligne et réécrit
-        printf "\r${C_SUCCESS}[${ICON_SUCCESS}]${C_RESET} %-70s\n" "$message"
+        echo -e "${C_SUCCESS}${ICON_SUCCESS}${C_RESET}"
         return 0
     else
-        # Erreur - efface la ligne et réécrit
-        printf "\r${C_ERROR}[${ICON_ERROR}]${C_RESET} %-70s\n" "$message"
+        echo -e "${C_ERROR}${ICON_ERROR}${C_RESET}"
         return 1
     fi
 }
