@@ -56,7 +56,10 @@ export class ApiKeyGuard implements CanActivate {
   }
 
   private extractApiKeyFromRequest(request: any): string | null {
+    console.log('headers', request.headers);
     const apiKeyHeader = request.headers['x-api-key'];
+    console.log('api-key');
+
     return apiKeyHeader || null;
   }
 
@@ -64,6 +67,9 @@ export class ApiKeyGuard implements CanActivate {
     apiKey: string,
     requiredPermissions: ApiKeyPermission[],
   ): boolean {
+    console.log('read', process.env.X_READ_KEY);
+    console.log('write', process.env.X_WRITE_KEY);
+
     for (const permission of requiredPermissions) {
       if (
         permission === ApiKeyPermission.READ &&

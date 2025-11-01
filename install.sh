@@ -368,6 +368,7 @@ echo "   • WEB:     https://$APP_DOMAIN"
 echo ""
 echo -e "${GREEN}🔑 Identifiants par défaut:${NC}"
 echo "   • Admin:    $ADMIN_EMAIL / $ADMIN_PASSWORD"
+echo "   • Admin:    $ADMIN_EMAIL / $ADMIN_PASSWORD"
 echo ""
 
 echo -e "${YELLOW}⚠️  SÉCURITÉ:${NC}"

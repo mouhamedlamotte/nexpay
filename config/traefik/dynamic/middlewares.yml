@@ -16,6 +16,7 @@ http:
           - "Origin"
           - "Cookie"
           - "Set-Cookie"
+          - "x-api-key"
         accessControlAllowOriginList:
           - "http://localhost:9001"
           - "http://localhost:9090"
@@ -26,6 +27,7 @@ http:
           - "X-User-Id"
           - "X-User-Role"
           - "Set-Cookie"
+          - "x-api-key"
 
     auth-basic-middleware:
       basicAuth:
