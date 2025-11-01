@@ -1,499 +1,747 @@
 #!/bin/bash
-## Nexpay Installation Script
-## Usage: curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- yourdomain.com
+################################################################################
+#                                                                              #
+#   ███╗   ██╗███████╗██╗  ██╗██████╗  █████╗ ██╗   ██╗                      #
+#   ████╗  ██║██╔════╝╚██╗██╔╝██╔══██╗██╔══██╗╚██╗ ██╔╝                      #
+#   ██╔██╗ ██║█████╗   ╚███╔╝ ██████╔╝███████║ ╚████╔╝                       #
+#   ██║╚██╗██║██╔══╝   ██╔██╗ ██╔═══╝ ██╔══██║  ╚██╔╝                        #
+#   ██║ ╚████║███████╗██╔╝ ██╗██║     ██║  ██║   ██║                         #
+#   ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝   ╚═╝                         #
+#                                                                              #
+#   Nexpay Installation Script v2.0                                           #
+#   Professional Self-Hosted Payment Gateway                                  #
+#                                                                              #
+################################################################################
 
-set -e # Exit on error
+set -e
 set -o pipefail
 
-# Couleurs
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-NC='\033[0m' # No Color
+################################################################################
+# CONFIGURATION
+################################################################################
 
-# Configuration
-INSTALL_DIR="/opt/nexpay"
-CDN_URL="https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main"
-DATE=$(date +"%Y%m%d-%H%M%S")
-LOG_FILE="$INSTALL_DIR/installation-${DATE}.log"
+readonly SCRIPT_VERSION="2.0.0"
+readonly INSTALL_DIR="/opt/nexpay"
+readonly REPO_URL="https://github.com/mouhamedlamotte/nexpay.git"
+readonly MIN_DISK_SPACE=10
+readonly DATE=$(date +"%Y%m%d-%H%M%S")
+readonly LOG_FILE="$INSTALL_DIR/installation-${DATE}.log"
 
-# Récupérer le domaine passé en paramètre
-DOMAIN_ARG="$1"
+################################################################################
+# COULEURS & STYLES
+################################################################################
 
-# Vérifier si root
-if [ $EUID != 0 ]; then
-    echo -e "${RED}❌ Veuillez exécuter ce script avec sudo${NC}"
-    exit 1
-fi
+# Couleurs principales
+readonly C_RESET='\033[0m'
+readonly C_BOLD='\033[1m'
+readonly C_DIM='\033[2m'
 
-# Banner
-echo -e "${PURPLE}"
-cat << "EOF"
-╔════════════════════════════════════════╗
-║   🚀 Nexpay Installation               ║
-║   Payment Gateway Self-Hosted          ║
-╚════════════════════════════════════════╝
-EOF
-echo -e "${NC}"
+# Palette moderne
+readonly C_PRIMARY='\033[38;5;39m'      # Bleu vif
+readonly C_SUCCESS='\033[38;5;46m'      # Vert néon
+readonly C_WARNING='\033[38;5;214m'     # Orange
+readonly C_ERROR='\033[38;5;196m'       # Rouge vif
+readonly C_INFO='\033[38;5;147m'        # Violet clair
+readonly C_ACCENT='\033[38;5;51m'       # Cyan
+readonly C_MUTED='\033[38;5;245m'       # Gris
 
-# Vérifier que le domaine est fourni
-if [ -z "$DOMAIN_ARG" ]; then
-    echo ""
-    echo -e "${RED}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${RED}║  ❌ ERREUR: DOMAINE REQUIS                                ║${NC}"
-    echo -e "${RED}╚════════════════════════════════════════════════════════════╝${NC}"
-    echo ""
-    echo -e "${YELLOW}Un nom de domaine est obligatoire pour installer Nexpay.${NC}"
-    echo ""
-    echo -e "${BLUE}Usage:${NC}"
-    echo "  curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- votre-domaine.com"
-    echo ""
-    echo -e "${BLUE}Exemple:${NC}"
-    echo "  curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- pay.example.com"
-    echo ""
-    echo -e "${BLUE}Prérequis:${NC}"
-    echo "  • Vous devez posséder un nom de domaine"
-    echo "  • Le domaine doit pointer vers l'IP de ce serveur (enregistrement DNS de type A)"
-    echo "  • Le certificat SSL sera automatiquement généré via Let's Encrypt"
-    echo ""
-    exit 1
-fi
+# Icônes
+readonly ICON_SUCCESS="✓"
+readonly ICON_ERROR="✗"
+readonly ICON_WARNING="⚠"
+readonly ICON_INFO="ℹ"
+readonly ICON_ROCKET="🚀"
+readonly ICON_LOCK="🔒"
+readonly ICON_GEAR="⚙"
+readonly ICON_CHECK="✔"
+readonly ICON_ARROW="→"
 
-# Créer le dossier d'installation AVANT le logging
-mkdir -p "$INSTALL_DIR"
+################################################################################
+# FONCTIONS UTILITAIRES - AFFICHAGE
+################################################################################
 
-# Fonction de logging
-exec > >(tee -a "$LOG_FILE") 2>&1
-
-log_info() {
-    echo -e "${BLUE}ℹ️  $1${NC}"
+# Fonction pour centrer le texte
+center_text() {
+    local text="$1"
+    local width=${2:-80}
+    local padding=$(( (width - ${#text}) / 2 ))
+    printf "%${padding}s%s%${padding}s\n" "" "$text" ""
 }
 
-log_success() {
-    echo -e "${GREEN}✅ $1${NC}"
+# Ligne de séparation stylée
+print_separator() {
+    local char="${1:-─}"
+    local width="${2:-80}"
+    printf "${C_MUTED}%${width}s${C_RESET}\n" | tr ' ' "$char"
 }
 
-log_warn() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+# Ligne double pour sections importantes
+print_double_separator() {
+    printf "${C_PRIMARY}%80s${C_RESET}\n" | tr ' ' '═'
 }
 
-log_error() {
-    echo -e "${RED}❌ $1${NC}"
+# Box avec titre
+print_box() {
+    local title="$1"
+    local color="${2:-$C_PRIMARY}"
+    echo ""
+    echo -e "${color}╔════════════════════════════════════════════════════════════════════════════╗${C_RESET}"
+    echo -e "${color}║$(center_text "$title" 76)║${C_RESET}"
+    echo -e "${color}╚════════════════════════════════════════════════════════════════════════════╝${C_RESET}"
+    echo ""
 }
 
-# Fonction pour vérifier si un domaine pointe vers ce serveur
-check_domain_dns() {
-    local domain=$1
-    local server_ip=$2
-    
-    log_info "Vérification DNS pour: $domain"
-    
-    # Essayer avec dig en premier
-    if command -v dig &> /dev/null; then
-        RESOLVED_IP=$(dig +short "$domain" A | tail -n1)
-    # Sinon essayer avec nslookup
-    elif command -v nslookup &> /dev/null; then
-        RESOLVED_IP=$(nslookup "$domain" | grep -A1 "Name:" | grep "Address:" | awk '{print $2}' | tail -n1)
-    else
-        log_error "Ni 'dig' ni 'nslookup' ne sont disponibles"
-        return 1
-    fi
-    
-    if [ -z "$RESOLVED_IP" ]; then
-        log_error "Impossible de résoudre le domaine: $domain"
-        return 1
-    fi
-    
-    log_info "Domaine $domain pointe vers: $RESOLVED_IP"
-    log_info "Adresse IP du serveur: $server_ip"
-    
-    if [ "$RESOLVED_IP" = "$server_ip" ]; then
-        log_success "✓ Le domaine pointe correctement vers ce serveur"
+################################################################################
+# FONCTIONS UTILITAIRES - LOGGING
+################################################################################
+
+log() {
+    local level="$1"
+    shift
+    local message="$*"
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+
+    case "$level" in
+        INFO)
+            echo -e "${C_INFO}${ICON_INFO}${C_RESET}  ${C_BOLD}${message}${C_RESET}"
+            ;;
+        SUCCESS)
+            echo -e "${C_SUCCESS}${ICON_SUCCESS}${C_RESET}  ${message}"
+            ;;
+        WARNING)
+            echo -e "${C_WARNING}${ICON_WARNING}${C_RESET}  ${C_BOLD}${message}${C_RESET}"
+            ;;
+        ERROR)
+            echo -e "${C_ERROR}${ICON_ERROR}${C_RESET}  ${C_BOLD}${message}${C_RESET}"
+            ;;
+        STEP)
+            echo ""
+            echo -e "${C_ACCENT}${ICON_ARROW}${C_RESET}  ${C_BOLD}${C_PRIMARY}${message}${C_RESET}"
+            print_separator "─" 80
+            ;;
+    esac
+
+    # Log vers fichier
+    echo "[$timestamp] [$level] $message" >> "$LOG_FILE" 2>/dev/null || true
+}
+
+################################################################################
+# FONCTIONS UTILITAIRES - PROGRESS
+################################################################################
+
+# Barre de progression
+progress_bar() {
+    local current=$1
+    local total=$2
+    local width=50
+    local percentage=$((current * 100 / total))
+    local filled=$((width * current / total))
+    local empty=$((width - filled))
+
+    printf "\r${C_PRIMARY}["
+    printf "%${filled}s" | tr ' ' '█'
+    printf "%${empty}s" | tr ' ' '░'
+    printf "]${C_RESET} ${C_BOLD}%3d%%${C_RESET}" $percentage
+}
+
+# Spinner animé
+spinner() {
+    local pid=$1
+    local message=$2
+    local delay=0.1
+    local spinstr='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+
+    while ps -p $pid > /dev/null 2>&1; do
+        local temp=${spinstr#?}
+        printf "\r${C_ACCENT}%c${C_RESET}  ${C_DIM}%s...${C_RESET}" "$spinstr" "$message"
+        spinstr=$temp${spinstr%"$temp"}
+        sleep $delay
+    done
+    printf "\r${C_SUCCESS}${ICON_SUCCESS}${C_RESET}  %s\n" "$message"
+}
+
+# Exécution avec animation
+execute_with_progress() {
+    local message="$1"
+    shift
+    local command="$@"
+
+    printf "${C_INFO}${ICON_GEAR}${C_RESET}  ${C_DIM}%s...${C_RESET}" "$message"
+
+    if eval "$command" >> "$LOG_FILE" 2>&1; then
+        printf "\r${C_SUCCESS}${ICON_SUCCESS}${C_RESET}  %s\n" "$message"
         return 0
     else
-        log_error "✗ Le domaine ne pointe PAS vers ce serveur"
-        echo ""
-        echo -e "${RED}╔════════════════════════════════════════════════════════════╗${NC}"
-        echo -e "${RED}║  ⚠️  ERREUR DE CONFIGURATION DNS                          ║${NC}"
-        echo -e "${RED}╚════════════════════════════════════════════════════════════╝${NC}"
-        echo ""
-        echo -e "${YELLOW}Le domaine '$domain' pointe vers: $RESOLVED_IP${NC}"
-        echo -e "${YELLOW}Mais ce serveur a l'IP: $server_ip${NC}"
-        echo ""
-        echo -e "${BLUE}📋 Pour corriger cela:${NC}"
-        echo "   1. Connectez-vous à votre registrar de domaine (OVH, Cloudflare, etc.)"
-        echo "   2. Créez un enregistrement DNS de type A:"
-        echo "      Nom: $domain (ou @ pour le domaine racine)"
-        echo "      Type: A"
-        echo "      Valeur: $server_ip"
-        echo "      TTL: 300 (ou minimum disponible)"
-        echo ""
-        echo "   3. Attendez la propagation DNS (5-30 minutes généralement)"
-        echo "   4. Vérifiez avec: dig +short $domain"
-        echo "   5. Relancez l'installation une fois le DNS configuré"
-        echo ""
+        printf "\r${C_ERROR}${ICON_ERROR}${C_RESET}  %s\n" "$message"
         return 1
     fi
 }
 
-# 1. Détection du système
-log_info "Détection du système d'exploitation..."
-OS_TYPE=$(grep -w "ID" /etc/os-release | cut -d "=" -f 2 | tr -d '"')
-OS_VERSION=$(grep -w "VERSION_ID" /etc/os-release | cut -d "=" -f 2 | tr -d '"')
+################################################################################
+# FONCTIONS MÉTIER
+################################################################################
 
-case "$OS_TYPE" in
-    ubuntu|debian|raspbian|centos|fedora|rhel|arch)
-        log_success "OS supporté: $OS_TYPE $OS_VERSION"
-        ;;
-    *)
-        log_error "OS non supporté: $OS_TYPE"
+# Affichage du banner
+show_banner() {
+    clear
+    echo -e "${C_PRIMARY}"
+    cat << "EOF"
+
+    ███╗   ██╗███████╗██╗  ██╗██████╗  █████╗ ██╗   ██╗
+    ████╗  ██║██╔════╝╚██╗██╔╝██╔══██╗██╔══██╗╚██╗ ██╔╝
+    ██╔██╗ ██║█████╗   ╚███╔╝ ██████╔╝███████║ ╚████╔╝
+    ██║╚██╗██║██╔══╝   ██╔██╗ ██╔═══╝ ██╔══██║  ╚██╔╝
+    ██║ ╚████║███████╗██╔╝ ██╗██║     ██║  ██║   ██║
+    ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝   ╚═╝
+
+EOF
+    echo -e "${C_RESET}"
+    center_text "Professional Payment Gateway Installation" 80
+    center_text "Version $SCRIPT_VERSION" 80
+    echo ""
+    print_double_separator
+}
+
+# Vérification des prérequis
+check_prerequisites() {
+    log STEP "Vérification des prérequis système"
+
+    # Root
+    if [ $EUID != 0 ]; then
+        log ERROR "Ce script nécessite les privilèges root"
+        echo -e "${C_MUTED}Veuillez exécuter: ${C_BOLD}sudo $0 $@${C_RESET}"
         exit 1
-        ;;
-esac
+    fi
+    log SUCCESS "Privilèges root confirmés"
 
-# 2. Vérification de l'espace disque
-log_info "Vérification de l'espace disque..."
-TOTAL_SPACE=$(df -BG / | awk 'NR==2 {print $2}' | sed 's/G//')
-AVAILABLE_SPACE=$(df -BG / | awk 'NR==2 {print $4}' | sed 's/G//')
+    # Domaine
+    if [ -z "$DOMAIN_ARG" ]; then
+        log ERROR "Nom de domaine requis"
+        echo ""
+        echo -e "${C_WARNING}Usage:${C_RESET}"
+        echo -e "  ${C_BOLD}curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- votre-domaine.com${C_RESET}"
+        echo ""
+        echo -e "${C_INFO}Exemple:${C_RESET}"
+        echo -e "  ${C_DIM}curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- pay.example.com${C_RESET}"
+        echo ""
+        exit 1
+    fi
+    log SUCCESS "Domaine fourni: ${C_BOLD}$DOMAIN_ARG${C_RESET}"
+}
 
-if [ "$AVAILABLE_SPACE" -lt 10 ]; then
-    log_warn "Espace disque faible: ${AVAILABLE_SPACE}GB disponible (10GB recommandé)"
-    sleep 3
-fi
+# Détection du système
+detect_system() {
+    log STEP "Détection du système d'exploitation"
 
-# 3. Installation des dépendances de base
-log_info "Installation des dépendances..."
+    if [ ! -f /etc/os-release ]; then
+        log ERROR "Impossible de détecter le système d'exploitation"
+        exit 1
+    fi
 
-case "$OS_TYPE" in
-    ubuntu|debian|raspbian)
-        apt-get update -y >/dev/null 2>&1
-        apt-get install -y curl wget git jq openssl apache2-utils dnsutils >/dev/null 2>&1
-        ;;
-    centos|fedora|rhel)
-        dnf install -y curl wget git jq openssl httpd-tools bind-utils >/dev/null 2>&1
-        ;;
-    arch)
-        pacman -Sy --noconfirm curl wget git jq openssl apache-tools bind-tools >/dev/null 2>&1
-        ;;
-esac
+    OS_TYPE=$(grep -w "ID" /etc/os-release | cut -d "=" -f 2 | tr -d '"')
+    OS_VERSION=$(grep -w "VERSION_ID" /etc/os-release | cut -d "=" -f 2 | tr -d '"')
 
-log_success "Dépendances installées"
+    case "$OS_TYPE" in
+        ubuntu|debian|raspbian|centos|fedora|rhel|arch)
+            log SUCCESS "Système supporté: ${C_BOLD}$OS_TYPE $OS_VERSION${C_RESET}"
+            ;;
+        *)
+            log ERROR "Système non supporté: $OS_TYPE"
+            exit 1
+            ;;
+    esac
 
-# 4. Installation de Docker
-log_info "Vérification de Docker..."
+    # Espace disque
+    local available=$(df -BG / | awk 'NR==2 {print $4}' | sed 's/G//')
+    if [ "$available" -lt "$MIN_DISK_SPACE" ]; then
+        log WARNING "Espace disque faible: ${available}GB (${MIN_DISK_SPACE}GB recommandé)"
+    else
+        log SUCCESS "Espace disque: ${C_BOLD}${available}GB disponible${C_RESET}"
+    fi
+}
 
-if ! command -v docker &> /dev/null; then
-    log_warn "Docker non détecté. Installation en cours..."
-    curl -fsSL https://get.docker.com | sh
-    systemctl enable docker
-    systemctl start docker
-    log_success "Docker installé"
-else
-    log_success "Docker déjà installé"
-fi
+# Installation des dépendances
+install_dependencies() {
+    log STEP "Installation des dépendances système"
 
-# Vérifier Docker Compose
-if ! docker compose version &> /dev/null; then
-    log_error "Docker Compose V2 requis mais non trouvé"
-    exit 1
-fi
+    case "$OS_TYPE" in
+        ubuntu|debian|raspbian)
+            execute_with_progress "Mise à jour des paquets" "apt-get update -y"
+            execute_with_progress "Installation des outils" \
+                "apt-get install -y curl wget git jq openssl apache2-utils dnsutils"
+            ;;
+        centos|fedora|rhel)
+            execute_with_progress "Installation des outils" \
+                "dnf install -y curl wget git jq openssl httpd-tools bind-utils"
+            ;;
+        arch)
+            execute_with_progress "Installation des outils" \
+                "pacman -Sy --noconfirm curl wget git jq openssl apache-tools bind-tools"
+            ;;
+    esac
 
-# 5. Détection de l'IP du serveur
-DETECTED_IP=$(hostname -I | awk '{print $1}')
+    log SUCCESS "Dépendances système installées"
+}
 
-if [ -z "$DETECTED_IP" ]; then
-    log_error "Impossible de détecter l'adresse IP du serveur"
-    exit 1
-fi
+# Vérification des ports
+check_ports() {
+    log STEP "Vérification des ports réseau"
 
-log_success "Adresse IP du serveur détectée: $DETECTED_IP"
+    local ports_busy=0
 
-# 6. Validation du domaine
-log_info "Domaine fourni: $DOMAIN_ARG"
+    # Vérifier le port 80
+    if lsof -Pi :80 -sTCP:LISTEN -t >/dev/null 2>&1 || netstat -tuln 2>/dev/null | grep -q ':80 '; then
+        log ERROR "Le port 80 est déjà utilisé"
+        lsof -Pi :80 -sTCP:LISTEN 2>/dev/null | grep LISTEN || netstat -tuln | grep ':80 '
+        ports_busy=1
+    else
+        log SUCCESS "Port 80 disponible"
+    fi
 
-# Vérifier que le domaine pointe vers ce serveur
-if ! check_domain_dns "$DOMAIN_ARG" "$DETECTED_IP"; then
-    log_error "Installation annulée: Le domaine ne pointe pas vers ce serveur"
-    exit 1
-fi
+    # Vérifier le port 443
+    if lsof -Pi :443 -sTCP:LISTEN -t >/dev/null 2>&1 || netstat -tuln 2>/dev/null | grep -q ':443 '; then
+        log ERROR "Le port 443 est déjà utilisé"
+        lsof -Pi :443 -sTCP:LISTEN 2>/dev/null | grep LISTEN || netstat -tuln | grep ':443 '
+        ports_busy=1
+    else
+        log SUCCESS "Port 443 disponible"
+    fi
 
-APP_DOMAIN="$DOMAIN_ARG"
-USE_SSL=true
-log_success "Domaine validé: $APP_DOMAIN (SSL sera configuré automatiquement)"
+    if [ $ports_busy -eq 1 ]; then
+        echo ""
+        log ERROR "Traefik nécessite les ports 80 et 443 libres"
+        echo -e "${C_WARNING}Arrêtez les services utilisant ces ports (Apache, Nginx, etc.)${C_RESET}"
+        echo -e "${C_MUTED}Exemple: sudo systemctl stop apache2 nginx${C_RESET}"
+        exit 1
+    fi
 
-# 7. Création de la structure des dossiers
-log_info "Création de la structure..."
-mkdir -p $INSTALL_DIR/{config/traefik/dynamic,database,api,web,logs,backups}
-cd $INSTALL_DIR
+    log SUCCESS "Tous les ports requis sont disponibles"
+}
 
-# 8. Clonage du repository
-log_info "Téléchargement de Nexpay depuis GitHub..."
+# Installation de Docker
+install_docker() {
+    log STEP "Configuration de Docker"
 
-REPO_URL="https://github.com/mouhamedlamotte/nexpay.git"
-TEMP_DIR=$(mktemp -d)
+    if command -v docker &> /dev/null; then
+        local docker_version=$(docker --version | cut -d ' ' -f3 | cut -d ',' -f1)
+        log SUCCESS "Docker déjà installé: ${C_BOLD}v$docker_version${C_RESET}"
+    else
+        log INFO "Installation de Docker en cours..."
 
-# Clone dans un dossier temporaire
-git clone --depth 1 --branch main "$REPO_URL" "$TEMP_DIR"
+        if curl -fsSL https://get.docker.com | sh >> "$LOG_FILE" 2>&1; then
+            execute_with_progress "Activation de Docker" "systemctl enable docker"
+            execute_with_progress "Démarrage de Docker" "systemctl start docker"
+            log SUCCESS "Docker installé avec succès"
+        else
+            log ERROR "Échec de l'installation de Docker"
+            exit 1
+        fi
+    fi
 
-# Copier les fichiers nécessaires
-cp -r "$TEMP_DIR"/* $INSTALL_DIR/
-rm -rf "$TEMP_DIR"
+    # Docker Compose V2
+    if docker compose version &> /dev/null; then
+        local compose_version=$(docker compose version --short)
+        log SUCCESS "Docker Compose: ${C_BOLD}v$compose_version${C_RESET}"
+    else
+        log ERROR "Docker Compose V2 requis mais non trouvé"
+        exit 1
+    fi
+}
 
-log_success "Code source téléchargé"
+# Validation DNS
+validate_dns() {
+    log STEP "Validation de la configuration DNS"
 
-# 9. Configuration automatique
-echo ""
-log_info "Configuration automatique de Nexpay"
-echo ""
+    local domain=$1
+    local server_ip=$(hostname -I | awk '{print $1}')
 
-# Email admin
-ADMIN_EMAIL="admin@$APP_DOMAIN"
-log_info "Email admin: $ADMIN_EMAIL"
+    if [ -z "$server_ip" ]; then
+        log ERROR "Impossible de détecter l'adresse IP du serveur"
+        exit 1
+    fi
 
-# Nom de l'app
-APP_NAME="Nexpay"
-log_info "Nom de l'application: $APP_NAME"
+    log INFO "IP du serveur: ${C_BOLD}$server_ip${C_RESET}"
+    log INFO "Vérification DNS pour: ${C_BOLD}$domain${C_RESET}"
 
-# Mot de passe Traefik par défaut
-TRAEFIK_PASSWORD="nexpay2024"
-log_info "Mot de passe Traefik: $TRAEFIK_PASSWORD (par défaut)"
+    local resolved_ip=""
+    if command -v dig &> /dev/null; then
+        resolved_ip=$(dig +short "$domain" A | tail -n1)
+    elif command -v nslookup &> /dev/null; then
+        resolved_ip=$(nslookup "$domain" | grep -A1 "Name:" | grep "Address:" | awk '{print $2}' | tail -n1)
+    else
+        log ERROR "Impossible de vérifier le DNS (dig/nslookup manquant)"
+        exit 1
+    fi
 
-echo ""
-log_warn "Configuration par défaut appliquée. Vous pourrez modifier ces paramètres plus tard dans le fichier .env"
-echo ""
-sleep 2
+    if [ -z "$resolved_ip" ]; then
+        log ERROR "Le domaine $domain ne résout vers aucune IP"
+        show_dns_help "$domain" "$server_ip"
+        exit 1
+    fi
 
-# 10. Génération des secrets
-log_info "Génération des secrets de sécurité..."
+    if [ "$resolved_ip" = "$server_ip" ]; then
+        log SUCCESS "DNS correctement configuré: ${C_BOLD}$domain${C_RESET} → ${C_BOLD}$server_ip${C_RESET}"
+    else
+        log ERROR "Configuration DNS incorrecte"
+        echo ""
+        echo -e "${C_WARNING}Le domaine pointe vers: ${C_BOLD}$resolved_ip${C_RESET}"
+        echo -e "${C_WARNING}Ce serveur a l'IP:      ${C_BOLD}$server_ip${C_RESET}"
+        show_dns_help "$domain" "$server_ip"
+        exit 1
+    fi
+}
 
-JWT_SECRET=$(openssl rand -base64 32)
-DB_PASSWORD=postgres
-REDIS_PASSWORD=$(openssl rand -base64 32)
-ENCRYPTION_KEY=$(openssl rand -hex 32)
-ADMIN_PASSWORD=$(openssl rand -hex 16)
-X_WRITE_KEY=$(openssl rand -hex 32)
-X_READ_KEY=$(openssl rand -hex 32)
-TRAEFIK_AUTH=$(echo $(htpasswd -nb admin "$TRAEFIK_PASSWORD") | sed -e 's/\$/\$\$/g')
+# Aide configuration DNS
+show_dns_help() {
+    local domain=$1
+    local server_ip=$2
 
-log_success "Secrets générés"
+    echo ""
+    print_box "Configuration DNS requise" "$C_WARNING"
 
-# 11. Création du fichier .env
-log_info "Configuration de l'environnement..."
+    echo -e "${C_INFO}Pour corriger la configuration DNS:${C_RESET}"
+    echo ""
+    echo -e "  ${C_BOLD}1.${C_RESET} Connectez-vous à votre registrar (OVH, Cloudflare, etc.)"
+    echo -e "  ${C_BOLD}2.${C_RESET} Créez un enregistrement DNS de type ${C_BOLD}A${C_RESET}:"
+    echo ""
+    echo -e "     ${C_MUTED}Nom:${C_RESET}    $domain"
+    echo -e "     ${C_MUTED}Type:${C_RESET}   A"
+    echo -e "     ${C_MUTED}Valeur:${C_RESET} $server_ip"
+    echo -e "     ${C_MUTED}TTL:${C_RESET}    300"
+    echo ""
+    echo -e "  ${C_BOLD}3.${C_RESET} Attendez la propagation DNS (5-30 minutes)"
+    echo -e "  ${C_BOLD}4.${C_RESET} Vérifiez avec: ${C_DIM}dig +short $domain${C_RESET}"
+    echo -e "  ${C_BOLD}5.${C_RESET} Relancez l'installation"
+    echo ""
+}
 
-cat > .env << EOF
-# Nexpay Configuration
-# Generated on $(date)
+# Téléchargement du code
+download_source() {
+    log STEP "Téléchargement du code source"
+
+    mkdir -p "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
+
+    local temp_dir=$(mktemp -d)
+
+    if git clone --depth 1 --branch main "$REPO_URL" "$temp_dir" >> "$LOG_FILE" 2>&1; then
+        log SUCCESS "Repository cloné"
+
+        execute_with_progress "Copie des fichiers" "cp -r $temp_dir/* $INSTALL_DIR/"
+        execute_with_progress "Nettoyage" "rm -rf $temp_dir"
+    else
+        log ERROR "Échec du clonage du repository"
+        exit 1
+    fi
+}
+
+# Génération de la configuration
+generate_config() {
+    log STEP "Génération de la configuration"
+
+    local app_name="Nexpay"
+    local admin_email="admin@$DOMAIN_ARG"
+
+    log INFO "Application: ${C_BOLD}$app_name${C_RESET}"
+    log INFO "Email admin: ${C_BOLD}$admin_email${C_RESET}"
+
+    # Génération des secrets
+    log INFO "Génération des secrets cryptographiques..."
+
+    local jwt_secret=$(openssl rand -base64 32)
+    local db_password="postgres"
+    local redis_password=$(openssl rand -base64 32)
+    local encryption_key=$(openssl rand -hex 32)
+    local admin_password=$(openssl rand -hex 16)
+    local x_write_key=$(openssl rand -hex 32)
+    local x_read_key=$(openssl rand -hex 32)
+    local traefik_password="nexpay2024"
+    local traefik_auth=$(echo $(htpasswd -nb admin "$traefik_password") | sed -e 's/\$/\$\$/g')
+
+    log SUCCESS "Secrets générés avec succès"
+
+    # Création du fichier .env
+    cat > .env << EOF
+# Nexpay Configuration - Generated $(date)
+# DO NOT COMMIT THIS FILE
 
 # Application
-APP_NAME=$APP_NAME
-APP_DOMAIN=$APP_DOMAIN
+APP_NAME=$app_name
+APP_DOMAIN=$DOMAIN_ARG
 APP_VERSION=1.0.0
-ADMIN_EMAIL=$ADMIN_EMAIL
-ADMIN_PASSWORD=$ADMIN_PASSWORD
+ADMIN_EMAIL=$admin_email
+ADMIN_PASSWORD=$admin_password
 NODE_ENV=production
 USE_SSL=true
 
 # Security
-JWT_SECRET=$JWT_SECRET
-ENCRYPTION_KEY=$ENCRYPTION_KEY
-X_WRITE_KEY=$X_WRITE_KEY
-X_READ_KEY=$X_READ_KEY
+JWT_SECRET=$jwt_secret
+ENCRYPTION_KEY=$encryption_key
+X_WRITE_KEY=$x_write_key
+X_READ_KEY=$x_read_key
 
 # Database
 DB_NAME=nexpay
 DB_USER=nexpay
-DB_PASSWORD=$DB_PASSWORD
+DB_PASSWORD=$db_password
 DATABASE_URL=postgresql://nexpay:postgres@nexpay-db:5432/nexpay
 
 # Redis
-REDIS_PASSWORD=$REDIS_PASSWORD
+REDIS_PASSWORD=$redis_password
 
 # Traefik
-TRAEFIK_AUTH=$TRAEFIK_AUTH
+TRAEFIK_AUTH=$traefik_auth
 EOF
 
-log_success "Fichier .env créé"
+    chmod 600 .env
+    log SUCCESS "Fichier de configuration créé: ${C_BOLD}.env${C_RESET}"
 
-# 12. Configuration SSL avec Let's Encrypt
-log_info "Configuration SSL activée pour: $APP_DOMAIN"
-mkdir -p config/traefik/letsencrypt
-touch config/traefik/letsencrypt/acme.json
-chmod 600 config/traefik/letsencrypt/acme.json
-log_success "Configuration SSL prête (Let's Encrypt)"
+    # Configuration SSL
+    mkdir -p config/traefik/letsencrypt
 
-# 13. Démarrage des containers
-log_info "Démarrage de Nexpay..."
-docker compose pull 2>&1 | grep -v "Pulling" || true
-docker compose up -d --build
+    if [ -f config/traefik/letsencrypt/acme.json ] && [ -s config/traefik/letsencrypt/acme.json ]; then
+        log INFO "Certificat SSL existant détecté"
+        cp config/traefik/letsencrypt/acme.json config/traefik/letsencrypt/acme.json.backup-$DATE
+    else
+        touch config/traefik/letsencrypt/acme.json
+        chmod 600 config/traefik/letsencrypt/acme.json
+    fi
 
-# 14. Attente du démarrage
-log_info "Attente du démarrage des services..."
-sleep 15
+    log SUCCESS "Configuration SSL préparée (Let's Encrypt)"
 
-# Vérifier que les containers tournent
-RUNNING_CONTAINERS=$(docker compose ps --status running 2>/dev/null | grep -c "Up" || echo "0")
-if [ "$RUNNING_CONTAINERS" -ge 3 ]; then
-    log_success "Tous les services sont démarrés ($RUNNING_CONTAINERS containers actifs)"
-else
-    log_warn "Certains services ont des problèmes"
-    docker compose ps
-fi
+    # Sauvegarde des credentials
+    cat > "$INSTALL_DIR/credentials.txt" << EOF
+═══════════════════════════════════════════════════════════════
+ NEXPAY - CREDENTIALS (CONFIDENTIEL)
+═══════════════════════════════════════════════════════════════
 
-# 15. Test de santé
-log_info "Test de connectivité..."
-sleep 5
+Domaine:        https://$DOMAIN_ARG
 
-if curl -f http://localhost:9000/api/v1/health > /dev/null 2>&1; then
-    log_success "API répond correctement"
-else
-    log_warn "API ne répond pas encore (peut prendre 1-2 minutes)"
-fi
+Admin:
+  Email:        $admin_email
+  Password:     $admin_password
 
-# 16. Affichage des informations finales
-echo ""
-echo -e "${PURPLE}"
-cat << "EOF"
+API Keys:
+  Write Key:    $x_write_key
+  Read Key:     $x_read_key
 
-███╗   ██╗███████╗██╗  ██╗██████╗  █████╗ ██╗   ██╗
-████╗  ██║██╔════╝╚██╗██╔╝██╔══██╗██╔══██╗╚██╗ ██╔╝
-██╔██╗ ██║█████╗   ╚███╔╝ ██████╔╝███████║ ╚████╔╝
-██║╚██╗██║██╔══╝   ██╔██╗ ██╔═══╝ ██╔══██║  ╚██╔╝
-██║ ╚████║███████╗██╔╝ ██╗██║     ██║  ██║   ██║
-╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝   ╚═╝
+Traefik Dashboard:
+  URL:          https://$DOMAIN_ARG/dashboard/
+  User:         admin
+  Password:     $traefik_password
 
+Database:
+  User:         nexpay
+  Password:     $db_password
+
+═══════════════════════════════════════════════════════════════
+ IMPORTANT: Sauvegardez ce fichier en lieu sûr puis supprimez-le
+═══════════════════════════════════════════════════════════════
 EOF
-echo -e "${NC}"
-echo ""
-echo -e "${GREEN}🌐 URLs disponibles:${NC}"
-echo "   • API:     https://$APP_DOMAIN/api/v1"
-echo "   • WEB:     https://$APP_DOMAIN"
 
-echo ""
-echo -e "${GREEN}🔑 Identifiants par défaut:${NC}"
-echo "   • Admin:    $ADMIN_EMAIL / $ADMIN_PASSWORD"
-echo "   • API_KEY:    $X_WRITE_KEY / $X_WRITE_KEY"
-echo ""
+    chmod 600 "$INSTALL_DIR/credentials.txt"
+    log SUCCESS "Credentials sauvegardés: ${C_BOLD}credentials.txt${C_RESET}"
+}
 
-echo -e "${YELLOW}⚠️  SÉCURITÉ:${NC}"
-echo "   1. Sauvegardez le fichier: $INSTALL_DIR/.env"
-echo "   2. CHANGEZ le mot de passe admin immédiatement !"
-echo ""
+# Démarrage des services
+start_services() {
+    log STEP "Démarrage des services Docker"
 
-echo -e "${BLUE}🔒 Certificat SSL:${NC}"
-echo "   • Le certificat SSL sera généré automatiquement par Let's Encrypt"
-echo "   • Cela peut prendre 1-2 minutes"
-echo "   • Vérifiez l'état: docker compose logs traefik | grep acme"
-echo ""
+    cd "$INSTALL_DIR"
 
-echo -e "${BLUE}📚 Commandes utiles:${NC}"
-echo "   • Voir les logs:     cd $INSTALL_DIR && docker compose logs -f"
-echo "   • Redémarrer:        cd $INSTALL_DIR && docker compose restart"
-echo "   • Arrêter:           cd $INSTALL_DIR && docker compose down"
-echo "   • Voir les services: cd $INSTALL_DIR && docker compose ps"
-echo "   • Mettre à jour:     cd $INSTALL_DIR && ./update.sh"
-echo ""
-echo -e "${BLUE}📖 Documentation:${NC} https://nexpay.thenexcom.com"
-echo -e "${BLUE}💬 Support:${NC} https://github.com/mouhamedlamotte/nexpay/issues"
-echo ""
+    log INFO "Téléchargement des images Docker..."
+    docker compose pull >> "$LOG_FILE" 2>&1 &
+    local pull_pid=$!
+    spinner $pull_pid "Téléchargement des images"
 
-# 17. Créer un script de mise à jour
-cat > update.sh << 'UPDATE_SCRIPT'
+    log INFO "Construction et démarrage des containers..."
+    if docker compose up -d --build >> "$LOG_FILE" 2>&1; then
+        log SUCCESS "Services démarrés"
+    else
+        log ERROR "Échec du démarrage des services"
+        echo -e "${C_MUTED}Consultez les logs: docker compose logs${C_RESET}"
+        exit 1
+    fi
+
+    # Attente du démarrage
+    log INFO "Initialisation des services..."
+    for i in {1..15}; do
+        progress_bar $i 15
+        sleep 1
+    done
+    echo ""
+
+    # Vérification
+    local running=$(docker compose ps --status running 2>/dev/null | grep -c "Up" || echo "0")
+    if [ "$running" -ge 3 ]; then
+        log SUCCESS "Tous les services sont opérationnels (${C_BOLD}$running${C_RESET} containers)"
+    else
+        log WARNING "Certains services n'ont pas démarré correctement"
+        docker compose ps
+    fi
+}
+
+# Test de santé
+health_check() {
+    log STEP "Test de santé de l'application"
+
+    sleep 5
+
+    if curl -f http://localhost:9000/api/v1/health > /dev/null 2>&1; then
+        log SUCCESS "API opérationnelle"
+    else
+        log WARNING "API pas encore disponible (peut prendre 1-2 minutes)"
+    fi
+}
+
+# Affichage final
+show_completion() {
+    echo ""
+    print_double_separator
+    echo ""
+    echo -e "${C_SUCCESS}${C_BOLD}"
+    center_text "✓ INSTALLATION TERMINÉE AVEC SUCCÈS" 80
+    echo -e "${C_RESET}"
+    print_double_separator
+    echo ""
+
+    echo -e "${C_PRIMARY}${ICON_ROCKET} URLs d'accès:${C_RESET}"
+    echo -e "   ${C_MUTED}API:${C_RESET}     ${C_BOLD}https://$DOMAIN_ARG/api/v1${C_RESET}"
+    echo -e "   ${C_MUTED}WEB:${C_RESET}     ${C_BOLD}https://$DOMAIN_ARG${C_RESET}"
+    echo ""
+
+    echo -e "${C_PRIMARY}${ICON_LOCK} Identifiants:${C_RESET}"
+    echo -e "   ${C_MUTED}Voir le fichier:${C_RESET} ${C_BOLD}$INSTALL_DIR/credentials.txt${C_RESET}"
+    echo ""
+
+    echo -e "${C_WARNING}${ICON_WARNING} Sécurité:${C_RESET}"
+    echo -e "   ${C_MUTED}1.${C_RESET} Sauvegardez ${C_BOLD}credentials.txt${C_RESET} en lieu sûr"
+    echo -e "   ${C_MUTED}2.${C_RESET} Changez le mot de passe admin immédiatement"
+    echo -e "   ${C_MUTED}3.${C_RESET} Le certificat SSL sera généré automatiquement (1-2 min)"
+    echo ""
+
+    echo -e "${C_INFO}${ICON_INFO} Commandes utiles:${C_RESET}"
+    echo -e "   ${C_DIM}cd $INSTALL_DIR${C_RESET}"
+    echo -e "   ${C_DIM}docker compose logs -f${C_RESET}        # Voir les logs"
+    echo -e "   ${C_DIM}docker compose restart${C_RESET}        # Redémarrer"
+    echo -e "   ${C_DIM}docker compose ps${C_RESET}             # Status des services"
+    echo -e "   ${C_DIM}./update.sh${C_RESET}                   # Mettre à jour"
+    echo ""
+
+    print_separator
+    echo -e "${C_MUTED}Documentation: https://nexpay.thenexcom.com${C_RESET}"
+    echo -e "${C_MUTED}Support:       https://github.com/mouhamedlamotte/nexpay/issues${C_RESET}"
+    print_separator
+    echo ""
+}
+
+# Création des scripts utilitaires
+create_utility_scripts() {
+    log STEP "Création des scripts utilitaires"
+
+    # Script de mise à jour
+    cat > "$INSTALL_DIR/update.sh" << 'UPDATE_SCRIPT'
 #!/bin/bash
 set -e
 
-echo "🔄 Mise à jour de Nexpay..."
+C_INFO='\033[38;5;147m'
+C_SUCCESS='\033[38;5;46m'
+C_RESET='\033[0m'
 
-# Backup de la base de données
+echo -e "${C_INFO}🔄 Mise à jour de Nexpay...${C_RESET}"
+
 echo "📦 Création d'un backup..."
 docker compose exec -T postgres_nexpay pg_dump -U nexpay nexpay > "backups/backup-$(date +%Y%m%d-%H%M%S).sql"
 
-# Pull des nouvelles images
 echo "⬇️  Téléchargement des mises à jour..."
 docker compose pull
 
-# Rebuild et restart
-echo "🔨 Reconstruction des services..."
+echo "🔨 Reconstruction..."
 docker compose up -d --build
 
-echo "✅ Mise à jour terminée"
-echo "📊 Status des services:"
+echo -e "${C_SUCCESS}✓ Mise à jour terminée${C_RESET}"
 docker compose ps
 UPDATE_SCRIPT
 
-chmod +x update.sh
+    chmod +x "$INSTALL_DIR/update.sh"
+    log SUCCESS "Script de mise à jour créé"
 
-# 18. Créer un script de configuration du domaine amélioré
-cat > configure-domain.sh << 'DOMAIN_SCRIPT'
+    # Script de configuration du domaine
+    cat > "$INSTALL_DIR/configure-domain.sh" << 'DOMAIN_SCRIPT'
 #!/bin/bash
 set -e
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+C_PRIMARY='\033[38;5;39m'
+C_SUCCESS='\033[38;5;46m'
+C_ERROR='\033[38;5;196m'
+C_RESET='\033[0m'
 
-echo -e "${BLUE}🌐 Configuration du domaine personnalisé${NC}"
+echo -e "${C_PRIMARY}🌐 Configuration du domaine personnalisé${C_RESET}"
 echo ""
 
-read -p "Entrez votre nom de domaine (ex: pay.example.com): " NEW_DOMAIN
+read -p "Nom de domaine (ex: pay.example.com): " NEW_DOMAIN
 
 if [ -z "$NEW_DOMAIN" ]; then
-    echo -e "${RED}❌ Domaine vide, annulation${NC}"
+    echo -e "${C_ERROR}❌ Domaine requis${C_RESET}"
     exit 1
 fi
 
-# Détecter l'IP du serveur
 SERVER_IP=$(hostname -I | awk '{print $1}')
-
-echo ""
-echo -e "${YELLOW}⏳ Vérification DNS en cours...${NC}"
-
-# Vérifier le DNS
-if command -v dig &> /dev/null; then
-    RESOLVED_IP=$(dig +short "$NEW_DOMAIN" A | tail -n1)
-elif command -v nslookup &> /dev/null; then
-    RESOLVED_IP=$(nslookup "$NEW_DOMAIN" | grep -A1 "Name:" | grep "Address:" | awk '{print $2}' | tail -n1)
-else
-    echo -e "${RED}❌ Impossible de vérifier le DNS${NC}"
-    exit 1
-fi
+RESOLVED_IP=$(dig +short "$NEW_DOMAIN" A | tail -n1)
 
 if [ "$RESOLVED_IP" != "$SERVER_IP" ]; then
-    echo -e "${RED}❌ Le domaine $NEW_DOMAIN ne pointe pas vers ce serveur${NC}"
-    echo -e "${YELLOW}   Domaine pointe vers: $RESOLVED_IP${NC}"
-    echo -e "${YELLOW}   Serveur IP: $SERVER_IP${NC}"
-    echo ""
-    echo "Veuillez configurer votre DNS avant de continuer."
+    echo -e "${C_ERROR}❌ DNS incorrect${C_RESET}"
+    echo "Le domaine pointe vers: $RESOLVED_IP"
+    echo "Serveur IP: $SERVER_IP"
     exit 1
 fi
 
-echo -e "${GREEN}✅ DNS correctement configuré${NC}"
-
-# Backup du .env
 cp .env .env.backup-$(date +%Y%m%d-%H%M%S)
-
-# Modifier le domaine dans .env
 sed -i "s/^APP_DOMAIN=.*/APP_DOMAIN=$NEW_DOMAIN/" .env
-sed -i "s/^USE_SSL=.*/USE_SSL=true/" .env
-
-echo -e "${GREEN}✅ Domaine configuré: $NEW_DOMAIN${NC}"
-echo -e "${BLUE}🔄 Redémarrage des services...${NC}"
 
 docker compose restart
 
-echo ""
-echo -e "${GREEN}✅ Configuration terminée!${NC}"
-echo ""
-echo -e "${GREEN}Votre application est maintenant accessible sur: https://$NEW_DOMAIN${NC}"
-echo -e "${YELLOW}Note: Le certificat SSL peut prendre 1-2 minutes à être généré${NC}"
+echo -e "${C_SUCCESS}✓ Domaine configuré: https://$NEW_DOMAIN${C_RESET}"
 DOMAIN_SCRIPT
 
-chmod +x configure-domain.sh
+    chmod +x "$INSTALL_DIR/configure-domain.sh"
+    log SUCCESS "Script de configuration créé"
+}
 
-log_success "Script d'installation terminé!"
-echo ""
-echo -e "${GREEN}🎉 Nexpay est maintenant prêt à l'emploi!${NC}"
-echo ""
+################################################################################
+# FONCTION PRINCIPALE
+################################################################################
+
+main() {
+    # Arguments
+    DOMAIN_ARG="$1"
+
+    # Banner
+    show_banner
+
+    # Initialisation du logging
+    mkdir -p "$INSTALL_DIR" 2>/dev/null || true
+    exec > >(tee -a "$LOG_FILE") 2>&1
+
+    # Étapes d'installation
+    check_prerequisites
+    detect_system
+    install_dependencies
+    install_docker
+    check_ports
+    validate_dns "$DOMAIN_ARG"
+    download_source
+    generate_config
+    create_utility_scripts
+    start_services
+    health_check
+    show_completion
+
+    log SUCCESS "Installation complétée - Log: ${C_BOLD}$LOG_FILE${C_RESET}"
+}
+
+################################################################################
+# POINT D'ENTRÉE
+################################################################################
+
+main "$@"
