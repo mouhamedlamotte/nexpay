@@ -165,14 +165,13 @@ execute_with_progress() {
     shift
     local command="$@"
     
-    # Pas de retour chariot, affichage séquentiel
-    printf "${C_INFO}${ICON_GEAR}${C_RESET}  ${C_DIM}%s...${C_RESET} " "$message"
+    printf "${C_INFO}[ ]${C_RESET} ${message}..."
     
     if eval "$command" >> "$LOG_FILE" 2>&1; then
-        echo -e "${C_SUCCESS}${ICON_SUCCESS}${C_RESET}"
+        printf "\r${C_SUCCESS}[#]${C_RESET} ${message}\n"
         return 0
     else
-        echo -e "${C_ERROR}${ICON_ERROR}${C_RESET}"
+        printf "\r${C_ERROR}[X]${C_RESET} ${message}\n"
         return 1
     fi
 }
