@@ -68,15 +68,7 @@ center_text() {
     printf "%${padding}s%s%${padding}s\n" "" "$text" ""
 }
 
-print_separator() {
-    local char="${1:--}"
-    local width="${2:-80}"
-    printf "${C_MUTED}%${width}s${C_RESET}\n" | tr ' ' "$char"
-}
 
-print_double_separator() {
-    printf "${C_PRIMARY}%80s${C_RESET}\n" | tr ' ' '='
-}
 
 # Box avec titre
 print_box() {
@@ -114,7 +106,6 @@ log() {
         STEP)
             echo ""
             echo -e "${C_ACCENT}${ICON_ARROW}${C_RESET}  ${C_BOLD}${C_PRIMARY}${message}${C_RESET}"
-            print_separator "-" 80
             ;;
     esac
 
@@ -196,7 +187,6 @@ EOF
     center_text "Professional Payment Gateway Installation" 80
     center_text "Version $SCRIPT_VERSION" 80
     echo ""
-    print_double_separator
 }
 
 # Vérification des prérequis
@@ -619,12 +609,10 @@ health_check() {
 # Affichage final
 show_completion() {
     echo ""
-    print_double_separator
     echo ""
     echo -e "${C_SUCCESS}${C_BOLD}"
     center_text "✓ INSTALLATION TERMINÉE AVEC SUCCÈS" 80
     echo -e "${C_RESET}"
-    print_double_separator
     echo ""
 
     echo -e "${C_PRIMARY}${ICON_ROCKET} URLs d'accès:${C_RESET}"
@@ -650,10 +638,8 @@ show_completion() {
     echo -e "   ${C_DIM}./update.sh${C_RESET}                   # Mettre à jour"
     echo ""
 
-    print_separator
     echo -e "${C_MUTED}Documentation: https://nexpay.thenexcom.com${C_RESET}"
     echo -e "${C_MUTED}Support:       https://github.com/mouhamedlamotte/nexpay/issues${C_RESET}"
-    print_separator
     echo ""
 }
 
