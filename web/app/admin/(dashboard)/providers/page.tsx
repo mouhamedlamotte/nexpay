@@ -99,7 +99,7 @@ export default function ProvidersPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => setConfigureProvider(provider)}>
+                        <Button className="!border-border" variant="outline" size="sm" onClick={() => setConfigureProvider(provider)}>
                           <Settings2 className="mr-2 h-4 w-4" />
                           Configure
                         </Button>

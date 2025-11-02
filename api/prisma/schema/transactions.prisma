@@ -31,7 +31,7 @@ model Payer {
   id           String        @id @default(cuid())
   name         String?
   email        String?
-  phone        String?
+  phone        String @unique
   userId       String?
   metadata     Json?
   transactions Transaction[]

@@ -41,7 +41,6 @@ export class InitiateSessionPaymentDto {
     description: 'Phone number of the entity making the payment',
   })
   @IsString()
-  @IsOptional()
   phone: string;
 
   @ApiProperty({

@@ -10,7 +10,7 @@ export interface PaymentInitiationData {
   currency: Currency;
   userId?: string;
   email?: string;
-  phone?: string;
+  phone: string;
   name?: string;
   providerId: string;
   projectId: string;

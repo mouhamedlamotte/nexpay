@@ -127,19 +127,22 @@ export class TransactionsService {
     userId?: string;
     name?: string;
     email?: string;
-    phone?: string;
+    phone: string;
     metadata?: string;
     providerId?: string;
     expiresAt?: Date;
   }) {
     try {
-      const payer = await this.prisma.payer.create({
-        data: {
-          userId: data.userId || 'unknown',
-          name: data.name || 'Unknown',
-          email: data.email || 'Unknown',
-          phone: data.phone || 'Unknown',
-        },
+      const payerData = {
+        userId: data.userId || 'unknown',
+        name: data.name || 'Unknown',
+        email: data.email || 'Unknown',
+        phone: data.phone,
+      };
+      const payer = await this.prisma.payer.upsert({
+        where: { phone: payerData.phone },
+        update: payerData,
+        create: payerData,
       });
 
       if (!payer) {

@@ -12,7 +12,7 @@ export class TransactionFactory {
     currency: Currency;
     userId?: string;
     email?: string;
-    phone?: string;
+    phone: string;
     name?: string;
     providerId: string;
     providerTransactionId: string;

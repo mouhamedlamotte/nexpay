@@ -7,6 +7,8 @@ model PaymentProvider {
 
   secretsFields String[] @map("secrets_fields")
 
+  hasValidConfig Boolean @default(false) @map("has_valid_config")
+
   secrets String? @db.Text
 
   createdAt DateTime @default(now()) @map("created_at")

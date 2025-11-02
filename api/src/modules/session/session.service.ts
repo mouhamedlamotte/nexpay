@@ -28,6 +28,23 @@ export class SessionService {
   ): Promise<SessionPaymenResponse> {
     try {
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+      const payerData = {
+        name: dto.name,
+        email: dto.email,
+        userId: dto.userId,
+      };
+      const payer = await this.prisma.payer.upsert({
+        where: {
+          phone: dto.phone,
+        },
+        update: payerData,
+        create: {
+          ...payerData,
+          phone: dto.phone,
+        },
+      });
+
       const session = await this.prisma.session.create({
         data: {
           amount: dto.amount,
@@ -40,11 +57,8 @@ export class SessionService {
             },
           },
           payer: {
-            create: {
-              userId: dto.userId,
-              email: dto.email,
-              phone: dto.phone,
-              name: dto.name,
+            connect: {
+              id: payer.id,
             },
           },
         },
