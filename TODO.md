@@ -35,7 +35,7 @@
 * [X] coriger les filtre de jours
 * [X] correct webhook page overflow
 * [X] add NP logo on mobile
-* [ ] activate/deactiva provider buttons colors
+* [X] activate/deactiva provider buttons colors
 * [X] add paddings to user mangement page
 
 #### INSTALATION
