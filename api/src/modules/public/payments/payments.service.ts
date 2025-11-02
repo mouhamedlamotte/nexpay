@@ -42,11 +42,20 @@ export class PaymentsService {
         provider.secretsFields,
         provider.name,
       );
-
-      console.log('secrets', secrets);
-
       const adapter = this.adapters[provider.code];
       if (!adapter) throw new NotFoundException('Provider not supported');
+
+      const callbacks = await this.prisma.callback.findUnique({
+        where: { projectId: data.projectId },
+      });
+
+      if (data.successUrl) {
+        data.successUrl = callbacks.successUrl;
+      }
+
+      if (data.cancelUrl) {
+        data.cancelUrl = callbacks.cancelUrl;
+      }
 
       return adapter.initiate({
         ...data,
