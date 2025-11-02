@@ -45,6 +45,19 @@ export class SessionService {
         },
       });
 
+      const appHasActivePaymentProvider =
+        await this.prisma.paymentProvider.count({
+          where: {
+            isActive: true,
+          },
+        });
+
+      if (appHasActivePaymentProvider === 0) {
+        throw new NotFoundException(
+          'No payment provider is active for this app, please add and activate configation for your payment provider',
+        );
+      }
+
       const session = await this.prisma.session.create({
         data: {
           amount: dto.amount,
