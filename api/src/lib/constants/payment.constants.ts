@@ -10,5 +10,5 @@ export const ORANGE_MONEY_GRANT_TYPE = 'client_credentials';
 export const PAYEMENT_VALIDITY = 3600;
 
 // DEFAULT REDIRECT URL
-export const DEFAULT_CANCEL_URL = `https://${process.env.APP_DOMAIN}/cancel`;
-export const DEFAULT_SUCCESS_URL = `https://${process.env.APP_DOMAIN}/success`;
+export const DEFAULT_CANCEL_URL = `https://${process.env.APP_DOMAIN}/checkout/cancel`;
+export const DEFAULT_SUCCESS_URL = `https://${process.env.APP_DOMAIN}/checkout/success`;

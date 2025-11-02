@@ -42,7 +42,6 @@ export class ProvidersSeedersService implements OnModuleInit {
           name: provider.name,
           logoUrl: provider.logoUrl,
           secretsFields: provider.secretsFields,
-          isActive: false,
         },
         create: {
           ...provider,
