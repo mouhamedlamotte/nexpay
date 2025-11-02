@@ -9,6 +9,8 @@ import { CustomExceptionFilter } from './lib/filters';
 import { ErrorInterceptor } from './lib/interceptors';
 import { AppModule } from './modules/app.module';
 import * as path from 'path';
+// import * as bodyParser from 'body-parser';
+
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
@@ -74,6 +76,14 @@ async function bootstrap() {
         },
       }),
     );
+    // app.use(
+    //   `/${globalPrefix}/webhook/*`,
+    //   bodyParser.json({
+    //     verify: (req: any, res, buf) => {
+    //       req.rawBody = buf.toString('utf8');
+    //     },
+    //   }),
+    // );
 
     app.useGlobalFilters(new CustomExceptionFilter());
     app.useGlobalInterceptors(new ErrorInterceptor());

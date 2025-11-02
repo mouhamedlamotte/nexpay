@@ -5,8 +5,9 @@ import {
   HttpStatus,
   Logger,
   Post,
+  UseGuards,
 } from '@nestjs/common';
-import { TransactionStatus } from 'src/lib';
+import { TransactionStatus, WebhookProvider } from 'src/lib';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { WavePaymentStatus, WaveWebhookDto } from './dto/wave-weebhook.dto';
 import { WebhookService } from './webhook.service';
@@ -14,15 +15,18 @@ import {
   OrangeMoneyPaymentStatus,
   OrangeMoneyWebhookDto,
 } from './dto/om-weebhook.dto';
+import { WebhookAuthGuard } from 'src/guards/providers-webhook.guard';
 
 @ApiTags('Payment Webhooks')
 @Controller('webhook')
+@UseGuards(WebhookAuthGuard)
 export class WebhookController {
   private logger = new Logger(WebhookController.name);
 
   constructor(private readonly service: WebhookService) {}
 
   @Post('wave')
+  @WebhookProvider('wave')
   @ApiOperation({ summary: 'Handle Wave webhook callback' })
   @ApiResponse({
     status: 200,
@@ -48,6 +52,7 @@ export class WebhookController {
   }
 
   @Post('om')
+  @WebhookProvider('om')
   @ApiOperation({ summary: 'Handle Orange Money webhook callback' })
   @ApiResponse({
     status: 200,

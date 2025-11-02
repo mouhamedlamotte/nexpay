@@ -9,6 +9,13 @@ import { TransactionFactory } from '../helpers/transaction.factory';
 import { PaymentProviderService } from 'src/modules/settings/providers/payment-provider.service';
 import { WebhookService } from './webhook.service';
 import { WebhookController } from './webhook.controller';
+import { WebhookAuthGuard } from 'src/guards/providers-webhook.guard';
+import {
+  HmacValidator,
+  SharedSecretValidator,
+  WebhookValidatorFactory,
+} from 'src/lib/validators';
+import { PrismaService } from 'src/lib';
 
 @Module({
   imports: [
@@ -24,6 +31,11 @@ import { WebhookController } from './webhook.controller';
     OMService,
     PaymentProviderService,
     TransactionFactory,
+    WebhookAuthGuard,
+    WebhookValidatorFactory,
+    SharedSecretValidator,
+    HmacValidator,
+    PrismaService,
   ],
   controllers: [PaymentsController, WebhookController],
   exports: [PaymentsService],
