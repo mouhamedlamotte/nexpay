@@ -9,10 +9,10 @@ import { deleteCookie } from "cookies-next";
 import { usePathname } from "next/navigation";
 
 export function AppHeader() {
-  const logout = useAuthStore(s=>s.logout);
   const {setLoadingPhase, setLoading} = useAppStore()
   const pathname = usePathname();
-
+  
+  const logout = useAuthStore(s=>s.logout);
   const handleLogout = () => {
     setLoadingPhase('AUTHENTIFICATION');
     setLoading(true);

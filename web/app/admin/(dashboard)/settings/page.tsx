@@ -23,6 +23,8 @@ import {
 import { useRouter } from "next/navigation"
 import { useAuthStore } from "../stores/auth/auth-store"
 import { UsersApi } from "@/lib/api/users.query"
+import { useAppStore } from "@/stores/app.store"
+import { deleteCookie } from "cookies-next"
 
 
 const profileSchema = z.object({
@@ -50,6 +52,18 @@ export default function ProfilePage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const user =  useAuthStore((state) => state.user)
   const setUser = useAuthStore((state) => state.updateUser)
+
+  const {setLoadingPhase, setLoading} = useAppStore()
+    const logout = useAuthStore(s=>s.logout);
+    const handleLogout = () => {
+      setLoadingPhase('AUTHENTIFICATION');
+      setLoading(true);
+      deleteCookie('access_token');
+      setTimeout(() => {
+        logout();
+        window.location.href = '/auth/login'
+      }, 1000);
+    }
 
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -94,9 +108,7 @@ export default function ProfilePage() {
   const deleteAccountMutation = useMutation({
     mutationFn: () => UsersApi.deleteOwnAccount(),
     onSuccess: () => {
-      toast.success("Account deleted successfully")
-      // Clear auth store and redirect to login
-      router.push("/login")
+      handleLogout()
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to delete account")
@@ -300,6 +312,7 @@ export default function ProfilePage() {
             <DialogDescription>
               Are you sure you want to delete your account? This action cannot be undone and all your data will be
               permanently removed.
+              <p className="text-destructive">You've up to 30 days to reactivate your account</p>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

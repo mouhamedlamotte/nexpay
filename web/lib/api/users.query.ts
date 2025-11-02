@@ -7,6 +7,7 @@ import {
 } from "../types";
 
 export interface User {
+  deletedAt: string | number | Date;
   id: string;
   firstName: string;
   lastName: string;

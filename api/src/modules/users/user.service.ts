@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  OnModuleInit,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 import {
   FilterConfig,
@@ -42,6 +48,8 @@ export class UserService implements OnModuleInit {
         password: password,
         hasDefaultPassword: true,
         isSuperUser: true,
+        deletedAt: null,
+        isActive: true,
       },
       create: {
         email: this.env.get('ADMIN_EMAIL'),
@@ -58,9 +66,7 @@ export class UserService implements OnModuleInit {
 
   private getUsersFilterConfig(): FilterConfig {
     return {
-      baseWhere: {
-        deletedAt: null,
-      },
+      baseWhere: {},
       allowedFilters: ['isActive'],
       searchConfig: {
         searchFields: ['email', 'firstName', 'lastName'],
@@ -93,11 +99,19 @@ export class UserService implements OnModuleInit {
       throw new BadRequestException('No data provided');
     }
 
+    const newData: any = {
+      ...data,
+    };
+
+    if (data.isActive) {
+      newData.deletedAt = null;
+    }
+
     try {
       const user = await this.prisma.user.update({
         where: { id: id },
         data: {
-          ...data,
+          ...newData,
         },
       });
       delete user.password;
@@ -168,7 +182,9 @@ export class UserService implements OnModuleInit {
 
   async validateEmailAndPasswordUser(email: string, password: string) {
     try {
-      const user = await this.prisma.user.findUnique({ where: { email } });
+      const user = await this.prisma.user.findUnique({
+        where: { email },
+      });
 
       const doesUserExist = !!user;
 
@@ -181,12 +197,56 @@ export class UserService implements OnModuleInit {
 
       if (!isPasswordValid) return null;
 
+      if (user.deletedAt) {
+        throw new UnauthorizedException(
+          'Your account has been deleted, contact admin to restore it',
+        );
+      }
+
+      if (!user.isActive) {
+        throw new UnauthorizedException(
+          'Your account has been disabled, contact admin to restore it',
+        );
+      }
+
       return { id: user.id };
     } catch (error) {
       this.logger.log("une erreur s'est produite :", error?.message);
       throw error;
     }
   }
+
+  async deleteMyAccount(id: string) {
+    try {
+      const isAtLeatOneSuperUser = await this.prisma.user.count({
+        where: {
+          isSuperUser: true,
+          isActive: true,
+          deletedAt: null,
+        },
+      });
+
+      if (isAtLeatOneSuperUser <= 1) {
+        throw new ForbiddenException(
+          'The app must have at least one super user',
+        );
+      }
+
+      await this.prisma.user.update({
+        where: { id: id },
+        data: {
+          deletedAt: new Date(),
+          isActive: false,
+        },
+      });
+
+      return true;
+    } catch (error) {
+      this.logger.error(error.message, error.stack);
+      throw error;
+    }
+  }
+
   // async forgotPassword(email: string) {
   //   try {
   //     const admin = await this.prisma.admin.findUnique({

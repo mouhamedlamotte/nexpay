@@ -13,7 +13,10 @@
 - [X] reconsiliate payee user by phone
 - [X] not update secret on webhook update if secret not provided
 - [X] add webhook description
-- [ ] not initiate payment if there are no active provider
+- [X] add delete my account
+- [X] if user try to logout and his acount is deleted , send an error message to say it and user have to contact admin to restor
+- [X] fordib account deletion if there isn't at leat one superuser
+- [X] not initiate payment if there are no active provider
 
 #### WEB
 

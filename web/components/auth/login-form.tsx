@@ -17,6 +17,7 @@ import { Button } from "../ui/button";
 import { setCookie } from "cookies-next";
 import { useMutation } from "@tanstack/react-query";
 import { AuthApi } from "@/lib/api/auth";
+import { toast } from "sonner";
 
 const loginSchema = z.object({
   email: z.string().email("Adresse e-mail invalide"),
@@ -35,7 +36,10 @@ const LoginForm = () => {
     onSuccess: (data) => {
       setCookie("access_token", data.access_token);
       window.location.href = next;
-    }
+    },
+    onError: (error:any) => {
+      toast.error(error.response?.data?.message || "Failed to login");
+    },
   });
 
   const form = useForm<z.infer<typeof loginSchema>>({

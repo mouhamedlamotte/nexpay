@@ -155,6 +155,22 @@ export class UserController {
     };
   }
 
+  @Delete('users/me')
+  @UseGuards(JwtAuthGuard())
+  @ApiOperation({ summary: 'Supprimer l’utilisateur connecté' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Utilisateur supprimé avec succès',
+  })
+  async deleteMyAccount(@Req() req: any) {
+    await this.user.deleteMyAccount(req.user.id);
+    return {
+      statusCode: HttpStatus.OK,
+      message:
+        'Votre compte a été supprimé, vous avez jusqu à 30 pour restorer votre compte',
+    };
+  }
+
   @Put('users/:id')
   @UseGuards(JwtAuthGuard())
   @ApiOperation({ summary: 'Modifier un user' })
