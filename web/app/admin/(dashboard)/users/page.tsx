@@ -75,7 +75,7 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <main className="flex-1 overflow-y-auto p-2 md:p-6 space-y-4">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
@@ -324,6 +324,6 @@ export default function UsersPage() {
           isDeleting={deleteMutation.isPending}
         />
       )}
-    </div>
+    </main>
   );
 }
