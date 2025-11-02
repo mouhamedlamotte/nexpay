@@ -35,6 +35,13 @@ export class PaymentsService {
         throw new NotFoundException('Provider not valid for this organization');
       }
 
+      const project = await this.prisma.project.findFirst({
+        where: { id: data.projectId },
+      });
+      if (!project) {
+        throw new NotFoundException('This project does not exist');
+      }
+
       const secrets = await this.providerService.validateAndDecryptSecrets(
         typeof provider.secrets === 'string'
           ? JSON.parse(provider.secrets)

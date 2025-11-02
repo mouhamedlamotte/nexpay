@@ -19,9 +19,9 @@
 - [X] if user try to logout and his acount is deleted , send an error message to say it and user have to contact admin to restor
 - [X] fordib account deletion if there isn't at leat one superuser
 - [X] not initiate payment if there are no active provider
-- [ ] payment initialisation : check if project exist and return a explicit error message if not
-- [ ] wave payment redirect uls
-- [ ] fix : change provider
+- [X] payment initialisation : check if project exist and return a explicit error message if not
+- [X] wave payment redirect uls
+- [X] fix : change provider
 - [ ] add a long pooling endpint to check if transation is completed
 
 #### WEB

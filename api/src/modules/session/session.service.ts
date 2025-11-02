@@ -27,6 +27,13 @@ export class SessionService {
     dto: InitiateSessionPaymentDto,
   ): Promise<SessionPaymenResponse> {
     try {
+      const project = await this.prisma.project.findUnique({
+        where: { id: dto.projectId },
+      });
+      if (!project) {
+        throw new NotFoundException('This project does not exist');
+      }
+
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
       const payerData = {
