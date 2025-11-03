@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { SessionService } from './session.service';
+import { SessionPayemtService } from './session.service';
 import { InitiateSessionPaymentDto } from './dto/initiate-session-payment.dto';
 import { CheckoutSessionPaymentDto } from './dto/CheckoutSessionPaymentDto';
 import {
@@ -25,8 +25,8 @@ import {
 
 @Controller('payment/session')
 @UseGuards(ApiKeyGuard)
-export class SessionController {
-  constructor(private readonly service: SessionService) {}
+export class SessionPaymentController {
+  constructor(private readonly service: SessionPayemtService) {}
 
   @Post('/initiate')
   @HttpCode(HttpStatus.CREATED)

@@ -7,13 +7,15 @@ import {
   Param,
   Put,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { PaymentProviderService } from './payment-provider.service';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { UpdatePaymentProviderDto } from './dto/update-payment-provider.dto';
+import { UpdatePaymentProviderSecretsDto } from './dto/update-payment-provider.dto';
 import { GetPaymentProviderDto } from './dto/get-payment-provider.dto';
 import { JwtAuthGuard } from 'src/guards/auth/jwt/jwt.guard';
+import { TestPaymentDto } from './dto/test-payment.dto';
 
 @ApiTags('Settings - Payment Providers')
 @Controller('/settings/providers')
@@ -22,16 +24,38 @@ export class PaymentProviderController {
   constructor(private readonly service: PaymentProviderService) {}
 
   // UPDATE
-  @ApiOperation({ summary: 'Update payment provider' })
+  @ApiOperation({ summary: 'Toggle payment provider' })
+  @ApiResponse({
+    status: 200,
+    description: 'The record has been successfully Toggled.',
+  })
+  @HttpCode(HttpStatus.OK)
+  @Put('/:code/toggle')
+  async toggle(
+    @Param('code') code: string,
+    @Body('isActive') isActive: boolean,
+  ) {
+    const res = await this.service.toggle(code, isActive);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Le payment provider a été mis à jour avec succès.',
+      data: res,
+    };
+  }
+  // UPDATE
+  @ApiOperation({ summary: 'Update payment provider secrets' })
   @ApiResponse({
     status: 200,
     description: 'The record has been successfully updated.',
   })
-  @ApiBody({ type: UpdatePaymentProviderDto })
+  @ApiBody({ type: UpdatePaymentProviderSecretsDto })
   @HttpCode(HttpStatus.OK)
-  @Put('')
-  async update(@Body() dto: UpdatePaymentProviderDto) {
-    const res = await this.service.update(dto);
+  @Put('/:code/secrets')
+  async update(
+    @Body() dto: UpdatePaymentProviderSecretsDto,
+    @Param('code') code: string,
+  ) {
+    const res = await this.service.update(code, dto);
     return {
       statusCode: HttpStatus.OK,
       message: 'Le payment provider a été mis à jour avec succès.',
@@ -39,22 +63,23 @@ export class PaymentProviderController {
     };
   }
 
-  // UPDATE
-  @ApiOperation({ summary: 'Toggle payment provider' })
+  @ApiOperation({ summary: 'Test a payment provider' })
   @ApiResponse({
     status: 200,
-    description: 'The record has been successfully Toggled.',
+    description: 'The test has been successfully done.',
   })
+  @ApiBody({ type: TestPaymentDto })
   @HttpCode(HttpStatus.OK)
-  @Put('/:providerId/toggle')
-  async toggle(
-    @Param('providerId') providerId: string,
-    @Body('isActive') isActive: boolean,
+  @Put('/:code/test')
+  async testSecret(
+    @Body() dto: TestPaymentDto,
+    @Param('code') code: string,
+    @Req() req: any,
   ) {
-    const res = await this.service.toggle(providerId, isActive);
+    const res = await this.service.testSecret(req.user.id, code, dto);
     return {
       statusCode: HttpStatus.OK,
-      message: 'Le payment provider a été mis à jour avec succès.',
+      message: 'Le test est passé avec succès.',
       data: res,
     };
   }
@@ -66,7 +91,7 @@ export class PaymentProviderController {
     description: 'Returns one payment provider.',
   })
   @HttpCode(HttpStatus.OK)
-  @Get('/code/:code')
+  @Get('/:code')
   async getByCode(@Param('code') code: string) {
     const res = await this.service.getProviderByCode(code);
     return {

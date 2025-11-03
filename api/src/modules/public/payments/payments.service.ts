@@ -3,10 +3,9 @@ import { InitiatePaymentDto } from './dto/initiate-payment.dto';
 import { WaveService } from './adapters/wave.service';
 import { OMService } from './adapters/om.service';
 import { randomUUID } from 'crypto';
-import { PrismaService } from 'src/lib';
+import { HashService, PrismaService } from 'src/lib';
 import { LoggerService } from 'src/lib/services/logger.service';
 import { PaymentAdapter } from './adapters/interface';
-import { PaymentProviderService } from 'src/modules/settings/providers/payment-provider.service';
 
 @Injectable()
 export class PaymentsService {
@@ -17,7 +16,7 @@ export class PaymentsService {
     private readonly prisma: PrismaService,
     private readonly wave: WaveService,
     private readonly om: OMService,
-    private readonly providerService: PaymentProviderService,
+    private readonly hash: HashService,
   ) {
     this.logger.setContext(PaymentsService.name);
     this.adapters = {
@@ -42,7 +41,7 @@ export class PaymentsService {
         throw new NotFoundException('This project does not exist');
       }
 
-      const secrets = await this.providerService.validateAndDecryptSecrets(
+      const secrets = await this.hash.validateAndDecryptSecrets(
         typeof provider.secrets === 'string'
           ? JSON.parse(provider.secrets)
           : provider.secrets,

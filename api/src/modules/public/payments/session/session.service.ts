@@ -2,8 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { LoggerService, PrismaService, SessionStatus } from 'src/lib';
 import { InitiateSessionPaymentDto } from './dto/initiate-session-payment.dto';
 import { ConfigService } from '@nestjs/config';
-import { PaymentsService } from '../public/payments/payments.service';
 import { CheckoutSessionPaymentDto } from './dto/CheckoutSessionPaymentDto';
+import { PaymentsService } from '../payments.service';
 
 export interface SessionPaymenResponse {
   sessionId: string;
@@ -13,14 +13,14 @@ export interface SessionPaymenResponse {
 }
 
 @Injectable()
-export class SessionService {
+export class SessionPayemtService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
     private readonly env: ConfigService,
     private readonly payment: PaymentsService,
   ) {
-    this.logger.setContext(SessionService.name);
+    this.logger.setContext(SessionPayemtService.name);
   }
 
   async initiateSessionPayment(

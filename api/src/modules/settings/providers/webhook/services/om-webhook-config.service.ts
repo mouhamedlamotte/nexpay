@@ -8,7 +8,6 @@ import { WebhookAuthType, WebhookHeaderPrefix } from '@prisma/client';
 import { ConfigureOmWebhookDto } from '../dto/configure-om-webhook.dto';
 import { HashService, ORANGE_MONEY_API_URL, PrismaService } from 'src/lib';
 import { OMService } from 'src/modules/public/payments/adapters/om.service';
-import { PaymentProviderService } from '../../payment-provider.service';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { WebhookConfigService } from './webhook-config.service';
@@ -21,7 +20,6 @@ export class OMWebhookConfigService {
     private readonly prisma: PrismaService,
     private readonly weebhookConfigService: WebhookConfigService,
     private readonly om: OMService,
-    private readonly providerService: PaymentProviderService,
     private readonly http: HttpService,
     private readonly hash: HashService,
   ) {}
@@ -79,7 +77,7 @@ export class OMWebhookConfigService {
       );
     }
 
-    const secrets = await this.providerService.validateAndDecryptSecrets(
+    const secrets = await this.hash.validateAndDecryptSecrets(
       typeof provider.secrets === 'string'
         ? JSON.parse(provider.secrets)
         : provider.secrets,

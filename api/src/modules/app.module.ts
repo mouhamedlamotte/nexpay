@@ -9,9 +9,9 @@ import { CallbacksModule } from './settings/callbacks/redirects.module';
 import { WebhooksModule } from './settings/webhooks/webhooks.module';
 import { PaymentsModule } from './public/payments/webhook/payments.module';
 import { SeedersModule } from 'src/lib/modules/seeders/seeders.module';
-import { SessionModule } from './session/session.module';
 import { UsersModule } from './users/user.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { SessionPaymentModule } from './public/payments/session/session.module';
 
 @Module({
   imports: [
@@ -28,7 +28,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     ProjectModule,
     TransactionsModule,
     PaymentsModule,
-    SessionModule,
+    SessionPaymentModule,
     UsersModule,
     DashboardModule,
   ],

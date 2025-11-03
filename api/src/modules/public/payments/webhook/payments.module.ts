@@ -16,6 +16,7 @@ import {
   WebhookValidatorFactory,
 } from 'src/lib/validators';
 import { PrismaService } from 'src/lib';
+import { SessionPayemtService } from '../session/session.service';
 
 @Module({
   imports: [
@@ -36,8 +37,23 @@ import { PrismaService } from 'src/lib';
     SharedSecretValidator,
     HmacValidator,
     PrismaService,
+    SessionPayemtService,
   ],
   controllers: [PaymentsController, WebhookController],
-  exports: [PaymentsService],
+  exports: [
+    PaymentsService,
+    TransactionsService,
+    WebhookService,
+    WaveService,
+    OMService,
+    PaymentProviderService,
+    TransactionFactory,
+    WebhookAuthGuard,
+    WebhookValidatorFactory,
+    SharedSecretValidator,
+    HmacValidator,
+    PrismaService,
+    SessionPayemtService,
+  ],
 })
 export class PaymentsModule {}

@@ -57,7 +57,7 @@ export class InitiateSessionPaymentDto {
   })
   @IsString()
   @IsOptional()
-  client_reference: string;
+  client_reference?: string;
 
   @ApiProperty({
     example: '1f31dfd7-aec8-4adf-84ff-4a9c1981be2a',
