@@ -1,29 +1,6 @@
-model PaymentProvider {
-  id       String  @id @default(cuid())
-  name     String
-  code     String  @unique
-  logoUrl  String?
-  isActive Boolean @default(true) @map("is_active")
-
-  secretsFields String[] @map("secrets_fields") // eg: ['client_id', 'client_secret', 'name', 'code']
-
-  hasValidConfig Boolean @default(false) @map("has_valid_config")
-
-  secrets String? @db.Text // eg. '{ "client_id": "xxx", "client_secret": "xxx" }'
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  transactions Transaction[]
-  webhookConfig ProviderWebhook?
-
-  @@map("payment_providers")
-}
-
 enum WebhookAuthType {
   sharedSecret
   hmac
-  // pas de basic auth
 }
 
 enum WebhookAlgo {
@@ -46,6 +23,30 @@ enum bodyFormat {
   timestampPlusBody // timestamp + body
 }
 
+model PaymentProvider {
+  id       String  @id @default(cuid())
+  name     String
+  code     String  @unique
+  logoUrl  String?
+  isActive Boolean @default(true) @map("is_active")
+
+  secretsFields String[] @map("secrets_fields") // eg: ['client_id', 'client_secret', 'name', 'code']
+
+  hasValidSecretConfig Boolean @default(false)
+  hasValidWebhookConfig Boolean @default(false)
+
+  secrets String? @db.Text // eg. '{ "client_id": "xxx", "client_secret": "xxx" }'
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  transactions Transaction[]
+  webhookConfig ProviderWebhook?
+
+  @@map("payment_providers")
+}
+
+
 
 model ProviderWebhook {
   id        String   @id @default(cuid())
@@ -66,8 +67,6 @@ model ProviderWebhook {
   timestampTolerance Int?
 
   bodyFormat bodyFormat?
-
-  isActive Boolean @default(true)
 
   lastTestedAt DateTime?
   lastVerifiedAt DateTime?

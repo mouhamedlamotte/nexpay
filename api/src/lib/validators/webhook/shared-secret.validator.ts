@@ -3,10 +3,12 @@ import { Request } from 'express';
 import { ProviderWebhook, WebhookHeaderPrefix } from '@prisma/client';
 import { IWebhookValidator } from './providers-webhook-validator.interface';
 import * as crypto from 'crypto';
+import { HashService } from 'src/lib/services';
 
 @Injectable()
 export class SharedSecretValidator implements IWebhookValidator {
   private readonly logger = new Logger(SharedSecretValidator.name);
+  constructor(private readonly hash: HashService) {}
 
   async validate(request: Request, config: ProviderWebhook): Promise<boolean> {
     const headerValue = this.getHeader(request, config.header);
@@ -16,7 +18,10 @@ export class SharedSecretValidator implements IWebhookValidator {
       return false;
     }
 
-    const expectedValue = this.buildExpectedValue(config.secret, config.prefix);
+    const expectedValue = await this.buildExpectedValue(
+      config.secret,
+      config.prefix,
+    );
 
     const isValid = this.secureCompare(headerValue, expectedValue);
 
@@ -36,10 +41,15 @@ export class SharedSecretValidator implements IWebhookValidator {
     return request.headers[normalizedHeader] as string;
   }
 
-  private buildExpectedValue(
+  private async buildExpectedValue(
     secret: string,
     prefix?: WebhookHeaderPrefix,
-  ): string {
+  ): Promise<string> {
+    const decryptedSecret = await this.hash.decryptSensitiveData(secret);
+    if (decryptedSecret) {
+      secret = decryptedSecret;
+    }
+
     if (!prefix) return secret;
 
     switch (prefix) {

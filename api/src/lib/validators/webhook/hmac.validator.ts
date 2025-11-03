@@ -3,10 +3,12 @@ import { Request } from 'express';
 import { ProviderWebhook, WebhookAlgo, WebhookEncoding } from '@prisma/client';
 import * as crypto from 'crypto';
 import { IWebhookValidator } from './providers-webhook-validator.interface';
+import { HashService } from 'src/lib/services';
 
 @Injectable()
 export class HmacValidator implements IWebhookValidator {
   private readonly logger = new Logger(HmacValidator.name);
+  constructor(private readonly hash: HashService) {}
 
   async validate(request: Request, config: ProviderWebhook): Promise<boolean> {
     const signatureHeader = this.getHeader(request, config.header);
@@ -45,7 +47,7 @@ export class HmacValidator implements IWebhookValidator {
     const payload = this.buildPayload(timestamp, rawBody, config.bodyFormat);
 
     // Calculer le HMAC attendu
-    const expectedSignature = this.computeHmac(
+    const expectedSignature = await this.computeHmac(
       payload,
       config.secret,
       config.algo || WebhookAlgo.sha256,
@@ -130,12 +132,16 @@ export class HmacValidator implements IWebhookValidator {
     return timestamp + body;
   }
 
-  private computeHmac(
+  private async computeHmac(
     payload: string,
     secret: string,
     algo: WebhookAlgo,
     encoding: WebhookEncoding,
-  ): string {
+  ): Promise<string> {
+    const decryptedSecret = await this.hash.decryptSensitiveData(secret);
+    if (decryptedSecret) {
+      secret = decryptedSecret;
+    }
     const hmac = crypto.createHmac(algo, secret);
     hmac.update(payload);
 

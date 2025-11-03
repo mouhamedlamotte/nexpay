@@ -36,20 +36,24 @@ export class OMService implements PaymentAdapter {
     @Inject('KEYV') private readonly keyv: Keyv,
   ) {}
 
-  private async getToken(
-    projectId: string,
-    creds: { client_id: string; client_secret: string; grant_type: string },
-  ) {
-    const cacheKey = `om-token:${projectId}`;
+  async getToken(creds: { client_id: string; client_secret: string }) {
+    const cacheKey = `om-token`;
     const cachedToken = await this.keyv.get(cacheKey);
     if (cachedToken) return cachedToken;
 
     this.logger.debug('Fetching new OM access token');
     try {
       const response = await firstValueFrom(
-        this.http.post(`${ORANGE_MONEY_API_URL}/oauth/token`, creds, {
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        }),
+        this.http.post(
+          `${ORANGE_MONEY_API_URL}/oauth/token`,
+          {
+            ...creds,
+            grant_type: ORANGE_MONEY_GRANT_TYPE,
+          },
+          {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          },
+        ),
       );
 
       this.logger.debug('OM access token response', response.data);
@@ -65,7 +69,7 @@ export class OMService implements PaymentAdapter {
 
   async initiate(data: PaymentInitiationData): Promise<PaymentResponse> {
     try {
-      const { amount, currency, projectId, reference, secrets } = data;
+      const { amount, currency, reference, secrets } = data;
       const { name, code, client_id, client_secret } = secrets;
 
       const checkoutParams: OMCheckoutParams = {
@@ -78,10 +82,9 @@ export class OMService implements PaymentAdapter {
         callbackCancelUrl: data.cancelUrl ?? DEFAULT_CANCEL_URL,
       };
 
-      const token = await this.getToken(projectId, {
+      const token = await this.getToken({
         client_id,
         client_secret,
-        grant_type: ORANGE_MONEY_GRANT_TYPE,
       });
 
       const response = await firstValueFrom(

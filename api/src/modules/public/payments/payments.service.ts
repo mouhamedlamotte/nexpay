@@ -49,6 +49,7 @@ export class PaymentsService {
         provider.secretsFields,
         provider.name,
       );
+
       const adapter = this.adapters[provider.code];
       if (!adapter) throw new NotFoundException('Provider not supported');
 

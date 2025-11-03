@@ -47,12 +47,6 @@ export class WebhookAuthGuard implements CanActivate {
         );
         throw new UnauthorizedException('Webhook not configured');
       }
-
-      if (!provider.webhookConfig.isActive) {
-        this.logger.warn(`Webhook disabled for provider: ${providerCode}`);
-        throw new UnauthorizedException('Webhook disabled');
-      }
-
       // Obtenir le validateur approprié
       const validator = this.validatorFactory.getValidator(
         provider.webhookConfig.authType,
