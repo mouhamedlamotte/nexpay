@@ -9,7 +9,13 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { ProjectService } from './project.service';
 import { GetProjectsDto } from './dto/get-project.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -19,6 +25,7 @@ import { JwtAuthGuard } from 'src/guards/auth/jwt/jwt.guard';
 @ApiTags('Projects')
 @Controller('projects')
 @UseGuards(JwtAuthGuard())
+@ApiBearerAuth()
 export class ProjectsController {
   constructor(private readonly service: ProjectService) {}
 
@@ -60,20 +67,6 @@ export class ProjectsController {
       statusCode: 200,
       message: 'Project retrieved successfully',
       data: result,
-    };
-  }
-
-  // ---- GET ONE BY NAME ----
-  @Get('name/:name')
-  @ApiOperation({ summary: 'Get a project by name' })
-  @ApiResponse({ status: 200, description: 'project found' })
-  @ApiResponse({ status: 404, description: 'project not found' })
-  async findOneByName(@Param('name') name: string) {
-    const result = this.service.findOneByName(name);
-    return {
-      statusCode: 200,
-      message: 'Project retrieved successfully',
-      result,
     };
   }
 

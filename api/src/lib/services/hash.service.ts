@@ -311,7 +311,7 @@ export class HashService {
   /**
    * Check if a string looks like encrypted data from our encryption method
    */
-  private isEncryptedData(value: string): boolean {
+  isEncryptedData(value: string): boolean {
     try {
       // Must be valid base64
       const decoded = Buffer.from(value, 'base64').toString('utf8');

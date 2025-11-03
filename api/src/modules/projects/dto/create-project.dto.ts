@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsOptional, IsString, ValidateNested } from 'class-validator';
-import { CallBacksDto } from 'src/modules/settings/callbacks/dto/callbacks.dto';
+import { CallBacksDto } from 'src/modules/projects/settings/callbacks/dto/callbacks.dto';
 
 export class CreateProjectDto {
   @ApiProperty({

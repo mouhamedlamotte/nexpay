@@ -76,19 +76,17 @@ async function bootstrap() {
         },
       }),
     );
-    // app.use(
-    //   `/${globalPrefix}/webhook/*`,
-    //   bodyParser.json({
-    //     verify: (req: any, res, buf) => {
-    //       req.rawBody = buf.toString('utf8');
-    //     },
-    //   }),
-    // );
-
     app.useGlobalFilters(new CustomExceptionFilter());
     app.useGlobalInterceptors(new ErrorInterceptor());
 
     const config = new DocumentBuilder()
+      .addBearerAuth()
+      .addApiKey({
+        type: 'apiKey',
+        name: 'x-api-key',
+        in: 'header',
+        description: 'API Key For initiating payments',
+      })
       .setTitle(configService.get('app.name'))
       .setDescription('Microservice API Documentation')
       .setVersion(configService.get('app.version'))

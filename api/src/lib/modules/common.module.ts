@@ -1,17 +1,17 @@
 import { Global, Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import {
   FilterService,
   HashService,
   PaginationService,
   PrismaService,
+  LoggerService,
+  TokensService,
 } from '../services';
-import { LoggerService } from '../services/logger.service';
 import { KeyvModule } from './keyv.module';
-import { HealthController } from '../controllers/health.controller';
 import { SeedersModule } from './seeders/seeders.module';
-import { TokensService } from '../services/tokens.service';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { HealthController } from '../controllers/health.controller';
 
 @Global()
 @Module({
@@ -43,7 +43,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     FilterService,
     HashService,
     LoggerService,
-    KeyvModule,
     TokensService,
     JwtModule,
   ],

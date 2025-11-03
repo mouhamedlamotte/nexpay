@@ -19,6 +19,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { UserService } from './user.service';
@@ -30,8 +31,9 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUserDto } from './dto/get-users-dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
-@Controller('')
+@Controller()
 @ApiTags('Users')
+@ApiBearerAuth()
 export class UserController {
   constructor(
     private readonly user: UserService,
