@@ -109,7 +109,7 @@ export function CheckoutForm({ sessionId }: CheckoutFormProps) {
           pollingRef.current = false;
           setIsPolling(false);
           toast.error('La session de paiement a expiré');
-          
+  
           if (session?.project?.metadata?.cancelUrl) {
             setTimeout(() => window.location.href = session.project.metadata.cancelUrl, 2000);
           }
@@ -178,8 +178,9 @@ export function CheckoutForm({ sessionId }: CheckoutFormProps) {
       if (!data?.qr_code && data?.checkout_urls.length > 0) {
         window.open(data?.checkout_urls[0].url, "_blank");
       }
-    } catch (err) {
-      toast.error('Une erreur est survenue lors de l\'initiation du paiement');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Une erreur est survenue lors de l\'initiation du paiement');
       console.error("Payment initiation failed:", err);
     }
   };
@@ -267,16 +268,6 @@ export function CheckoutForm({ sessionId }: CheckoutFormProps) {
         ) : (
           <>
             <ProviderSelector providers={session.providers} />
-
-            {initiatePayment.isError && (
-              <Alert variant="destructive" className="border-destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-destructive-foreground">
-                  Erreur lors de l'initiation du paiement. Veuillez réessayer.
-                </AlertDescription>
-              </Alert>
-            )}
-
             <Button
               onClick={handlePayment}
               disabled={!provider || initiatePayment.isPending}

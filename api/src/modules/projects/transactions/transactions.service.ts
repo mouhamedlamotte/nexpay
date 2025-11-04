@@ -149,7 +149,7 @@ export class TransactionsService {
         throw new Error('Payer not found or created');
       }
 
-      let tData: any = {
+      const tData: any = {
         project: { connect: { id: data.projectId } },
         amount: data.amount,
         currency: data.currency,
@@ -164,10 +164,14 @@ export class TransactionsService {
       };
 
       if (data.sessionId) {
-        tData = {
-          ...tData,
-          session: { connect: { id: data.sessionId } },
-        };
+        console.log('data.sessionId', data.sessionId);
+        const transaction = await this.prisma.transaction.upsert({
+          where: { sessionId: data.sessionId },
+          update: tData,
+          create: tData,
+          include: this.getTransactionInclude(),
+        });
+        return transaction;
       }
 
       const transaction = await this.prisma.transaction.create({

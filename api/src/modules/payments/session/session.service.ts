@@ -170,7 +170,9 @@ export class SessionPayemtService {
       const session = await this.prisma.session.findUnique({
         where: {
           id: sessionId,
-          status: SessionStatus.opened,
+          status: {
+            in: [SessionStatus.opened, SessionStatus.pending],
+          },
           expiresAt: { gt: new Date() },
         },
         include: {
