@@ -437,8 +437,15 @@ download_source() {
     if git clone --depth 1 --branch main "$REPO_URL" "$temp_dir" >> "$LOG_FILE" 2>&1; then
         log SUCCESS "Repository cloné"
 
-        execute_with_progress "Suppression des vieux fichiers" "rm -rf $INSTALL_DIR"
-        execute_with_progress "Copie des fichiers" "cp -r $temp_dir/* $INSTALL_DIR/"
+        execute_with_progress "Suppression des vieux fichiers api" "rm -rf $INSTALL_DIR/api"
+        execute_with_progress "Suppression des vieux fichiers config" "rm -rf $INSTALL_DIR/config"
+        execute_with_progress "Suppression des vieux fichiers web" "rm -rf $INSTALL_DIR/web"
+
+        execute_with_progress "Copie du dossier api" "cp -r $temp_dir/api $INSTALL_DIR/"
+        execute_with_progress "Copie du dossier config" "cp -r $temp_dir/config $INSTALL_DIR/"
+        execute_with_progress "Copie du dossier web" "cp -r $temp_dir/web $INSTALL_DIR/"
+        execute_with_progress "Copie du docker-compose" "cp $temp_dir/docker-compose.yml $INSTALL_DIR/"
+
         execute_with_progress "Nettoyage" "rm -rf $temp_dir"
     else
         log ERROR "Échec du clonage du repository"
