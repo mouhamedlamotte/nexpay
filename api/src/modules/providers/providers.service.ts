@@ -82,6 +82,7 @@ export class ProvidersService {
         data: {
           secrets: JSON.stringify(reEncryptedSecrets),
           hasValidSecretConfig: true,
+          hastSecretTestPassed: false,
         },
         omit: { secrets: true },
       });

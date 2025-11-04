@@ -49,14 +49,21 @@ export class WaveAdapter implements PaymentAdapter {
       const finalkey = api_key.replace('"', '').replace('"', '');
       this.logger.debug('Wave key', finalkey);
 
-      const response = await firstValueFrom(
-        this.http.post(WAVE_CHECKOUT_URL, checkoutParams, {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${finalkey}`,
-          },
-        }),
-      );
+      let response: any;
+
+      try {
+        await firstValueFrom(
+          this.http.post(WAVE_CHECKOUT_URL, checkoutParams, {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${finalkey}`,
+            },
+          }),
+        );
+      } catch (error) {
+        this.logger.error('Error initiating Wave payment', error);
+        throw new Error('Wave initiation failed, check your API key');
+      }
 
       this.logger.debug('Wave response', response.data);
 

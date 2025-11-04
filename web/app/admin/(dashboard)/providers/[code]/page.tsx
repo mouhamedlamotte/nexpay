@@ -150,36 +150,43 @@ export default function ProviderConfigPage({
             <CardTitle className="text-sm font-medium">
               Secrets Configuration
             </CardTitle>
-            {
-              providerData.hasValidSecretConfig && (
-                  <Button
-                    variant='destructive'
-                    size="sm"
-                    className="ml-auto"
-                    onClick={() => resetSecretsMutation.mutate()}
-                  >
-                    {resetSecretsMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Reset Secrets
-                  </Button>
-              )
-            }
+            {providerData.hasValidSecretConfig && (
+              <Button
+                variant="destructive"
+                size="sm"
+                className="ml-auto"
+                onClick={() => resetSecretsMutation.mutate()}
+              >
+                {resetSecretsMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Reset Secrets
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2">
+            <div className="space-y-1">
               {providerData.hasValidSecretConfig ? (
-                <div className="flex">
-                  <div className="inline-flex space-x-4">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  <span className="text-sm text-green-600">Configured</span>
-                  </div>
+                <div className="flex items-center gap-1.5 text-green-600">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span className="text-sm">Configured</span>
                 </div>
               ) : (
-                <>
-                  <XCircle className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    Not configured
-                  </span>
-                </>
+                <div className="flex items-center gap-1.5 text-red-500">
+                  <XCircle className="h-4 w-4" />
+                  <span className="text-sm">Not Configured</span>
+                </div>
+              )}
+              {providerData.hastSecretTestPassed ? (
+                <div className="flex items-center gap-1.5 text-green-600">
+                  <Zap className="h-4 w-4" />
+                  <span className="text-sm">Tested</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 text-red-500">
+                  <Zap className="h-4 w-4" />
+                  <span className="text-sm">Not Tested</span>
+                </div>
               )}
             </div>
           </CardContent>
@@ -190,35 +197,46 @@ export default function ProviderConfigPage({
             <CardTitle className="text-sm font-medium">
               Webhook Configuration
             </CardTitle>
-              {
-              providerData.hasValidWebhookConfig && (
-                  <Button
-                    variant='destructive'
-                    size="sm"
-                    className="ml-auto"
-                    onClick={() => resetWebhooksMutation.mutate()}
-                  >
-                    {resetWebhooksMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Reset Webhook Config
-                  </Button>
-              )
-            }
+            {providerData.hasValidWebhookConfig && (
+              <Button
+                variant="destructive"
+                size="sm"
+                className="ml-auto"
+                onClick={() => resetWebhooksMutation.mutate()}
+              >
+                {resetWebhooksMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Reset Webhook Config
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              {providerData.hasValidWebhookConfig ? (
-                <>
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  <span className="text-sm text-green-600">Configured</span>
-                </>
-              ) : (
-                <>
-                  <XCircle className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    Not configured
-                  </span>
-                </>
-              )}
+              <div className="space-y-1">
+                {providerData.hasValidWebhookConfig ? (
+                  <div className="flex items-center gap-1.5 text-green-600">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span className="text-sm">Configured</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-red-500">
+                    <XCircle className="h-4 w-4" />
+                    <span className="text-sm">Not Configured</span>
+                  </div>
+                )}
+                {providerData.hasWebhookTestPassed ? (
+                  <div className="flex items-center gap-1.5 text-green-600">
+                    <Zap className="h-4 w-4" />
+                    <span className="text-sm">Tested</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-red-500">
+                    <Zap className="h-4 w-4" />
+                    <span className="text-sm">Not Tested</span>
+                  </div>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

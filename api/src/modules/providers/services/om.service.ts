@@ -40,7 +40,9 @@ export class OMService {
       return access_token;
     } catch (error) {
       this.logger.error('Error fetching OM access token', error);
-      throw error;
+      throw new Error(
+        'Error getting OM token, Please consider checking your credentials',
+      );
     }
   }
 }
