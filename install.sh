@@ -430,7 +430,6 @@ download_source() {
     log STEP "Téléchargement du code source"
 
     mkdir -p "$INSTALL_DIR"
-    mkdir -p "$INSTALL_DIR/logs"
     cd "$INSTALL_DIR"
 
     local temp_dir=$(mktemp -d)
