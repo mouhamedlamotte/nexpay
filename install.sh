@@ -437,6 +437,7 @@ download_source() {
     if git clone --depth 1 --branch main "$REPO_URL" "$temp_dir" >> "$LOG_FILE" 2>&1; then
         log SUCCESS "Repository cloné"
 
+        execute_with_progress "Suppression des vieux fichiers" "rm -rf $INSTALL_DIR"
         execute_with_progress "Copie des fichiers" "cp -r $temp_dir/* $INSTALL_DIR/"
         execute_with_progress "Nettoyage" "rm -rf $temp_dir"
     else
