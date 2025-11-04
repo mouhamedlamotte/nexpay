@@ -12,10 +12,6 @@ export const projectsApi = {
     return data
   },
 
-  getByName: async (name: string) => {
-    const { data } = await apiClient.get<ApiResponse<Project>>(`/projects/name/${name}`)
-    return data
-  },
 
   create: async (dto: CreateProjectDto) => {
     const { data } = await apiClient.post<ApiResponse<Project>>("/projects", dto)

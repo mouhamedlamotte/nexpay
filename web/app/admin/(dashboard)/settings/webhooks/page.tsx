@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { settingsApi } from "@/lib/api/settings"
+import { projectSettingsApi } from "@/lib/api/project-settings"
 import { CreateWebhookDialog } from "@/components/webhooks/create-webhook-dialog"
 import { EditWebhookDialog } from "@/components/webhooks/edit-webhook-dialog"
 import { ViewWebhookDialog } from "@/components/webhooks/view-webhook-dialog"
@@ -27,11 +27,11 @@ export default function WebhooksPage() {
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["webhooks", projectId, page],
-    queryFn: () => settingsApi.getWebhooks(projectId, { page, limit: 10 }),
+    queryFn: () => projectSettingsApi.getWebhooks(projectId, { page, limit: 10 }),
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => settingsApi.deleteWebhook(projectId, id),
+    mutationFn: (id: string) => projectSettingsApi.deleteWebhook(projectId, id),
     onSuccess: () => {
       toast.warning("Webhook deleted successfully")
       refetch()

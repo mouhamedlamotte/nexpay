@@ -1,12 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import {
-  DEFAULT_CANCEL_URL,
-  DEFAULT_SUCCESS_URL,
-  ORANGE_MONEY_API_URL,
-  PAYEMENT_VALIDITY,
-} from 'src/lib/constants';
+import { ORANGE_MONEY_API_URL, PAYEMENT_VALIDITY } from 'src/lib/constants';
 import {
   PaymentAdapter,
   PaymentInitiationData,
@@ -14,6 +9,7 @@ import {
 } from './interface';
 import { TransactionFactory } from '../helpers/transaction.factory';
 import { OMService } from 'src/modules/providers/services/om.service';
+import { ConfigService } from '@nestjs/config';
 
 interface OMCheckoutParams {
   amount: { value: number; unit: string };
@@ -33,6 +29,7 @@ export class OMAdapder implements PaymentAdapter {
     private readonly omService: OMService,
     private readonly transactionFactory: TransactionFactory,
     private readonly http: HttpService,
+    private readonly config: ConfigService,
   ) {}
 
   async initiate(data: PaymentInitiationData): Promise<PaymentResponse> {
@@ -40,14 +37,19 @@ export class OMAdapder implements PaymentAdapter {
       const { amount, currency, reference, secrets } = data;
       const { name, code, client_id, client_secret } = secrets;
 
+      const APP_URL = this.config.get('app.url');
+
+      const callbackSuccessUrl = data.successUrl ?? `${APP_URL}/success`;
+      const callbackCancelUrl = data.cancelUrl ?? `${APP_URL}/cancel`;
+
       const checkoutParams: OMCheckoutParams = {
         amount: { value: amount, unit: currency },
         reference,
         validity: PAYEMENT_VALIDITY,
         name,
         code,
-        callbackSuccessUrl: data.successUrl ?? DEFAULT_SUCCESS_URL,
-        callbackCancelUrl: data.cancelUrl ?? DEFAULT_CANCEL_URL,
+        callbackSuccessUrl,
+        callbackCancelUrl,
       };
 
       const token = await this.omService.getToken({
@@ -75,7 +77,7 @@ export class OMAdapder implements PaymentAdapter {
         providerTransactionId: response.data.id,
         expiresAt: new Date(response.data.validFor?.endDateTime),
       });
-      const THUMB_URL = `https://${process.env.APP_DOMAIN}/${process.env.GLOBAL_PREFIX}/media/images/thumbs`;
+      const THUMB_URL = `${APP_URL}/${process.env.GLOBAL_PREFIX}/media/images/thumbs`;
 
       return {
         amount,

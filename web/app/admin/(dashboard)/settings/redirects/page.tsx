@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { settingsApi } from "@/lib/api/settings"
+import { projectSettingsApi } from "@/lib/api/project-settings"
 import { Loader2, Save } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useProjectStore } from "@/stores/project.store"
@@ -27,7 +27,7 @@ export default function RedirectsPage() {
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["redirects", projectId],
-    queryFn: () => settingsApi.getRedirects(projectId),
+    queryFn: () => projectSettingsApi.getRedirects(projectId),
   })
 
   const form = useForm<FormValues>({
@@ -43,8 +43,8 @@ export default function RedirectsPage() {
     mutationFn: (values: FormValues) => {
       const hasExisting = data?.data && Object.keys(data.data).length > 0
       return hasExisting
-        ? settingsApi.updateRedirects(projectId, values)
-        : settingsApi.createRedirects(projectId, values)
+        ? projectSettingsApi.updateRedirects(projectId, values)
+        : projectSettingsApi.createRedirects(projectId, values)
     },
     onSuccess: () => {
       toast.success("Redirect URLs updated successfully")

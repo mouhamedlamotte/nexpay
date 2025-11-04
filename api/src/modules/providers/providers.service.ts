@@ -134,7 +134,7 @@ export class ProvidersService {
           where: { code },
           data: { hasValidSecretConfig: true },
         });
-        return checkout;
+        return session;
       }
     });
   }

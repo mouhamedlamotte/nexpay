@@ -1,11 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
-import {
-  DEFAULT_CANCEL_URL,
-  DEFAULT_SUCCESS_URL,
-  WAVE_CHECKOUT_URL,
-} from 'src/lib/constants';
+import { WAVE_CHECKOUT_URL } from 'src/lib/constants';
 import {
   PaymentAdapter,
   PaymentInitiationData,
@@ -13,6 +9,7 @@ import {
 } from './interface';
 import { TransactionFactory } from '../helpers/transaction.factory';
 import { LoggerService } from 'src/lib/services/logger.service';
+import { ConfigService } from '@nestjs/config';
 
 interface WaveCheckoutParams {
   amount: string;
@@ -28,18 +25,23 @@ export class WaveAdapter implements PaymentAdapter {
     private readonly logger: LoggerService,
     private readonly transactionFactory: TransactionFactory,
     private readonly http: HttpService,
+    private readonly config: ConfigService,
   ) {
     this.logger.setContext(WaveAdapter.name);
   }
 
   async initiate(data: PaymentInitiationData): Promise<PaymentResponse> {
     try {
+      const APP_URL = this.config.get('app.url');
+
+      const success_url = data.successUrl ?? `${APP_URL}/success`;
+      const error_url = data.cancelUrl ?? `${APP_URL}/cancel`;
       const checkoutParams: WaveCheckoutParams = {
         amount: data.amount.toString(),
         currency: data.currency,
         client_reference: data.reference,
-        success_url: data.successUrl ?? DEFAULT_SUCCESS_URL,
-        error_url: data.cancelUrl ?? DEFAULT_CANCEL_URL,
+        success_url,
+        error_url,
       };
 
       const { api_key } = data.secrets;
@@ -70,7 +72,7 @@ export class WaveAdapter implements PaymentAdapter {
         providerTransactionId: response.data.id,
         expiresAt: new Date(response.data.when_expires),
       });
-      const THUMB_URL = `https://${process.env.APP_DOMAIN}/${process.env.GLOBAL_PREFIX}/media/images/thumbs`;
+      const THUMB_URL = `${APP_URL}/${process.env.GLOBAL_PREFIX}/media/images/thumbs`;
 
       return {
         provider: {

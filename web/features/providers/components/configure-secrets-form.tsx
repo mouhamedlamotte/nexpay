@@ -1,25 +1,21 @@
-"use client"
+"use client";
 
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { useMutation } from "@tanstack/react-query"
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import type React from "react";
+
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { providersApi } from "@/lib/api/providers";
+import { Edit2, Loader2 } from "lucide-react";
+import type { PaymentProvider } from "@/lib/types";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Form, FormLabel, FormDescription } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { providersApi } from "@/lib/api/providers"
-import { Loader2, Edit2 } from "lucide-react"
-import type { PaymentProvider } from "@/lib/types"
-import { useEffect, useState } from "react"
-import { toast } from "sonner"
+
 
 const formSchema = z.object({
   secrets: z.record(z.string()),
@@ -27,85 +23,79 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
-interface ConfigureProviderDialogProps {
-  provider: PaymentProvider
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSuccess: () => void
+interface ConfigureSecretsFormProps {
+  provider: PaymentProvider;
+  onSuccess: () => void;
 }
 
-export function ConfigureProviderDialog({ provider, open, onOpenChange, onSuccess }: ConfigureProviderDialogProps) {
-  const [editingFields, setEditingFields] = useState<Set<string>>(new Set())
+export function ConfigureSecretsForm({
+  provider,
+  onSuccess,
+}: ConfigureSecretsFormProps) {
+  const [editingFields, setEditingFields] = useState<Set<string>>(new Set());
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-  })
+  });
 
   // Check which fields have existing values
   const hasExistingSecret = (field: string): boolean => {
     try {
-      const secrets = provider.secrets as unknown
+      const secrets = provider.secrets as unknown;
       if (typeof secrets === "string" && (secrets as string).trim() !== "") {
-        const parsed = JSON.parse(secrets as string)
-        return !!parsed?.[field]
+        const parsed = JSON.parse(secrets as string);
+        return !!parsed?.[field];
       }
       if (typeof secrets === "object" && secrets !== null) {
-        return !!(secrets as Record<string, any>)[field]
+        return !!(secrets as Record<string, any>)[field];
       }
     } catch (e) {
-      return false
+      return false;
     }
-    return false
-  }
+    return false;
+  };
 
-  // Reset form when provider or dialog opens
-  useEffect(() => {
-    if (open) {
-      form.reset({ secrets: {} })
-      setEditingFields(new Set())
-    }
-  }, [provider.id, open, form])
 
   const toggleEdit = (field: string) => {
-    const newEditing = new Set(editingFields)
+    const newEditing = new Set(editingFields);
     if (newEditing.has(field)) {
-      newEditing.delete(field)
+      newEditing.delete(field);
       // Clear the field value when stopping edit
-      form.setValue(`secrets.${field}`, "")
+      form.setValue(`secrets.${field}`, "");
     } else {
-      newEditing.add(field)
+      newEditing.add(field);
     }
-    setEditingFields(newEditing)
-  }
+    setEditingFields(newEditing);
+  };
 
   const mutation = useMutation({
     mutationFn: (values: FormValues) => {
       // Only send modified fields (non-empty values)
-      const modifiedSecrets = Object.entries(values.secrets).reduce((acc, [key, value]) => {
-        if (value && value.trim() !== "") {
-          acc[key] = value
-        }
-        return acc
-      }, {} as Record<string, string>)
+      const modifiedSecrets = Object.entries(values.secrets).reduce(
+        (acc, [key, value]) => {
+          if (value && value.trim() !== "") {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as Record<string, string>
+      );
 
-      return providersApi.updateSecrets(provider.code,modifiedSecrets)
+      return providersApi.updateSecrets(provider.code, modifiedSecrets);
     },
     onSuccess: () => {
-      toast.success("Provider configuration updated successfully")
-      onSuccess()
+      toast.success("Provider configuration updated successfully");
+      onSuccess();
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to update provider configuration")
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to update provider configuration"
+      );
     },
-  })
+  });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Configure {provider.name}</DialogTitle>
-          <DialogDescription>Update API credentials and secrets for this payment provider.</DialogDescription>
-        </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="space-y-4">
             <div className="space-y-4">
@@ -177,18 +167,13 @@ export function ConfigureProviderDialog({ provider, open, onOpenChange, onSucces
                 </div>
               )}
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={mutation.isPending}>
+            <div>
+              <Button type="submit" disabled={mutation.isPending || !form.formState.isValid || !form.formState.isDirty}>
                 {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Configuration
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
-  )
+  );
 }

@@ -84,6 +84,8 @@ export interface PaymentProvider {
   name: string;
   code: string;
   secretsFields: string[];
+  hasValidSecretConfig:boolean
+  hasValidWebhookConfig:boolean
   secrets: Record<string, any>;
   isActive: boolean;
   createdAt: string;
@@ -158,4 +160,40 @@ export interface CreateUserDto {
 
 export interface UpdateUserDto extends Partial<CreateUserDto> {
   isActive?: boolean;
+}
+
+export interface UpdatePaymentProviderDto {
+  providerId: string
+  secrets: Record<string, any>
+}
+
+export interface ConfigureWaveWebhookDto {
+  authType: "sharedSecret" | "hmac"
+  secret: string
+}
+
+export interface ConfigureOmWebhookDto {
+  secret: string
+  autoConfigure: boolean
+}
+
+export interface WebhookConfig {
+  authType: string
+  secret: string
+  secretPreview: string
+  lastTestedAt?: string
+  lastVerifiedAt?: string
+}
+
+export interface TestPaymentDto {
+  amount: number
+  phone?: string
+  projectId: string
+}
+
+export interface TestPaymentResponse {
+    sessionId: string
+    checkoutUrl: string
+    status: string
+    expiresAt: string
 }

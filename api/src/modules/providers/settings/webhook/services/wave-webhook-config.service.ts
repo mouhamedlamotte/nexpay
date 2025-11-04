@@ -44,6 +44,11 @@ export class WaveWebhookConfigService {
       },
     });
 
+    await this.prisma.paymentProvider.update({
+      where: { id: data.providerId },
+      data: { hasValidWebhookConfig: true },
+    });
+
     return this.wehbookConfigService.sanitizeWebhookConfig(data);
   }
 
@@ -51,7 +56,6 @@ export class WaveWebhookConfigService {
     const secret = await this.hash.encryptSensitiveData(dto.secret);
     const baseConfig = {
       secret,
-      isActive: true,
     };
 
     if (dto.authType === WaveWebhookAuthType.SHARED_SECRET) {
@@ -95,26 +99,5 @@ export class WaveWebhookConfigService {
       ),
       webhookUrl: this.wehbookConfigService.getWebhookUrl('wave'),
     };
-  }
-
-  async updateWaveWebhookSecret(newSecret: string) {
-    const provider = await this.prisma.paymentProvider.findUnique({
-      where: { code: 'wave' },
-      include: { webhookConfig: true },
-    });
-
-    if (!provider || !provider.webhookConfig) {
-      throw new NotFoundException('Configuration Wave non trouvée');
-    }
-
-    const secret = await this.hash.encryptSensitiveData(newSecret);
-
-    const updated = await this.prisma.providerWebhook.update({
-      where: { id: provider.webhookConfig.id },
-      data: { secret },
-    });
-
-    this.logger.warn('⚠️ Wave webhook secret rotated');
-    return this.wehbookConfigService.sanitizeWebhookConfig(updated);
   }
 }

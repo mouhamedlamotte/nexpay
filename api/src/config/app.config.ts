@@ -6,7 +6,9 @@ export default registerAs('app', () => ({
   name: process.env.APP_NAME || 'nestjs-app',
   version: process.env.APP_VERSION || '1.0.0',
   globalPrefix: process.env.GLOBAL_PREFIX,
-  url: `https://${process.env.APP_DOMAIN}` || 'http://localhost:9000',
+  url:
+    `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${process.env.APP_DOMAIN}` ||
+    'http://localhost:9000',
 
   security: {
     corsOrigin: process.env.CORS_ORIGIN,

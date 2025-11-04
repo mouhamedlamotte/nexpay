@@ -11,7 +11,7 @@ export * from './interceptors/error/prisma-error';
 export * from './modules/common.module';
 export * from './modules/keyv.module';
 export * from './modules/seeders/seeders.module';
-export * from './modules/seeders/seeds/providers.seeder.service';
+export * from './modules/seeders/services/providers.seeder.service';
 export * from './services/filter.service';
 export * from './services/hash.service';
 export * from './services/logger.service';

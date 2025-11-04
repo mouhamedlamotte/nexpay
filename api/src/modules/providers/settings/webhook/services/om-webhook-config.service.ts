@@ -34,7 +34,22 @@ export class OMWebhookConfigService {
       throw new NotFoundException('Provider Orange Money non trouvé');
     }
 
-    const secret = await this.hash.encryptSensitiveData(dto.secret);
+    if (!dto.secret && !dto.autoConfigure) {
+      throw new BadRequestException(
+        'You need to provide a secret if you want to configure the webhook manually',
+      );
+    }
+
+    let secret;
+    if (!dto.secret) {
+      const generatedSecret =
+        await this.weebhookConfigService.generateSecureSecret('nexpay_om_WHS');
+      secret = await this.hash.encryptSensitiveData(generatedSecret);
+    }
+
+    if (dto.autoConfigure) {
+      return await this.autoConfigureOmWebhook(secret);
+    }
 
     // Configuration Orange Money (toujours Basic Auth)
     const omConfig = {
@@ -46,7 +61,6 @@ export class OMWebhookConfigService {
       encoding: null,
       timestampTolerance: null,
       bodyFormat: null,
-      isActive: true,
     };
 
     const data = await this.prisma.providerWebhook.upsert({
@@ -56,6 +70,11 @@ export class OMWebhookConfigService {
         ...omConfig,
         providerId: provider.id,
       },
+    });
+
+    await this.prisma.paymentProvider.update({
+      where: { id: data.providerId },
+      data: { hasValidWebhookConfig: true },
     });
 
     return this.weebhookConfigService.sanitizeWebhookConfig(data);
@@ -98,7 +117,7 @@ export class OMWebhookConfigService {
     }
     if (!secret) {
       const newSecret =
-        this.weebhookConfigService.generateSecureSecret('nexpay_om_WH');
+        this.weebhookConfigService.generateSecureSecret('nexpay_om_WHS');
       secret = await this.hash.encryptSensitiveData(newSecret);
     }
 
@@ -140,7 +159,6 @@ export class OMWebhookConfigService {
         encoding: null,
         timestampTolerance: null,
         bodyFormat: null,
-        isActive: true,
       };
 
       const webhookConfig = await this.prisma.providerWebhook.upsert({
@@ -150,6 +168,11 @@ export class OMWebhookConfigService {
           ...omConfig,
           providerId: provider.id,
         },
+      });
+
+      await this.prisma.paymentProvider.update({
+        where: { id: webhookConfig.providerId },
+        data: { hasValidWebhookConfig: true },
       });
       return {
         ...this.weebhookConfigService.sanitizeWebhookConfig(webhookConfig),

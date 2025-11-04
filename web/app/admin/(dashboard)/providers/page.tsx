@@ -2,25 +2,27 @@
 
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Search, Settings2, Power, PowerOff } from "lucide-react"
+import { Search, Settings2, Power, PowerOff, CheckCircle2, XCircle, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { providersApi } from "@/lib/api/providers"
-import { ConfigureProviderDialog } from "@/components/providers/configure-provider-dialog"
 import { ToggleProviderDialog } from "@/components/providers/toggle-provider-dialog"
 import type { PaymentProvider } from "@/lib/types"
 import { format } from "date-fns"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
+import { TestPaymentDialog } from "@/features/providers/components/test-payment-dialog"
 
 export default function ProvidersPage() {
+  const router = useRouter()
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
-  const [configureProvider, setConfigureProvider] = useState<PaymentProvider | null>(null)
   const [toggleProvider, setToggleProvider] = useState<PaymentProvider | null>(null)
+    const [testProvider, setTestProvider] = useState<PaymentProvider | null>(null)
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["providers", page, search],
@@ -28,9 +30,8 @@ export default function ProvidersPage() {
   })
 
   return (
-    <div>
-
-      <div className="flex-1 space-y-4 p-6">
+    <>
+     <main className="flex-1 overflow-y-auto p-2 md:p-6 space-y-4">
         {/* Search */}
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">
@@ -51,6 +52,8 @@ export default function ProvidersPage() {
               <TableRow>
                 <TableHead>Provider</TableHead>
                 <TableHead>Code</TableHead>
+                <TableHead>Secrets</TableHead>
+                <TableHead>Webhook</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Updated</TableHead>
                 <TableHead className="w-[140px]"></TableHead>
@@ -70,6 +73,12 @@ export default function ProvidersPage() {
                       <Skeleton className="h-5 w-16" />
                     </TableCell>
                     <TableCell>
+                      <Skeleton className="h-5 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-16" />
+                    </TableCell>
+                    <TableCell>
                       <Skeleton className="h-4 w-24" />
                     </TableCell>
                     <TableCell>
@@ -79,7 +88,7 @@ export default function ProvidersPage() {
                 ))
               ) : data?.data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     No providers found.
                   </TableCell>
                 </TableRow>
@@ -91,6 +100,20 @@ export default function ProvidersPage() {
                       <code className="rounded bg-muted px-2 py-1 text-xs">{provider.code}</code>
                     </TableCell>
                     <TableCell>
+                      {provider.hasValidSecretConfig ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {provider.hasValidWebhookConfig ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <Badge variant={provider.isActive ? "default" : "outline"}>
                         {provider.isActive ? "Active" : "Inactive"}
                       </Badge>
@@ -99,19 +122,41 @@ export default function ProvidersPage() {
                       {format(new Date(provider.updatedAt), "MMM d, yyyy")}
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
-                        <Button className="!border-border" variant="outline" size="sm" onClick={() => setConfigureProvider(provider)}>
+                      <div className="flex gap-2 justify-end">
+                        {
+                          provider.isActive && (
+                                                    <Button
+                          className="!border-border bg-transparent"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setTestProvider(provider)}
+                        >
+                          <Zap className="mr-2 h-4 w-4" />
+                          Test
+                        </Button>
+                          )
+                        }
+                        <Button
+                          className="!border-border bg-transparent"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => router.push(`/admin/providers/${provider.code}`)}
+                        >
                           <Settings2 className="mr-2 h-4 w-4" />
                           Configure
                         </Button>
                         <Button
-                          className={cn(provider.isActive ? "bg-destructive hover:" : "bg-green-600 hover:bg-green-700")}
-                          size="icon"
+                          className={cn(
+                            provider.isActive
+                              ? "bg-destructive hover:bg-destructive/90"
+                              : "bg-green-600 hover:bg-green-700",
+                          )}
                           onClick={() => setToggleProvider(provider)}
                         >
+                          {provider.isActive ? 'Deactivate' : 'Activate'}
                           {provider.isActive ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
                         </Button>
-                      </div>
+                        </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -146,20 +191,9 @@ export default function ProvidersPage() {
             </div>
           </div>
         )}
-      </div>
+      </main>
 
-      {/* Dialogs */}
-      {configureProvider && (
-        <ConfigureProviderDialog
-          provider={configureProvider}
-          open={!!configureProvider}
-          onOpenChange={(open) => !open && setConfigureProvider(null)}
-          onSuccess={() => {
-            refetch()
-            setConfigureProvider(null)
-          }}
-        />
-      )}
+      {/* Toggle Dialog */}
       {toggleProvider && (
         <ToggleProviderDialog
           provider={toggleProvider}
@@ -171,6 +205,16 @@ export default function ProvidersPage() {
           }}
         />
       )}
-    </div>
+
+
+      {/* Test Payment Dialog */}
+      {testProvider && (
+        <TestPaymentDialog
+          provider={testProvider}
+          open={!!testProvider}
+          onOpenChange={(open) => !open && setTestProvider(null)}
+        />
+      )}
+    </>
   )
 }

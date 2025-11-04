@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { settingsApi } from "@/lib/api/settings"
+import { projectSettingsApi } from "@/lib/api/project-settings"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { Textarea } from "../ui/textarea"
@@ -48,7 +48,7 @@ export function CreateWebhookDialog({ projectId, open, onOpenChange, onSuccess }
   })
 
   const mutation = useMutation({
-    mutationFn: (values: FormValues) => settingsApi.createWebhook(projectId, values),
+    mutationFn: (values: FormValues) => projectSettingsApi.createWebhook(projectId, values),
     onSuccess: () => {
       form.reset()
       onSuccess()

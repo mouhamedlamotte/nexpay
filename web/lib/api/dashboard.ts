@@ -52,7 +52,7 @@ export interface DashboardResponse {
 
 export const dashboardApi = {
   get: async (projectId: string, params?: any) => {
-    const { data } = await apiClient.get<DashboardResponse>(`/dashboard/${projectId}`, { params });
+    const { data } = await apiClient.get<DashboardResponse>(`/projects/${projectId}/dashboard`, { params });
     return data;
   },
 };

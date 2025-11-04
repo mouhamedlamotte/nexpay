@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { settingsApi } from "@/lib/api/settings"
+import { projectSettingsApi } from "@/lib/api/project-settings"
 import { Loader2 } from "lucide-react"
 import type { Webhook } from "@/lib/types"
 import { useEffect } from "react"
@@ -60,7 +60,7 @@ export function EditWebhookDialog({ projectId, webhook, open, onOpenChange, onSu
   }, [webhook, form])
 
   const mutation = useMutation({
-    mutationFn: (values: FormValues) => settingsApi.updateWebhook(projectId, webhook.id, values),
+    mutationFn: (values: FormValues) => projectSettingsApi.updateWebhook(projectId, webhook.id, values),
     onSuccess: () => {
       toast.success("Webhook updated successfully")
       onSuccess()
