@@ -127,9 +127,11 @@ export class OMWebhookConfigService {
     // Déterminer l'environnement
     const omApiUrl = ORANGE_MONEY_API_URL;
 
+    const decryptedSecret = await this.hash.decryptSensitiveData(secret);
+
     try {
       const OmWebhookData = {
-        apiKey: secret,
+        apiKey: decryptedSecret,
         callbackUrl: webhookUrl,
         code: secrets.code,
         name: secrets.name,
