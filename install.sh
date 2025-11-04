@@ -445,6 +445,7 @@ download_source() {
         execute_with_progress "Copie du dossier config" "cp -r $temp_dir/config $INSTALL_DIR/"
         execute_with_progress "Copie du dossier web" "cp -r $temp_dir/web $INSTALL_DIR/"
         execute_with_progress "Copie du docker-compose" "cp $temp_dir/docker-compose.yml $INSTALL_DIR/"
+        execute_with_progress "Copie du update.sh" "cp $temp_dir/update.sh $INSTALL_DIR/"
 
         execute_with_progress "Nettoyage" "rm -rf $temp_dir"
     else
