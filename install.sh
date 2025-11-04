@@ -25,7 +25,7 @@ readonly INSTALL_DIR="/opt/nexpay"
 readonly REPO_URL="https://github.com/mouhamedlamotte/nexpay.git"
 readonly MIN_DISK_SPACE=10
 readonly DATE=$(date +"%Y%m%d-%H%M%S")
-readonly LOG_FILE="$INSTALL_DIR/installation-${DATE}.log"
+readonly LOG_FILE="$INSTALL_DIR/logs/installation-${DATE}.log"
 
 ################################################################################
 # COULEURS & STYLES
@@ -454,6 +454,7 @@ download_source() {
 }
 
 # Génération de la configuration
+# Génération de la configuration
 generate_config() {
     log STEP "Génération de la configuration"
 
@@ -466,17 +467,34 @@ generate_config() {
     # Génération des secrets
     log INFO "Génération des secrets cryptographiques..."
 
-    local jwt_secret=$(openssl rand -base64 32)
+    # Vérifier si .env existe et contient déjà des clés
+    local jwt_secret encryption_key admin_password x_write_key x_read_key redis_password
+
+    if [ -f "$INSTALL_DIR/.env" ]; then
+        log INFO "Fichier .env existant détecté - Préservation des clés existantes"
+
+        # Récupérer les valeurs existantes si présentes
+        jwt_secret=$(grep "^JWT_SECRET=" .env 2>/dev/null | cut -d'=' -f2)
+        encryption_key=$(grep "^ENCRYPTION_KEY=" .env 2>/dev/null | cut -d'=' -f2)
+        x_write_key=$(grep "^X_WRITE_KEY=" .env 2>/dev/null | cut -d'=' -f2)
+        x_read_key=$(grep "^X_READ_KEY=" .env 2>/dev/null | cut -d'=' -f2)
+        admin_password=$(grep "^ADMIN_PASSWORD=" .env 2>/dev/null | cut -d'=' -f2)
+        redis_password=$(grep "^REDIS_PASSWORD=" .env 2>/dev/null | cut -d'=' -f2)
+    fi
+
+    # Générer uniquement les clés manquantes
+    [ -z "$jwt_secret" ] && jwt_secret=$(openssl rand -base64 32)
+    [ -z "$encryption_key" ] && encryption_key=$(openssl rand -hex 32)
+    [ -z "$x_write_key" ] && x_write_key=$(openssl rand -hex 32)
+    [ -z "$x_read_key" ] && x_read_key=$(openssl rand -hex 32)
+    [ -z "$admin_password" ] && admin_password=$(openssl rand -hex 16)
+    [ -z "$redis_password" ] && redis_password=$(openssl rand -base64 32)
+
     local db_password="postgres"
-    local redis_password=$(openssl rand -base64 32)
-    local encryption_key=$(openssl rand -hex 32)
-    local admin_password=$(openssl rand -hex 16)
-    local x_write_key=$(openssl rand -hex 32)
-    local x_read_key=$(openssl rand -hex 32)
     local traefik_password="nexpay2024"
     local traefik_auth=$(echo $(htpasswd -nb admin "$traefik_password") | sed -e 's/\$/\$\$/g')
 
-    log SUCCESS "Secrets générés avec succès"
+    log SUCCESS "Secrets configurés avec succès"
 
     # Création du fichier .env
     cat > .env << EOF
@@ -652,30 +670,6 @@ show_completion() {
 # Création des scripts utilitaires
 create_utility_scripts() {
     log STEP "Création des scripts utilitaires"
-
-    # Script de mise à jour
-    cat > "$INSTALL_DIR/update.sh" << 'UPDATE_SCRIPT'
-#!/bin/bash
-set -e
-
-C_INFO='\033[38;5;147m'
-C_SUCCESS='\033[38;5;46m'
-C_RESET='\033[0m'
-
-echo -e "${C_INFO}🔄 Mise à jour de Nexpay...${C_RESET}"
-
-echo "📦 Création d'un backup..."
-docker compose exec -T postgres_nexpay pg_dump -U nexpay nexpay > "backups/backup-$(date +%Y%m%d-%H%M%S).sql"
-
-echo "⬇️  Téléchargement des mises à jour..."
-docker compose pull
-
-echo "🔨 Reconstruction..."
-docker compose up -d --build
-
-echo -e "${C_SUCCESS}✓ Mise à jour terminée${C_RESET}"
-docker compose ps
-UPDATE_SCRIPT
 
     chmod +x "$INSTALL_DIR/update.sh"
     log SUCCESS "Script de mise à jour créé"
