@@ -25,7 +25,7 @@ readonly INSTALL_DIR="/opt/nexpay"
 readonly REPO_URL="https://github.com/mouhamedlamotte/nexpay.git"
 readonly MIN_DISK_SPACE=10
 readonly DATE=$(date +"%Y%m%d-%H%M%S")
-readonly LOG_FILE="$INSTALL_DIR/logs/installation-${DATE}.log"
+readonly LOG_FILE="$INSTALL_DIR/installation-${DATE}.log"
 
 ################################################################################
 # COULEURS & STYLES
