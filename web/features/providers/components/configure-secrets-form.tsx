@@ -18,8 +18,9 @@ import { Form, FormLabel, FormDescription } from "@/components/ui/form"
 
 
 const formSchema = z.object({
-  secrets: z.record(z.string()),
+  secrets: z.record(z.string().min(2, "This field is required")),
 })
+
 
 type FormValues = z.infer<typeof formSchema>
 

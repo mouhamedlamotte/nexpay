@@ -2,7 +2,13 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { FilterConfig, FilterService } from 'src/lib/services/filter.service';
 import { GetTransactionDto } from './dto/get-transaction.dto';
 import { PaginationService } from 'src/lib/services/pagination.service';
-import { Currency, Prisma, PrismaService, TransactionStatus } from 'src/lib';
+import {
+  Currency,
+  Prisma,
+  PrismaService,
+  SessionStatus,
+  TransactionStatus,
+} from 'src/lib';
 
 @Injectable()
 export class TransactionsService {
@@ -57,6 +63,7 @@ export class TransactionsService {
         omit: { secrets: true },
       },
       project: true,
+      session: true,
       payer: true,
     };
   }
@@ -164,14 +171,7 @@ export class TransactionsService {
       };
 
       if (data.sessionId) {
-        console.log('data.sessionId', data.sessionId);
-        const transaction = await this.prisma.transaction.upsert({
-          where: { sessionId: data.sessionId },
-          update: tData,
-          create: tData,
-          include: this.getTransactionInclude(),
-        });
-        return transaction;
+        tData.session = { connect: { id: data.sessionId } };
       }
 
       const transaction = await this.prisma.transaction.create({
@@ -187,20 +187,40 @@ export class TransactionsService {
 
   async updateStatus(reference: string, status: TransactionStatus) {
     try {
-      await this.findByReference(reference);
+      const transaction = await this.findByReference(reference);
       const resolvedAt = new Date();
-      const transaction = await this.prisma.transaction.update({
+      const tData: any = {
+        status,
+        resolvedAt: status === 'SUCCEEDED' ? resolvedAt : null,
+      };
+      if (transaction.sessionId) {
+        tData.session = {
+          update: {
+            status: this.getSessionStatus(status),
+          },
+        };
+      }
+      const updated = await this.prisma.transaction.update({
         where: { reference },
-        data: {
-          status,
-          resolvedAt: status === 'SUCCEEDED' ? resolvedAt : null,
-        },
+        data: tData,
         include: this.getTransactionInclude(),
       });
-      return transaction;
+      return updated;
     } catch (error) {
       this.logger.error('Error updating transaction status', error);
       throw error;
+    }
+  }
+
+  private getSessionStatus(status: TransactionStatus): SessionStatus {
+    if (status === 'SUCCEEDED') {
+      return 'completed';
+    } else if (status === 'FAILED') {
+      return 'failed';
+    } else if (status === 'EXPIRED') {
+      return 'expired';
+    } else {
+      return 'closed';
     }
   }
 }

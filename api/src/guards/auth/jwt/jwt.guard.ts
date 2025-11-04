@@ -33,7 +33,6 @@ export function JwtAuthGuard(): Type<CanActivate> {
 
       try {
         const payload = await this.jwt.verifyAsync(token);
-        console.log(payload);
 
         req.user = payload;
         return true;

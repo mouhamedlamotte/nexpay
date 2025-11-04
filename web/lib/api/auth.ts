@@ -37,8 +37,6 @@ export const AuthApi = {
     const { data } = await apiClient.get<ApiResponse<User>>(
       "/users/me"
     );
-    console.log("data getProfile", data);
-    
     return data;
   },
 };

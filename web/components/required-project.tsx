@@ -40,7 +40,6 @@ const isIgnoredPath = useMemo(() => {
     try {
       setLoadingPhase("PROJECT");
 
-      console.log('Project phase hit');
 
       // Ignorer certains chemins
       if (isIgnoredPath) {
@@ -51,11 +50,9 @@ const isIgnoredPath = useMemo(() => {
       // Vérifier et récupérer  project
       const currentProject = await validateProject();
 
-      console.log('currentProject', currentProject);
 
       // Si aucun project n'est disponible, rediriger vers quicksetup
       if (!currentProject) {
-        console.log('currentProject', currentProject);
         typeof window !== "undefined" && window.location.replace(QUICKSETUP_PATH);
         return;
       }
@@ -98,12 +95,10 @@ const isIgnoredPath = useMemo(() => {
 
 
   if (!hasCheckedAuth || !isAuthenticated) {
-    console.log('RequireProject: Rendering null - auth not ready');
     return null;
   }
 
   if (!isIgnoredPath && !hasCheckedProject) {
-    console.log('RequireProject: Rendering null - Project not checked');
     return null;
   }
 

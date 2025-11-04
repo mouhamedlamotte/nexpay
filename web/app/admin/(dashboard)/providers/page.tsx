@@ -22,7 +22,7 @@ export default function ProvidersPage() {
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
   const [toggleProvider, setToggleProvider] = useState<PaymentProvider | null>(null)
-    const [testProvider, setTestProvider] = useState<PaymentProvider | null>(null)
+  const [testProvider, setTestProvider] = useState<PaymentProvider | null>(null)
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["providers", page, search],
@@ -31,7 +31,7 @@ export default function ProvidersPage() {
 
   return (
     <>
-     <main className="flex-1 overflow-y-auto p-2 md:p-6 space-y-4">
+      <main className="flex-1 overflow-y-auto p-2 md:p-6 space-y-4">
         {/* Search */}
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">
@@ -56,7 +56,7 @@ export default function ProvidersPage() {
                 <TableHead>Webhook</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Updated</TableHead>
-                <TableHead className="w-[140px]"></TableHead>
+                <TableHead className="w-[140px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -100,18 +100,56 @@ export default function ProvidersPage() {
                       <code className="rounded bg-muted px-2 py-1 text-xs">{provider.code}</code>
                     </TableCell>
                     <TableCell>
-                      {provider.hasValidSecretConfig ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-muted-foreground" />
-                      )}
+                      <div className="space-y-1">
+                        {provider.hasValidSecretConfig ? (
+                          <div className="flex items-center gap-1.5 text-green-600">
+                            <CheckCircle2 className="h-4 w-4" />
+                            <span className="text-sm">Configured</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 text-red-500">
+                            <XCircle className="h-4 w-4" />
+                            <span className="text-sm">Not Configured</span>
+                          </div>
+                        )}
+                        {provider.hastSecretTestPassed ? (
+                          <div className="flex items-center gap-1.5 text-green-600">
+                            <Zap className="h-4 w-4" />
+                            <span className="text-sm">Tested</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 text-red-500">
+                            <Zap className="h-4 w-4" />
+                            <span className="text-sm">Not Tested</span>
+                          </div>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
-                      {provider.hasValidWebhookConfig ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-muted-foreground" />
-                      )}
+                      <div className="space-y-1">
+                        {provider.hasValidWebhookConfig ? (
+                          <div className="flex items-center gap-1.5 text-green-600">
+                            <CheckCircle2 className="h-4 w-4" />
+                            <span className="text-sm">Configured</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 text-red-500">
+                            <XCircle className="h-4 w-4" />
+                            <span className="text-sm">Not Configured</span>
+                          </div>
+                        )}
+                        {provider.hasWebhookTestPassed ? (
+                          <div className="flex items-center gap-1.5 text-green-600">
+                            <Zap className="h-4 w-4" />
+                            <span className="text-sm">Tested</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 text-red-500">
+                            <Zap className="h-4 w-4" />
+                            <span className="text-sm">Not Tested</span>
+                          </div>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={provider.isActive ? "default" : "outline"}>
@@ -122,30 +160,21 @@ export default function ProvidersPage() {
                       {format(new Date(provider.updatedAt), "MMM d, yyyy")}
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-2 justify-end">
-                        {
-                          provider.isActive && (
-                                                    <Button
-                          className="!border-border bg-transparent"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setTestProvider(provider)}
-                        >
-                          <Zap className="mr-2 h-4 w-4" />
-                          Test
-                        </Button>
-                          )
-                        }
+                      <div className="flex items-center gap-2 justify-end">
+                        {provider.isActive && (
+                          <Button variant="outline" size="sm" onClick={() => setTestProvider(provider)}>
+                            <Zap className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
-                          className="!border-border bg-transparent"
                           variant="outline"
                           size="sm"
                           onClick={() => router.push(`/admin/providers/${provider.code}`)}
                         >
-                          <Settings2 className="mr-2 h-4 w-4" />
-                          Configure
+                          <Settings2 className="h-4 w-4" />
                         </Button>
                         <Button
+                          size="sm"
                           className={cn(
                             provider.isActive
                               ? "bg-destructive hover:bg-destructive/90"
@@ -153,10 +182,9 @@ export default function ProvidersPage() {
                           )}
                           onClick={() => setToggleProvider(provider)}
                         >
-                          {provider.isActive ? 'Deactivate' : 'Activate'}
                           {provider.isActive ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
                         </Button>
-                        </div>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -205,7 +233,6 @@ export default function ProvidersPage() {
           }}
         />
       )}
-
 
       {/* Test Payment Dialog */}
       {testProvider && (

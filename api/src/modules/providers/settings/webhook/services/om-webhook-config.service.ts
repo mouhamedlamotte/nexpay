@@ -40,14 +40,17 @@ export class OMWebhookConfigService {
       );
     }
 
-    let secret;
-    if (!dto.secret) {
+    let secret = dto.secret;
+    if (!dto.secret || dto.secret === '') {
       const generatedSecret =
-        await this.weebhookConfigService.generateSecureSecret('nexpay_om_WHS');
-      secret = await this.hash.encryptSensitiveData(generatedSecret);
+        this.weebhookConfigService.generateSecureSecret('nexpay_om_WHS');
+      secret = generatedSecret;
     }
 
+    secret = await this.hash.encryptSensitiveData(secret);
+
     if (dto.autoConfigure) {
+      this.logger.log('Auto configuring Orange Money webhook...');
       return await this.autoConfigureOmWebhook(secret);
     }
 
@@ -92,7 +95,7 @@ export class OMWebhookConfigService {
 
     if (!provider.secrets) {
       throw new BadRequestException(
-        "Secrets Orange Money non configurés. Veuillez d'abord configurer le provider.",
+        "Secrets Orange Money non configurés. Veuillez d'abord configurer le provider pour ajouter automatiquement le webhook.",
       );
     }
 

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { HashService, PrismaService } from 'src/lib';
 import { LoggerService } from 'src/lib/services/logger.service';
 import { UpdatePaymentProviderSecretsDto } from './dto/update-payment-provider.dto';
@@ -7,7 +11,6 @@ import { PaginationService } from 'src/lib/services/pagination.service';
 import { GetPaymentProviderDto } from './dto/get-payment-provider.dto';
 import { InitiatePaymentDto } from 'src/modules/payments/dto/initiate-payment.dto';
 import { TestPaymentDto } from './dto/test-payment.dto';
-import { ConfigService } from '@nestjs/config';
 import { SessionPayemtService } from 'src/modules/payments/session/session.service';
 
 @Injectable()
@@ -19,7 +22,6 @@ export class ProvidersService {
     private readonly pagination: PaginationService,
     private readonly filter: FilterService,
     private readonly sessionService: SessionPayemtService,
-    private readonly config: ConfigService,
   ) {
     this.logger.setContext(ProvidersService.name);
   }
@@ -77,19 +79,53 @@ export class ProvidersService {
 
       return this.prisma.paymentProvider.update({
         where: { code },
-        data: { secrets: JSON.stringify(reEncryptedSecrets) },
+        data: {
+          secrets: JSON.stringify(reEncryptedSecrets),
+          hasValidSecretConfig: true,
+        },
         omit: { secrets: true },
       });
     });
   }
 
   async toggle(code: string, isActive: boolean) {
-    return this.handleError(() =>
-      this.prisma.paymentProvider.update({
-        where: { id: code },
+    try {
+      if (isActive) {
+        const provider = await this.getProviderByCode(code);
+        if (!provider.hasValidSecretConfig)
+          throw new ForbiddenException(
+            'You must configure payment provider secrets before activating it',
+          );
+        if (!provider.hasValidWebhookConfig)
+          throw new ForbiddenException(
+            'You must configure payment provider webhooks before activating it',
+          );
+      }
+      return this.prisma.paymentProvider.update({
+        where: { code },
         data: { isActive },
-      }),
-    );
+      });
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
+
+  async resetSecrets(code: string) {
+    try {
+      return this.prisma.paymentProvider.update({
+        where: { code },
+        data: {
+          secrets: null,
+          hasValidSecretConfig: false,
+          hastSecretTestPassed: false,
+          isActive: false,
+        },
+      });
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
   }
 
   async findAll(dto: GetPaymentProviderDto) {
@@ -108,7 +144,7 @@ export class ProvidersService {
   }
 
   async testSecret(userId: string, code: string, dto: TestPaymentDto) {
-    return this.handleError(async () => {
+    try {
       const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
       const data: InitiatePaymentDto = {
@@ -121,18 +157,29 @@ export class ProvidersService {
 
       if (!user) throw new NotFoundException('User not found');
       const session = await this.sessionService.initiateSessionPayment(data);
-      const checkout = await this.sessionService.checkoutSessionPayment(
-        session.sessionId,
-        { provider: code },
-      );
-      if (checkout) {
+      try {
+        const checkout = await this.sessionService.checkoutSessionPayment(
+          session.sessionId,
+          { provider: code },
+        );
+        if (checkout) {
+          await this.prisma.paymentProvider.update({
+            where: { code },
+            data: { hasValidSecretConfig: true, hastSecretTestPassed: true },
+          });
+          return session;
+        }
+      } catch (error) {
         await this.prisma.paymentProvider.update({
           where: { code },
-          data: { hasValidSecretConfig: true },
+          data: { hastSecretTestPassed: false },
         });
-        return session;
+        throw error;
       }
-    });
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
   }
 
   async getProviderByCode(code: string) {

@@ -189,9 +189,6 @@ export class SessionPayemtService {
         paymentData = JSON.parse(session.paymentData);
       }
 
-      console.log(JSON.stringify(paymentData, null, 2));
-      console.log(JSON.stringify(dto, null, 2));
-
       if (
         paymentData &&
         paymentData.expiration &&
@@ -214,6 +211,18 @@ export class SessionPayemtService {
         },
         sessionId,
       );
+
+      const callbacks = await this.prisma.callback.findUnique({
+        where: { projectId: session.projectId },
+      });
+
+      if (!dto.successUrl) {
+        dto.successUrl = callbacks.successUrl;
+      }
+
+      if (!dto.cancelUrl) {
+        dto.cancelUrl = callbacks.cancelUrl;
+      }
       await this.prisma.session.update({
         where: {
           id: sessionId,
@@ -221,6 +230,8 @@ export class SessionPayemtService {
         data: {
           status: SessionStatus.pending,
           paymentData: JSON.stringify(paymentData),
+          successUrl: dto.successUrl,
+          cancelUrl: dto.cancelUrl,
         },
       });
 
@@ -255,12 +266,11 @@ export class SessionPayemtService {
           return {
             sessionId: session.id,
             status: session.status,
-            redirectUrl:
-              session.status === 'failed'
-                ? session.cancelUrl
-                : session.status === 'completed'
-                  ? session.successUrl
-                  : null,
+            redirectUrl: this.getRedirectUrl(
+              session.status,
+              session.cancelUrl,
+              session.successUrl,
+            ),
           };
         }
 
@@ -276,5 +286,11 @@ export class SessionPayemtService {
       this.logger.error('Error fetching session', error);
       throw error;
     }
+  }
+
+  getRedirectUrl(status: SessionStatus, cancelUrl: string, successUrl: string) {
+    if (status === 'failed') return cancelUrl;
+    if (status === 'completed') return successUrl;
+    return null;
   }
 }

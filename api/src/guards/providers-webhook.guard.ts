@@ -65,6 +65,11 @@ export class WebhookAuthGuard implements CanActivate {
         this.logger.log(
           `Webhook authenticated successfully for ${providerCode}`,
         );
+
+        await this.prisma.paymentProvider.update({
+          where: { code: providerCode },
+          data: { hasValidWebhookConfig: true, hasWebhookTestPassed: true },
+        });
         return true;
       }
 

@@ -12,6 +12,19 @@ export class WebhookConfigService {
     private readonly config: ConfigService,
   ) {}
 
+  async resetProviderWebhookConfig(code: string) {
+    try {
+      const provider = await this.prisma.paymentProvider.update({
+        where: { code },
+        data: { webhookConfig: { delete: true }, hasValidWebhookConfig: false },
+      });
+      return provider;
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
+
   async getWebhookConfigByProvider(providerCode: string) {
     const provider = await this.prisma.paymentProvider.findUnique({
       where: { code: providerCode.toUpperCase() },

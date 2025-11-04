@@ -25,7 +25,7 @@ interface ToggleProviderDialogProps {
 export function ToggleProviderDialog({ provider, open, onOpenChange, onSuccess }: ToggleProviderDialogProps) {
 
   const mutation = useMutation({
-    mutationFn: () => providersApi.toggle(provider.id, provider.isActive),
+    mutationFn: () => providersApi.toggle(provider.code, provider.isActive),
     onSuccess: () => {
       toast.success(provider.isActive ? "Provider deactivated successfully" : "Provider activated successfully")
       onSuccess()

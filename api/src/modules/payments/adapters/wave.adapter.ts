@@ -46,8 +46,6 @@ export class WaveAdapter implements PaymentAdapter {
 
       const { api_key } = data.secrets;
 
-      console.log(api_key.replace('"', '').replace('"', ''));
-
       const finalkey = api_key.replace('"', '').replace('"', '');
       this.logger.debug('Wave key', finalkey);
 

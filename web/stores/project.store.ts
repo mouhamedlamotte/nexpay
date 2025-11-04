@@ -85,14 +85,12 @@ export const useProjectStore = create<ProjectState>()(
       validateProject: async () => {
         try {
           const { currentProject: currentProject } = get();
-          console.log('=============== currentProject', currentProject);
           
           if (currentProject) {
             const { data } = await apiClient.get<{ data: Project }>(
               `/projects/${currentProject.id}`
             );
 
-            console.log("currentProject and id checked", data);
             set({
               currentProject: data.data,
               isLoading: false,

@@ -93,7 +93,6 @@ export class ProjectService {
       });
 
       const defaultProjet = await this.getDefaultProject();
-      console.log(defaultProjet);
 
       if (!defaultProjet) {
         await this.prisma.project.update({

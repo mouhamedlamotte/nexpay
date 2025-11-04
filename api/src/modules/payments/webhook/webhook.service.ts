@@ -64,6 +64,10 @@ export class WebhookService {
         return;
       }
 
+      this.logger.log(
+        `Transaction found: id=${transaction.id}, status=${transaction.status}`,
+        transaction,
+      );
       if (transaction.status !== TransactionStatus.PENDING) {
         this.logger.log(
           `Transaction already updated: id=${transaction.id}, status=${transaction.status}`,
@@ -75,24 +79,6 @@ export class WebhookService {
         data.reference,
         data.status,
       );
-
-      if (updatedTransaction.sessionId) {
-        await this.prisma.session.update({
-          where: {
-            id: updatedTransaction.sessionId,
-          },
-          data: {
-            status:
-              data.status === 'SUCCEEDED'
-                ? 'completed'
-                : data.status === 'FAILED'
-                  ? 'failed'
-                  : data.status === 'EXPIRED'
-                    ? 'expired'
-                    : 'closed',
-          },
-        });
-      }
 
       this.logger.log(
         `Transaction updated: id=${transaction.id}, status=${transaction.status}`,
@@ -126,8 +112,6 @@ export class WebhookService {
     } catch (error) {
       this.logger.error('Error parsing metadata', error);
     }
-
-    console.log('Transaction in webhook event:', transaction);
 
     const type =
       transaction.status.toLowerCase() === 'succeeded'

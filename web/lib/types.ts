@@ -85,7 +85,9 @@ export interface PaymentProvider {
   code: string;
   secretsFields: string[];
   hasValidSecretConfig:boolean
+  hastSecretTestPassed:boolean
   hasValidWebhookConfig:boolean
+  hasWebhookTestPassed:boolean
   secrets: Record<string, any>;
   isActive: boolean;
   createdAt: string;

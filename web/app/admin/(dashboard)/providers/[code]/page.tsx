@@ -1,10 +1,11 @@
 "use client";
 
 import { use, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   CheckCircle2,
+  Loader2,
   Power,
   PowerOff,
   XCircle,
@@ -19,7 +20,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { providersApi } from "@/lib/api/providers";
 import { ConfigureWaveWebhookForm } from "@/features/providers/components/configure-wave-webhook-form";
 import { ConfigureOmWebhookForm } from "@/features/providers/components/configure-om-webhook-form";
@@ -29,6 +29,7 @@ import { ConfigureSecretsForm } from "@/features/providers/components/configure-
 import { TestPaymentDialog } from "@/features/providers/components/test-payment-dialog";
 import { cn } from "@/lib/utils";
 import { ToggleProviderDialog } from "@/components/providers/toggle-provider-dialog";
+import { toast } from "sonner";
 
 export default function ProviderConfigPage({
   params,
@@ -47,6 +48,28 @@ export default function ProviderConfigPage({
   } = useQuery({
     queryKey: ["provider", code],
     queryFn: () => providersApi.getByCode(code),
+  });
+
+  const resetSecretsMutation = useMutation({
+    mutationFn: () => providersApi.resetSecrets(code),
+    onSuccess: () => {
+      toast.success("Secrets reset successfully");
+      refetch();
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to reset secrets");
+    },
+  });
+
+  const resetWebhooksMutation = useMutation({
+    mutationFn: () => providersApi.resetWebhookConfig(code),
+    onSuccess: () => {
+      toast.success("Webhook configuration reset successfully");
+      refetch();
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to reset webhooks");
+    },
   });
 
   if (isLoading) {
@@ -123,18 +146,33 @@ export default function ProviderConfigPage({
       {/* Status Indicators */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-3 flex-row">
             <CardTitle className="text-sm font-medium">
               Secrets Configuration
             </CardTitle>
+            {
+              providerData.hasValidSecretConfig && (
+                  <Button
+                    variant='destructive'
+                    size="sm"
+                    className="ml-auto"
+                    onClick={() => resetSecretsMutation.mutate()}
+                  >
+                    {resetSecretsMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Reset Secrets
+                  </Button>
+              )
+            }
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               {providerData.hasValidSecretConfig ? (
-                <>
+                <div className="flex">
+                  <div className="inline-flex space-x-4">
                   <CheckCircle2 className="h-5 w-5 text-green-600" />
                   <span className="text-sm text-green-600">Configured</span>
-                </>
+                  </div>
+                </div>
               ) : (
                 <>
                   <XCircle className="h-5 w-5 text-muted-foreground" />
@@ -148,10 +186,23 @@ export default function ProviderConfigPage({
         </Card>
 
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-3 flex-row">
             <CardTitle className="text-sm font-medium">
               Webhook Configuration
             </CardTitle>
+              {
+              providerData.hasValidWebhookConfig && (
+                  <Button
+                    variant='destructive'
+                    size="sm"
+                    className="ml-auto"
+                    onClick={() => resetWebhooksMutation.mutate()}
+                  >
+                    {resetWebhooksMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Reset Webhook Config
+                  </Button>
+              )
+            }
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
@@ -175,7 +226,7 @@ export default function ProviderConfigPage({
 
       {/* Configuration Tabs */}
       <Tabs defaultValue="secrets" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="w-full">
           <TabsTrigger value="secrets">Configure Secrets</TabsTrigger>
           <TabsTrigger value="webhook">Configure Webhook</TabsTrigger>
         </TabsList>

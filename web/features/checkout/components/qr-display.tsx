@@ -67,7 +67,7 @@ export function QrDisplay({ paymentData, setPaymentData }: QrDisplayProps) {
               <Button
                 key={index}
                 variant="outline"
-                className="w-full justify-between border-border hover:bg-primary/10 hover:border-primary bg-transparent"
+                className="w-full justify-between border-border hover:bg-primary/10 hover:border-primary bg-transparent py-6"
                 asChild
               >
                 <a

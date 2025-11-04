@@ -33,7 +33,9 @@ model PaymentProvider {
   secretsFields String[] @map("secrets_fields") // eg: ['client_id', 'client_secret', 'name', 'code']
 
   hasValidSecretConfig Boolean @default(false)
+  hastSecretTestPassed Boolean @default(false)
   hasValidWebhookConfig Boolean @default(false)
+  hasWebhookTestPassed Boolean @default(false)
 
   secrets String? @db.Text // eg. '{ "client_id": "xxx", "client_secret": "xxx" }'
 

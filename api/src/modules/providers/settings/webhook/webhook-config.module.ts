@@ -6,6 +6,7 @@ import { OMWebhookConfigController } from './controllers/om-webhook-config.contr
 import { OMWebhookConfigService } from './services/om-webhook-config.service';
 import { WebhookConfigService } from './services/webhook-config.service';
 import { OMService } from '../../services/om.service';
+import { WebhookConfigController } from './controllers/webhook-config.controller';
 
 @Module({
   imports: [
@@ -13,7 +14,11 @@ import { OMService } from '../../services/om.service';
       maxRedirects: 5,
     }),
   ],
-  controllers: [WaveWebhookConfigController, OMWebhookConfigController],
+  controllers: [
+    WebhookConfigController,
+    WaveWebhookConfigController,
+    OMWebhookConfigController,
+  ],
   providers: [
     WebhookConfigService,
     WaveWebhookConfigService,

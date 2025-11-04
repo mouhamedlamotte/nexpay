@@ -26,6 +26,11 @@ export const providersApi = {
     return data
   },
 
+  resetSecrets: async (code: string) => {
+    const { data } = await apiClient.put<ApiResponse<PaymentProvider>>(`/providers/${code}/secrets/reset`)
+    return data
+  },
+
   toggle: async (code: string, isActive: boolean) => {
     const { data } = await apiClient.put<ApiResponse<void>>(`/providers/${code}/toggle`, { isActive: !isActive })
     return data
@@ -54,6 +59,11 @@ export const providersApi = {
 
   testPayment: async (code: string, dto: TestPaymentDto) => {
     const { data } = await apiClient.put<ApiResponse<TestPaymentResponse>>(`/providers/${code}/test`, dto)
+    return data
+  },
+
+  resetWebhookConfig: async (code: string) => {
+    const { data } = await apiClient.put<ApiResponse<void>>(`/providers/settings/webhook/${code}/reset`)
     return data
   },
 }

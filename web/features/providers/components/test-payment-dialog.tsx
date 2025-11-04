@@ -50,9 +50,7 @@ export function TestPaymentDialog({ provider, open, onOpenChange }: TestPaymentD
   const testMutation = useMutation({
     mutationFn: (data: TestPaymentFormData) => providersApi.testPayment(provider.code, data),
     onSuccess: (response) => {
-      console.log(response);
-      console.log(response.data);
-      
+
       setPaymentResult(response.data)
       toast.success("Payment session created successfully")
     },

@@ -15,7 +15,6 @@ import { useAppStore } from "@/stores/app.store";
       const checkAuthHere = async () => {
         setLoadingPhase('AUTHENTIFICATION')
         const isAuthenticated = await checkAuth();
-        console.log('isAuthenticated', isAuthenticated);
 
         if (!isAuthenticated) {
           const fullUrl = window.location.href;

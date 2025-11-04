@@ -70,6 +70,23 @@ export class ProvidersController {
     };
   }
 
+  @ApiOperation({ summary: 'Reset payment provider secrets' })
+  @ApiResponse({
+    status: 200,
+    description: 'The record has been successfully Reset .',
+  })
+  @ApiBody({ type: UpdatePaymentProviderSecretsDto })
+  @HttpCode(HttpStatus.OK)
+  @Put('/:code/secrets/reset')
+  async resetSecrets(@Param('code') code: string) {
+    const res = await this.service.resetSecrets(code);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Le payment provider a été mis à jour avec succès.',
+      data: res,
+    };
+  }
+
   @ApiOperation({ summary: 'Test a payment provider' })
   @ApiResponse({
     status: 200,

@@ -58,8 +58,6 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true })
           const data  = await AuthApi.getProfile()
-          console.log({data});
-          
           set({
             hasCheckedAuth: true,
             user: data.data,
@@ -74,7 +72,7 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             hasCheckedAuth: true,
           })
-          console.log(error);
+          console.error(error);
           throw new Error("Failed to check authentication status")
         }
       },

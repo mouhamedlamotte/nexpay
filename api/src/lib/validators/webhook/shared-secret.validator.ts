@@ -35,8 +35,6 @@ export class SharedSecretValidator implements IWebhookValidator {
   private getHeader(request: Request, headerName: string): string | undefined {
     // Normaliser le nom du header (Express met tout en minuscule)
     const normalizedHeader = headerName.toLowerCase();
-    console.log({ normalizedHeader });
-    console.log('request.headers', request.headers);
 
     return request.headers[normalizedHeader] as string;
   }

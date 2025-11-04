@@ -672,7 +672,7 @@ show_completion() {
 create_utility_scripts() {
     log STEP "Création des scripts utilitaires"
 
-    chmod +x "$INSTALL_DIR/update.sh"
+    # chmod +x "$INSTALL_DIR/update.sh"
     log SUCCESS "Script de mise à jour créé"
 
     # Script de configuration du domaine
