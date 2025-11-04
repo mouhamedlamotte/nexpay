@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { CheckoutSummary } from "./checkout-summary";
 import { ProviderSelector } from "./provider-selector";
 import { QrDisplay } from "./qr-display";
@@ -14,14 +14,27 @@ import { PaymentResponse } from "../schemas/checkout.schema";
 import { useInitiatePayment } from "../hooks/use-initiate-payment";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface CheckoutFormProps {
   sessionId: string;
 }
 
+type SessionStatus = 'opened' | 'pending' | 'completed' | 'failed' | 'expired' | 'closed';
+
+interface PaymentStatusResponse {
+  sessionId: string;
+  status: SessionStatus;
+  redirectUrl: string | null;
+}
+
 export function CheckoutForm({ sessionId }: CheckoutFormProps) {
+  const router = useRouter();
   const { provider } = useCheckoutStore();
   const [paymentData, setPaymentData] = useState<PaymentResponse['data'] | null>(null);
+  const [_, setIsPolling] = useState(false);
+  const [pollingError, setPollingError] = useState<string | null>(null);
+  const pollingRef = useRef<boolean>(false);
 
   const { data: session, isLoading, error } = useCheckoutSession(sessionId);
 
@@ -33,6 +46,116 @@ export function CheckoutForm({ sessionId }: CheckoutFormProps) {
 
   const initiatePayment = useInitiatePayment();
 
+  // Long polling function with backend timeout support
+  const pollPaymentStatus = useCallback(async () => {
+    if (!sessionId || pollingRef.current) return;
+
+    pollingRef.current = true;
+    setIsPolling(true);
+    setPollingError(null);
+    
+    const maxDuration = 5 * 60 * 1000; // 5 minutes total
+    const startTime = Date.now();
+
+    const poll = async () => {
+      try {
+        // Backend waits up to 30 seconds per request
+        const response = await fetch(`/api/v1/payment/session/${sessionId}/status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': process.env.NEXT_PUBLIC_READ_API_KEY || '',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch payment status');
+        }
+
+        const result = await response.json();
+        const { status, redirectUrl }: PaymentStatusResponse = result.data;
+
+        // Handle terminal states
+        if (status === 'completed') {
+          pollingRef.current = false;
+          setIsPolling(false);
+          toast.success('Paiement réussi !');
+          
+          // Redirect to success URL
+          if (redirectUrl) {
+            setTimeout(() => window.location.href = redirectUrl, 1000);
+          } else if (session?.project?.metadata?.successUrl) {
+            setTimeout(() => window.location.href = session.project.metadata.successUrl, 1000);
+          } else {
+            router.push('/checkout/success');
+          }
+          return;
+        }
+
+        if (status === 'failed') {
+          pollingRef.current = false;
+          setIsPolling(false);
+          toast.error('Le paiement a échoué');
+          
+          if (redirectUrl) {
+            setTimeout(() => window.location.href = redirectUrl, 2000);
+          } else if (session?.project?.metadata?.failureUrl) {
+            setTimeout(() => window.location.href = session.project.metadata.failureUrl, 2000);
+          }
+          return;
+        }
+
+        if (status === 'expired') {
+          pollingRef.current = false;
+          setIsPolling(false);
+          toast.error('La session de paiement a expiré');
+          
+          if (session?.project?.metadata?.cancelUrl) {
+            setTimeout(() => window.location.href = session.project.metadata.cancelUrl, 2000);
+          }
+          return;
+        }
+
+        if (status === 'closed') {
+          pollingRef.current = false;
+          setIsPolling(false);
+          toast.warning('La session de paiement a été fermée');
+          
+          if (session?.project?.metadata?.cancelUrl) {
+            setTimeout(() => window.location.href = session.project.metadata.cancelUrl, 2000);
+          }
+          return;
+        }
+
+        // Continue polling if status is 'opened' or 'pending'
+        if (Date.now() - startTime < maxDuration) {
+          // Backend returns immediately if status changed, or after 30s timeout
+          // So we can call again immediately
+          setTimeout(poll, 500); // Small delay to prevent overwhelming the server
+        } else {
+          pollingRef.current = false;
+          setIsPolling(false);
+          setPollingError('Le délai d\'attente du paiement a expiré. Veuillez vérifier l\'état de votre transaction.');
+          toast.warning('Délai d\'attente dépassé. Veuillez vérifier votre transaction.');
+        }
+      } catch (err) {
+        console.error('Polling error:', err);
+        
+        // Retry with exponential backoff on error
+        if (Date.now() - startTime < maxDuration) {
+          setTimeout(poll, 3000);
+        } else {
+          pollingRef.current = false;
+          setIsPolling(false);
+          setPollingError('Impossible de vérifier l\'état du paiement. Veuillez réessayer.');
+          toast.error('Erreur lors de la vérification du paiement');
+        }
+      }
+    };
+
+    poll();
+  }, [sessionId, session, router]);
+
   const handlePayment = async () => {
     if (!session || !provider) return;
 
@@ -40,13 +163,16 @@ export function CheckoutForm({ sessionId }: CheckoutFormProps) {
       const result = await initiatePayment.mutateAsync({
         sessionId,
         data: {
-          provider : provider as 'om' | 'wave',
+          provider: provider as 'om' | 'wave',
         },
       });
 
       setPaymentData(result.data);
 
       const data = result.data;
+
+      // Start long polling after payment initiation
+      pollPaymentStatus();
 
       // If no QR code, redirect to first checkout URL
       if (!data?.qr_code && data?.checkout_urls.length > 0) {
@@ -57,6 +183,24 @@ export function CheckoutForm({ sessionId }: CheckoutFormProps) {
       console.error("Payment initiation failed:", err);
     }
   };
+
+  // Start polling if payment data exists on mount and session is not terminal
+  useEffect(() => {
+    const terminalStates = ['completed', 'failed', 'expired', 'closed'];
+    if (
+      paymentData && 
+      !pollingRef.current && 
+      session?.status && 
+      !terminalStates.includes(session.status)
+    ) {
+      pollPaymentStatus();
+    }
+
+    // Cleanup on unmount
+    return () => {
+      pollingRef.current = false;
+    };
+  }, [paymentData, session?.status, pollPaymentStatus]);
 
   if (isLoading) {
     return (
@@ -69,21 +213,57 @@ export function CheckoutForm({ sessionId }: CheckoutFormProps) {
 
   if (error || !session) {
     return (
-      <div className="h-[calc(100vh-300px)] flex items-center justify-center">
-          <h2 className="text-2xl font-bold text-center">{error?.response?.data?.message || "Une erreur est survenue"}</h2>
+      <div className="h-[calc(100vh-300px)] flex items-center justify-center p-6">
+        <div className="max-w-md w-full space-y-6">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+              <AlertCircle className="w-8 h-8 text-destructive" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-foreground">
+                Session introuvable
+              </h2>
+              <p className="text-muted-foreground">
+                {error?.response?.data?.message || "La session de paiement n'existe pas ou a expiré."}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-3">
+            <Button 
+              onClick={() => router.back()} 
+              variant="outline"
+              className="w-full"
+            >
+              Retour
+            </Button>
+            <Button 
+              onClick={() => router.push('/')} 
+              className="w-full"
+            >
+              Retour à l'accueil
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
-
-
   return (
     <div className="space-y-6 animate-fade-in grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className={cn(paymentData && 'hidden lg:block')}>
-      <CheckoutSummary session={session} />
+        <CheckoutSummary session={session} />
       </div>
       <div className="space-y-5">
         {paymentData ? (
-          <QrDisplay paymentData={paymentData} setPaymentData={setPaymentData} />
+          <>
+            <QrDisplay paymentData={paymentData} setPaymentData={setPaymentData} />
+
+            {pollingError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{pollingError}</AlertDescription>
+              </Alert>
+            )}
+          </>
         ) : (
           <>
             <ProviderSelector providers={session.providers} />

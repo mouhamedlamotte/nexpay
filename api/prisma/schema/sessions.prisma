@@ -1,7 +1,10 @@
 enum SessionStatus {
     opened
-    closed
+    pending
+    completed
+    failed
     expired
+    closed
 }
 
 model Session {
@@ -21,6 +24,9 @@ model Session {
     expiresAt DateTime @map("expires_at")
 
     status SessionStatus @default(opened)
+
+    successUrl String? @map("success_url")
+    cancelUrl  String? @map("cancel_url")
 
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")

@@ -231,7 +231,7 @@ export default function ProviderConfigPage({
       {toggleProvider && (
         <ToggleProviderDialog
           provider={providerData}
-          open={!toggleProvider}
+          open={toggleProvider}
           onOpenChange={(open) => !open && setToggleProvider(false)}
           onSuccess={() => {
             refetch();

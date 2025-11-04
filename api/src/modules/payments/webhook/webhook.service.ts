@@ -1,6 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
-import { SessionStatus, TransactionStatus, Webhook } from 'src/lib';
+import { TransactionStatus, Webhook } from 'src/lib';
 import { firstValueFrom } from 'rxjs';
 import { HashService, PrismaService } from 'src/lib';
 import { TransactionsService } from 'src/modules/projects/transactions/transactions.service';
@@ -82,7 +82,14 @@ export class WebhookService {
             id: updatedTransaction.sessionId,
           },
           data: {
-            status: SessionStatus.closed,
+            status:
+              data.status === 'SUCCEEDED'
+                ? 'completed'
+                : data.status === 'FAILED'
+                  ? 'failed'
+                  : data.status === 'EXPIRED'
+                    ? 'expired'
+                    : 'closed',
           },
         });
       }

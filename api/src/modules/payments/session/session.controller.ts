@@ -94,4 +94,27 @@ export class SessionPaymentController {
       data: res,
     };
   }
+
+  @Post('/:id/status')
+  @HttpCode(HttpStatus.OK)
+  @RequireApiKey(ApiKeyPermission.READ, ApiKeyPermission.WRITE)
+  @ApiOperation({ summary: 'Check status of a payment session' })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment status data successfully fetched',
+    example: {
+      sessionId: 'cmhdpuj6m00069usa10370ldr',
+      status: 'opened',
+      redirectUrl: 'http://l........../checkout/success',
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Provider or service not found' })
+  async waitPaymentStatus(@Param('id') id: string) {
+    const res = await this.service.waitSessionPaymentStatus(id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Payment status data successfully fetched',
+      data: res,
+    };
+  }
 }

@@ -38,6 +38,7 @@ export function QrDisplay({ paymentData, setPaymentData }: QrDisplayProps) {
       </CardHeader>
       <CardContent className="space-y-6">
         {hasQrCode && (
+          
           <div className="flex flex-col items-center gap-4">
             <p className="text-sm text-muted-foreground text-center">
               Scannez ce QR code avec votre application de paiement

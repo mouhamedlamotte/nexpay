@@ -110,8 +110,6 @@ export class ProvidersService {
   async testSecret(userId: string, code: string, dto: TestPaymentDto) {
     return this.handleError(async () => {
       const user = await this.prisma.user.findUnique({ where: { id: userId } });
-      const cancelUrl = `${this.config.get('url')}/checkout/cancel`;
-      const successUrl = `${this.config.get('url')}/checkout/success`;
 
       const data: InitiatePaymentDto = {
         ...dto,
@@ -119,8 +117,6 @@ export class ProvidersService {
         name: user.firstName + ' ' + user.lastName,
         userId: user.id,
         provider: code,
-        cancelUrl,
-        successUrl,
       };
 
       if (!user) throw new NotFoundException('User not found');

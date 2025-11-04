@@ -5,8 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useMutation } from "@tanstack/react-query"
-import { Loader2, Copy, Check, ExternalLink } from "lucide-react"
-import { QRCodeSVG } from "qrcode.react"
+import { Loader2, Copy, Check, ExternalLink, Zap } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -15,6 +14,8 @@ import { providersApi } from "@/lib/api/providers"
 import type { PaymentProvider, TestPaymentResponse } from "@/lib/types"
 import { useProjectStore } from "@/stores/project.store"
 import { toast } from "sonner"
+import Link from "next/link"
+import QRCode from "react-qr-code"
 
 const testPaymentSchema = z.object({
   amount: z.coerce.number().min(10, "Amount must be at least 10"),
@@ -90,6 +91,7 @@ export function TestPaymentDialog({ provider, open, onOpenChange }: TestPaymentD
           </DialogDescription>
         </DialogHeader>
 
+            
         {!paymentResult ? (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -136,25 +138,17 @@ export function TestPaymentDialog({ provider, open, onOpenChange }: TestPaymentD
         ) : (
           <div className="space-y-6">
             {/* QR Code */}
-            <div className="flex justify-center rounded-lg border bg-white p-6">
-              <QRCodeSVG value={paymentResult.checkoutUrl} size={200} level="H" />
+            <div className="flex justify-center rounded-lg borde p-6">
+            <div className="rounded-lg bg-white p-4">
+              <QRCode value={paymentResult.checkoutUrl} size={200} level="L" />
+              </div>
             </div>
 
             {/* Payment Details */}
             <div className="space-y-3">
               <div className="rounded-lg border bg-muted/50 p-4">
-                <p className="mb-1 text-xs font-medium text-muted-foreground">Session ID</p>
-                <code className="text-sm">{paymentResult.sessionId}</code>
-              </div>
-
-              <div className="rounded-lg border bg-muted/50 p-4">
-                <p className="mb-1 text-xs font-medium text-muted-foreground">Status</p>
-                <p className="text-sm font-medium capitalize">{paymentResult.status}</p>
-              </div>
-
-              <div className="rounded-lg border bg-muted/50 p-4">
                 <p className="mb-1 text-xs font-medium text-muted-foreground">Expires At</p>
-                <p className="text-sm">{new Date(paymentResult.expiresAt).toLocaleString()}</p>
+                <p className="text-sm text-destructive">{new Date(paymentResult.expiresAt).toLocaleString()}</p>
               </div>
 
               <div className="rounded-lg border bg-muted/50 p-4">
@@ -181,9 +175,16 @@ export function TestPaymentDialog({ provider, open, onOpenChange }: TestPaymentD
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={handleReset}>
-                Test Again
+              <Zap className="mr-2 h-4 w-4" />  Test Again
               </Button>
-              <Button onClick={() => onOpenChange(false)}>Done</Button>
+              <Button variant="destructive" onClick={() => onOpenChange(false)}>
+                Close
+              </Button>
+              <Button>
+                <Link href={paymentResult.checkoutUrl} target="_blank">
+                  Pay Now
+                </Link>
+              </Button>
             </div>
           </div>
         )}

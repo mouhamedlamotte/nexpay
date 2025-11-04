@@ -65,6 +65,18 @@ export class SessionPayemtService {
         );
       }
 
+      const callbacks = await this.prisma.callback.findUnique({
+        where: { projectId: dto.projectId },
+      });
+
+      if (!dto.successUrl) {
+        dto.successUrl = callbacks.successUrl;
+      }
+
+      if (!dto.cancelUrl) {
+        dto.cancelUrl = callbacks.cancelUrl;
+      }
+
       const session = await this.prisma.session.create({
         data: {
           amount: dto.amount,
@@ -104,7 +116,9 @@ export class SessionPayemtService {
         where: {
           id,
           expiresAt: selectExpired ? undefined : { gt: new Date() },
-          status: SessionStatus.opened,
+          status: {
+            in: [SessionStatus.opened, SessionStatus.pending],
+          },
         },
         include: {
           payer: true,
@@ -133,7 +147,7 @@ export class SessionPayemtService {
       }
 
       const providers = await this.prisma.paymentProvider.findMany({
-        where: { isActive: true },
+        where: { isActive: true, hasValidSecretConfig: true },
         select: { id: true, name: true, code: true, logoUrl: true },
       });
       const checkoutUrl = `${this.env.get('app.url')}/checkout/${session.id}`;
@@ -203,11 +217,59 @@ export class SessionPayemtService {
           id: sessionId,
         },
         data: {
+          status: SessionStatus.pending,
           paymentData: JSON.stringify(paymentData),
         },
       });
 
       return paymentData;
+    } catch (error) {
+      this.logger.error('Error fetching session', error);
+      throw error;
+    }
+  }
+
+  async waitSessionPaymentStatus(id: string): Promise<{
+    sessionId: string;
+    status: SessionStatus;
+    redirectUrl: string | null;
+  }> {
+    try {
+      const start = new Date();
+      const timeout = 30000;
+
+      while (Date.now() - start.getTime() < timeout) {
+        const session = await this.prisma.session.findUnique({
+          where: {
+            id,
+          },
+        });
+
+        if (!session) {
+          throw new NotFoundException('Checkout session not found or expired');
+        }
+
+        if (session.status !== 'pending') {
+          return {
+            sessionId: session.id,
+            status: session.status,
+            redirectUrl:
+              session.status === 'failed'
+                ? session.cancelUrl
+                : session.status === 'completed'
+                  ? session.successUrl
+                  : null,
+          };
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+
+      return {
+        sessionId: id,
+        status: SessionStatus.opened,
+        redirectUrl: null,
+      };
     } catch (error) {
       this.logger.error('Error fetching session', error);
       throw error;

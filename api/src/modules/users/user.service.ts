@@ -44,13 +44,7 @@ export class UserService implements OnModuleInit {
     const password = await this.hash.hashPassword(defaultPassword);
     const admin = await this.prisma.user.upsert({
       where: { email: this.env.get('ADMIN_EMAIL') },
-      update: {
-        password: password,
-        hasDefaultPassword: true,
-        isSuperUser: true,
-        deletedAt: null,
-        isActive: true,
-      },
+      update: {},
       create: {
         email: this.env.get('ADMIN_EMAIL'),
         firstName: '',
@@ -61,7 +55,7 @@ export class UserService implements OnModuleInit {
       },
     });
 
-    this.logger.log(`Admin ${admin.email} created`);
+    this.logger.log(`Admin ${admin.email} created or updated successfully`);
   };
 
   private getUsersFilterConfig(): FilterConfig {

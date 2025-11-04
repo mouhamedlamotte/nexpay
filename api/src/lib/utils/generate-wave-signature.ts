@@ -75,7 +75,7 @@ const webhookBody = {
     id: 'cos-1b01test123',
     amount: '5000',
     checkout_status: 'complete',
-    client_reference: 'NEXPAY_TX_C206FDF1B4384E49',
+    client_reference: 'NEXPAY_TX_8F1C3B9AA74246F6',
     currency: 'XOF',
     error_url: 'https://example.com/error',
     last_payment_error: null,
