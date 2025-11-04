@@ -259,7 +259,7 @@ export default function ProfilePage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" disabled={changePasswordMutation.isPending}>
+                <Button type="submit" disabled={changePasswordMutation.isPending || !passwordForm.formState.isDirty}>
                   {changePasswordMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Change Password
                 </Button>

@@ -69,7 +69,7 @@ export interface Webhook {
 export interface CreateWebhookDto {
   url: string;
   header: string;
-  secret: string;
+  secret?: string;
 }
 
 export interface UpdateWebhookDto {

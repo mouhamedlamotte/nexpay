@@ -6,6 +6,7 @@ import {
   LoggerService,
   PaginationService,
   PrismaService,
+  TokensService,
 } from 'src/lib';
 import { UpdateWebhooksConfigDto } from './dto/update-webhooks-config.dto';
 import { CreateWebhooksConfigDto } from './dto/create-webhooks-config.dto';
@@ -17,6 +18,7 @@ export class WebhooksService {
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
     private readonly hash: HashService,
+    private readonly tokens: TokensService,
     private readonly filter: FilterService,
     private readonly pagination: PaginationService,
   ) {
@@ -82,10 +84,11 @@ export class WebhooksService {
 
   async create(projectId: string, data: CreateWebhooksConfigDto) {
     try {
-      if (data.secret) {
-        data.secret = await this.hash.encryptSensitiveData(data.secret);
+      if (!data.secret) {
+        data.secret = this.tokens.generateSecureSecret('nexpay_WHS');
       }
-      return await this.prisma.webhook.upsert({
+      data.secret = await this.hash.encryptSensitiveData(data.secret);
+      const config = await this.prisma.webhook.upsert({
         where: { id: projectId },
         create: {
           projectId,
@@ -95,6 +98,10 @@ export class WebhooksService {
           ...data,
         },
       });
+      return {
+        ...config,
+        secret: await this.hash.decryptSensitiveData(config.secret),
+      };
     } catch (error) {
       this.logger.error('Error creating redirect config', error);
       throw error;

@@ -23,8 +23,8 @@
 - [X] wave payment redirect uls
 - [X] fix : change provider
 - [X] add a long pooling endpint to check if transation is completed
-- [ ] allow auto generate webhook secret and show it once
-- [ ] add explicit error message when testing payment
+- [X] allow auto generate webhook secret and show it once
+- [X] add explicit error message when testing payment
 - [X] fix : payment status on polling
 - [X] fix : om webhook secret not empty case
 - [X] allow reset config
@@ -42,8 +42,8 @@
 * [X] add NP logo on mobile
 * [X] activate/deactiva provider buttons colors
 * [X] add paddings to user mangement page
-* [ ] change password button deabled if form is not dirty
-* [ ] not allow empy sting on scret config
+* [X] change password button deabled if form is not dirty
+* [X] not allow empy sting on scret config
 
 #### INSTALATION
 

@@ -145,7 +145,7 @@ export function ConfigureSecretsForm({
                           <div className="flex gap-2">
                             <Input
                               id={field}
-                              type="password"
+                              type="text"
                               placeholder={hasValue ? "Enter new value to update" : `Enter ${field}`}
                               {...form.register(`secrets.${field}`)}
                               className="w-full"

@@ -31,6 +31,10 @@ export class TokensService {
   generateCryptoToken(length = 64) {
     return crypto.randomBytes(length).toString('hex');
   }
+  generateSecureSecret(prefix: string): string {
+    const randomBytes = crypto.randomBytes(32).toString('hex');
+    return `${prefix}_${randomBytes}`;
+  }
 
   async hashToken(token: string) {
     return await argon2.hash(token);
