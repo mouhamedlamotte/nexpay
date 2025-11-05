@@ -52,7 +52,7 @@ export class WaveAdapter implements PaymentAdapter {
       let response: any;
 
       try {
-        await firstValueFrom(
+        response = await firstValueFrom(
           this.http.post(WAVE_CHECKOUT_URL, checkoutParams, {
             headers: {
               'Content-Type': 'application/json',
