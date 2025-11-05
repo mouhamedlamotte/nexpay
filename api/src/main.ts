@@ -3,13 +3,12 @@ import { ConfigService } from '@nestjs/config';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
-// import helmet from 'helmet';
+import helmet from 'helmet';
 import * as compression from 'compression';
 import { CustomExceptionFilter } from './lib/filters';
 import { ErrorInterceptor } from './lib/interceptors';
 import { AppModule } from './modules/app.module';
 import * as path from 'path';
-// import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -24,23 +23,23 @@ async function bootstrap() {
 
     app.set('trust proxy', 1);
 
-    // app.use(
-    //   helmet({
-    //     contentSecurityPolicy: {
-    //       directives: {
-    //         defaultSrc: ["'self'"],
-    //         styleSrc: ["'self'", "'unsafe-inline'"],
-    //         scriptSrc: ["'self'"],
-    //         imgSrc: ["'self'", 'data:', 'https:'],
-    //       },
-    //     },
-    //     hsts: {
-    //       maxAge: 31536000,
-    //       includeSubDomains: true,
-    //       preload: true,
-    //     },
-    //   }),
-    // );
+    app.use(
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'"],
+            imgSrc: ["'self'", 'data:', 'https:'],
+          },
+        },
+        hsts: {
+          maxAge: 31536000,
+          includeSubDomains: true,
+          preload: true,
+        },
+      }),
+    );
 
     app.use(compression());
 
@@ -92,15 +91,17 @@ async function bootstrap() {
       .setVersion(configService.get('app.version'))
       .build();
 
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup(`${globalPrefix}/docs`, app, document, {
-      swaggerOptions: {
-        persistAuthorization: true,
-        displayRequestDuration: true,
-      },
-      jsonDocumentUrl: `${globalPrefix}/docs/json`,
-      customSiteTitle: 'Microservice API Docs',
-    });
+    if (process.env.NODE_ENV != 'production') {
+      const document = SwaggerModule.createDocument(app, config);
+      SwaggerModule.setup(`${globalPrefix}/docs`, app, document, {
+        swaggerOptions: {
+          persistAuthorization: true,
+          displayRequestDuration: true,
+        },
+        jsonDocumentUrl: `${globalPrefix}/docs/json`,
+        customSiteTitle: 'Microservice API Docs',
+      });
+    }
 
     // Graceful shutdown
     app.enableShutdownHooks();
@@ -111,7 +112,11 @@ async function bootstrap() {
     logger.log(
       `🚀 Application is running on: http://${host}:${port}/${globalPrefix}`,
     );
-    logger.log(`📚 Documentation: http://${host}:${port}/${globalPrefix}/docs`);
+    if (process.env.NODE_ENV != 'production') {
+      logger.log(
+        `📚 Documentation: http://${host}:${port}/${globalPrefix}/docs`,
+      );
+    }
     logger.log(
       `🏥 Health Check: http://${host}:${port}/${globalPrefix}/health`,
     );
