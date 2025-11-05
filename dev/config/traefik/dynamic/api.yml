@@ -13,6 +13,6 @@ http:
     api-service:
       loadBalancer:
         servers:
-          # For production, use: http://api-service:3000
-          # For development, use: http://host.docker.internal:3000
-          - url: "http://host.docker.internal:9000"
+          # For docker, use: http://api:9000
+          # For live update (run api with `pnpm dev`) , use: http://host.docker.internal:3000
+          - url: "http://api:9000"

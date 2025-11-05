@@ -3,32 +3,18 @@ services:
       image: traefik:v3.5
       container_name: traefik
       command:
-        - "--api.dashboard=true"
         - "--api.insecure=true"
         - "--providers.docker=true"
         - "--providers.docker.exposedbydefault=false"
         - "--entrypoints.web.address=:80"
-        # - "--entrypoints.web.address=:443"
-        # Auto SSL avec Let's Encrypt
-        # - "--certificatesresolvers.letsencrypt.acme.email=${ADMIN_EMAIL}"
-        # - "--certificatesresolvers.letsencrypt.acme.storage=/acme.json"
-        # - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
       ports:
         - "9090:80"
         - "9091:8080"
-        # - "443:443"
       volumes:
       - ./dev/config/traefik/traefik.yml:/etc/traefik/traefik.yml
       - ./dev/config/traefik/dynamic:/etc/traefik/dynamic
       environment:
         - APP_DOMAIN=${APP_DOMAIN}
-      labels:
-        # Dashboard Traefik (optionnel)
-        - "traefik.enable=true"
-        - "traefik.http.routers.traefik.rule=Host(`traefik.${APP_DOMAIN}`)"
-        - "traefik.http.routers.traefik.service=api@internal"
-        - "traefik.http.routers.traefik.middlewares=traefik-auth"
-        - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_AUTH}" # user:password hash
       networks:
         - web
       extra_hosts:
@@ -71,7 +57,7 @@ services:
       dockerfile: Dockerfile
     container_name: api
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - APP_PORT=9000
       - APP_NAME=${APP_NAME}
       - APP_DOMAIN=${APP_DOMAIN}
@@ -81,10 +67,13 @@ services:
       - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
       - LOG_LEVEL=info
       - LOG_FORMAT=json
-      - CORS_ORIGIN=${APP_DOMAIN}
       - HELMET_CSP_DIRECTIVES=default-src 'self'
-      - ENCRYPTION_KEY=0072ac7fffc1cfce186b308af5f874fe7f5795adcf1c3d3592a7c2c159e01811
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - JWT_SECRET=${JWT_SECRET}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - X_WRITE_KEY=${X_WRITE_KEY}
+      - X_READ_KEY=${X_READ_KEY}
     depends_on:
       - postgres
       - redis
@@ -99,9 +88,13 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
-    container_name: nexpay_web
+      args:
+        NEXT_PUBLIC_API_URL: "http://${APP_DOMAIN}:9090/api/v1"
+        NEXT_PUBLIC_READ_API_KEY: ${X_READ_KEY}
+    container_name: nexpay-web
     environment:
-      - NEXT_PUBLIC_API_URL=https://${APP_DOMAIN}/api/v1
+      - NEXT_PUBLIC_API_URL=http://${APP_DOMAIN}:9090/api/v1
+      - NEXT_PUBLIC_READ_API_KEY=${X_READ_KEY}
     expose:
       - 9001
     networks:

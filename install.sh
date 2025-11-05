@@ -587,16 +587,16 @@ start_services() {
     cd "$INSTALL_DIR"
 
     log INFO "Téléchargement des images Docker..."
-    docker compose pull >> "$LOG_FILE" 2>&1 &
+    docker compose -f docker-compose-prod.yml pull >> "$LOG_FILE" 2>&1 &
     local pull_pid=$!
     spinner $pull_pid "Téléchargement des images"
 
     log INFO "Construction et démarrage des containers..."
-    if docker compose up -d --build >> "$LOG_FILE" 2>&1; then
+    if docker compose -f docker-compose-prod.yml up -d --build >> "$LOG_FILE" 2>&1; then
         log SUCCESS "Services démarrés"
     else
         log ERROR "Échec du démarrage des services"
-        echo -e "${C_MUTED}Consultez les logs: docker compose logs${C_RESET}"
+        echo -e "${C_MUTED}Consultez les logs: docker compose -f docker-compose-prod.yml logs${C_RESET}"
         exit 1
     fi
 
@@ -609,12 +609,12 @@ start_services() {
     echo ""
 
     # Vérification
-    local running=$(docker compose ps --status running 2>/dev/null | grep -c "Up" || echo "0")
+    local running=$(docker compose -f docker-compose-prod.yml ps --status running 2>/dev/null | grep -c "Up" || echo "0")
     if [ "$running" -ge 3 ]; then
         log SUCCESS "Tous les services sont opérationnels (${C_BOLD}$running${C_RESET} containers)"
     else
         log WARNING "Certains services n'ont pas démarré correctement"
-        docker compose ps
+        docker compose -f docker-compose-prod.yml ps
     fi
 }
 
@@ -657,9 +657,9 @@ show_completion() {
 
     echo -e "${C_INFO}${ICON_INFO} Commandes utiles:${C_RESET}"
     echo -e "   ${C_DIM}cd $INSTALL_DIR${C_RESET}"
-    echo -e "   ${C_DIM}docker compose logs -f${C_RESET}        # Voir les logs"
-    echo -e "   ${C_DIM}docker compose restart${C_RESET}        # Redémarrer"
-    echo -e "   ${C_DIM}docker compose ps${C_RESET}             # Status des services"
+    echo -e "   ${C_DIM}docker compose -f docker-compose-prod.yml logs -f${C_RESET}        # Voir les logs"
+    echo -e "   ${C_DIM}docker compose -f docker-compose-prod.yml restart${C_RESET}        # Redémarrer"
+    echo -e "   ${C_DIM}docker compose -f docker-compose-prod.yml ps${C_RESET}             # Status des services"
     echo -e "   ${C_DIM}./update.sh${C_RESET}                   # Mettre à jour"
     echo ""
 
@@ -708,7 +708,7 @@ fi
 cp .env .env.backup-$(date +%Y%m%d-%H%M%S)
 sed -i "s/^APP_DOMAIN=.*/APP_DOMAIN=$NEW_DOMAIN/" .env
 
-docker compose restart
+docker compose -f docker-compose-prod.yml restart
 
 echo -e "${C_SUCCESS}✓ Domaine configuré: https://$NEW_DOMAIN${C_RESET}"
 DOMAIN_SCRIPT
