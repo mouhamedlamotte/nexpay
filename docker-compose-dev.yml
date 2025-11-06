@@ -16,13 +16,13 @@ services:
       environment:
         - APP_DOMAIN=${APP_DOMAIN}
       networks:
-        - web
+        - nexpay-web
       extra_hosts:
         - "host.docker.internal:host-gateway"
       restart: unless-stopped
-  postgres:
-    image: postgres:15-alpine
-    container_name: postgres
+  nexpay-db:
+    image: postgres:17-alpine
+    container_name: nexpay-db
     environment:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
@@ -33,29 +33,29 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
-      - backend
+      - nexpay-web
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
-  redis:
+  nexpay-cache:
     image: redis:7-alpine
-    container_name: redis
+    container_name: nexpay-cache
     command: /bin/sh -c "redis-server --requirepass $REDIS_PASSWORD"
-    hostname: redis
+    hostname: nexpay-cache
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
-      - backend
-  api:
+      - nexpay-web
+  nexpay-api:
     build:
       context: ./api
       dockerfile: Dockerfile
-    container_name: api
+    container_name: nexpay-api
     environment:
       - NODE_ENV=development
       - APP_PORT=9000
@@ -81,12 +81,11 @@ services:
     expose:
       - "9000"
     networks:
-      - web
-      - backend
+      - nexpay-web
     restart: unless-stopped
-  web:
+  nexpay-web:
     build:
-      context: ./web
+      context: ./nexpay-web
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: "http://${APP_DOMAIN}:9090/api/v1"
@@ -98,15 +97,13 @@ services:
     expose:
       - 9001
     networks:
-      - web
+      - nexpay-web
 
 
 
 networks:
-  web:
-    name: web
-  backend:
-    internal: true
+  nexpay-web:
+    name: nexpay-web
 
 volumes:
   postgres_data:
