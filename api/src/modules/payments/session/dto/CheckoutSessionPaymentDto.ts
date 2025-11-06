@@ -37,5 +37,5 @@ export class CheckoutSessionPaymentDto {
   })
   @IsString()
   @IsOptional()
-  cancelUrl?: string;
+  failureUrl?: string;
 }

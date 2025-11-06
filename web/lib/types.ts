@@ -51,7 +51,6 @@ export interface UpdateProjectDto {
 export interface CallbackUrls {
   successUrl?: string;
   failureUrl?: string;
-  cancelUrl?: string;
 }
 
 // Webhook types

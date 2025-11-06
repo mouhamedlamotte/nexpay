@@ -41,7 +41,6 @@ model Callback {
   id        String   @id @default(cuid())
   successUrl String?
   failureUrl String?
-  cancelUrl  String?
   projectId String @unique
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())

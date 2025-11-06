@@ -110,8 +110,8 @@ export function CheckoutForm({ sessionId }: CheckoutFormProps) {
           setIsPolling(false);
           toast.error('La session de paiement a expiré');
   
-          if (session?.project?.metadata?.cancelUrl) {
-            setTimeout(() => window.location.href = session.project.metadata.cancelUrl, 2000);
+          if (session?.project?.metadata?.failureUrl) {
+            setTimeout(() => window.location.href = session.project.metadata.failureUrl, 2000);
           }
           return;
         }
@@ -121,8 +121,8 @@ export function CheckoutForm({ sessionId }: CheckoutFormProps) {
           setIsPolling(false);
           toast.warning('La session de paiement a été fermée');
           
-          if (session?.project?.metadata?.cancelUrl) {
-            setTimeout(() => window.location.href = session.project.metadata.cancelUrl, 2000);
+          if (session?.project?.metadata?.failureUrl) {
+            setTimeout(() => window.location.href = session.project.metadata.failureUrl, 2000);
           }
           return;
         }

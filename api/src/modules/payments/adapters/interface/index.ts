@@ -19,7 +19,7 @@ export interface PaymentInitiationData {
   secrets: Record<string, string>;
   metadata?: Record<string, any>;
   successUrl?: string;
-  cancelUrl?: string;
+  failureUrl?: string;
 }
 
 export interface PaymentResponse {

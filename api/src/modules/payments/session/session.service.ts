@@ -69,12 +69,12 @@ export class SessionPayemtService {
         where: { projectId: dto.projectId },
       });
 
-      if (!dto.successUrl) {
+      if (!dto.successUrl && callbacks && callbacks.successUrl) {
         dto.successUrl = callbacks.successUrl;
       }
 
-      if (!dto.cancelUrl) {
-        dto.cancelUrl = callbacks.cancelUrl;
+      if (!dto.failureUrl && callbacks && callbacks.failureUrl) {
+        dto.failureUrl = callbacks.failureUrl;
       }
 
       const session = await this.prisma.session.create({
@@ -220,8 +220,8 @@ export class SessionPayemtService {
         dto.successUrl = callbacks.successUrl;
       }
 
-      if (!dto.cancelUrl && callbacks && callbacks.cancelUrl) {
-        dto.cancelUrl = callbacks.cancelUrl;
+      if (!dto.failureUrl && callbacks && callbacks.failureUrl) {
+        dto.failureUrl = callbacks.failureUrl;
       }
       await this.prisma.session.update({
         where: {
@@ -231,7 +231,7 @@ export class SessionPayemtService {
           status: SessionStatus.pending,
           paymentData: JSON.stringify(paymentData),
           successUrl: dto.successUrl,
-          cancelUrl: dto.cancelUrl,
+          failureUrl: dto.failureUrl,
         },
       });
 
@@ -268,7 +268,7 @@ export class SessionPayemtService {
             status: session.status,
             redirectUrl: this.getRedirectUrl(
               session.status,
-              session.cancelUrl,
+              session.failureUrl,
               session.successUrl,
             ),
           };
@@ -288,8 +288,12 @@ export class SessionPayemtService {
     }
   }
 
-  getRedirectUrl(status: SessionStatus, cancelUrl: string, successUrl: string) {
-    if (status === 'failed') return cancelUrl;
+  getRedirectUrl(
+    status: SessionStatus,
+    failureUrl: string,
+    successUrl: string,
+  ) {
+    if (status === 'failed') return failureUrl;
     if (status === 'completed') return successUrl;
     return null;
   }

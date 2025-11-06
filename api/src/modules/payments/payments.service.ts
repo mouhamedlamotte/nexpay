@@ -60,8 +60,8 @@ export class PaymentsService {
         data.successUrl = callbacks.successUrl;
       }
 
-      if (!data.cancelUrl) {
-        data.cancelUrl = callbacks.cancelUrl;
+      if (!data.failureUrl) {
+        data.failureUrl = callbacks.failureUrl;
       }
 
       return adapter.initiate({

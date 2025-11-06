@@ -93,5 +93,5 @@ export class InitiateSessionPaymentDto {
   })
   @IsString()
   @IsOptional()
-  cancelUrl?: string;
+  failureUrl?: string;
 }

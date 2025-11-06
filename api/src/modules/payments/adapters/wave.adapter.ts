@@ -35,7 +35,7 @@ export class WaveAdapter implements PaymentAdapter {
       const APP_URL = this.config.get('app.url');
 
       const success_url = data.successUrl ?? `${APP_URL}/success`;
-      const error_url = data.cancelUrl ?? `${APP_URL}/cancel`;
+      const error_url = data.failureUrl ?? `${APP_URL}/failed`;
       const checkoutParams: WaveCheckoutParams = {
         amount: data.amount.toString(),
         currency: data.currency,

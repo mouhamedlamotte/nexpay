@@ -25,7 +25,6 @@ const formSchema = z.object({
   description: z.string().optional(),
   successUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   failureUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  cancelUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -44,7 +43,6 @@ export function CreateProjectDialog({ open, onOpenChange, onSuccess }: CreatePro
       description: "",
       successUrl: "",
       failureUrl: "",
-      cancelUrl: "",
     },
   })
 
@@ -61,15 +59,14 @@ export function CreateProjectDialog({ open, onOpenChange, onSuccess }: CreatePro
   })
 
   const onSubmit = (values: FormValues) => {
-    const { successUrl, failureUrl, cancelUrl, ...rest } = values
+    const { successUrl, failureUrl, ...rest } = values
     mutation.mutate({
       ...rest,
       callbackUrls:
-        successUrl || failureUrl || cancelUrl
+        successUrl || failureUrl
           ? {
               successUrl: successUrl || undefined,
               failureUrl: failureUrl || undefined,
-              cancelUrl: cancelUrl || undefined,
             }
           : undefined,
     })
@@ -133,19 +130,6 @@ export function CreateProjectDialog({ open, onOpenChange, onSuccess }: CreatePro
                     <FormLabel>Failure URL</FormLabel>
                     <FormControl>
                       <Input placeholder="https://example.com/failure" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="cancelUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cancel URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://example.com/cancel" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

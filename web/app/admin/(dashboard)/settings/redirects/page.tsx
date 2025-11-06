@@ -17,7 +17,6 @@ import { toast } from "sonner"
 const formSchema = z.object({
   successUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   failureUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  cancelUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -35,7 +34,6 @@ export default function RedirectsPage() {
     values: {
       successUrl: data?.data?.successUrl || "",
       failureUrl: data?.data?.failureUrl || "",
-      cancelUrl: data?.data?.cancelUrl || "",
     },
   })
 
@@ -73,7 +71,7 @@ export default function RedirectsPage() {
               </div>
             ) : (
               <Form {...form}>
-                <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="space-y-6">
+                <form onSubmit={form.handleSubmit((values : FormValues) => mutation.mutate(values))} className="space-y-6">
                   {
                     [
                       {
@@ -87,17 +85,12 @@ export default function RedirectsPage() {
                         label: "Failure URL",
                         placeholder: "https://example.com/failure",
                         description: "Redirect URL after failed payment",
-                      },
-                      {
-                        name: "cancelUrl",
-                        label: "Cancel URL",
-                        placeholder: "https://example.com/cancel",
-                        description: "Redirect URL after canceled payment",
-                      },
-                    ].map(({ name, label, placeholder, description }) => (
+                      }
+                    ].map(({ name, label, placeholder }) => (
                       <FormField
                         control={form.control}
                         name={name as keyof FormValues}
+                        // eslint-disable-next-line
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>{label}</FormLabel>

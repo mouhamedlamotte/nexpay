@@ -40,7 +40,7 @@ export class OMAdapder implements PaymentAdapter {
       const APP_URL = this.config.get('app.url');
 
       const callbackSuccessUrl = data.successUrl ?? `${APP_URL}/success`;
-      const callbackCancelUrl = data.cancelUrl ?? `${APP_URL}/cancel`;
+      const callbackCancelUrl = data.failureUrl ?? `${APP_URL}/cancel`;
 
       const checkoutParams: OMCheckoutParams = {
         amount: { value: amount, unit: currency },

@@ -26,7 +26,7 @@ model Session {
     status SessionStatus @default(opened)
 
     successUrl String? @map("success_url")
-    cancelUrl  String? @map("cancel_url")
+    failureUrl  String? @map("failure_url")
 
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")

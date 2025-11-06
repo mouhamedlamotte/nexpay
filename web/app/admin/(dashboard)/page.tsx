@@ -19,11 +19,13 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  ArrowDownRight,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi } from "@/lib/api/dashboard";
 import { useProjectStore } from "@/stores/project.store";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 const Dashboard = () => {
   const projectId = useProjectStore((state) => state.currentProject?.id!);
@@ -129,9 +131,15 @@ const Dashboard = () => {
             <div className="text-2xl font-bold text-white">
               {formatCurrency(data?.stats?.totalVolume || 0)}
             </div>
-            <div className="flex items-center text-xs text-green-500 mt-1">
-              <ArrowUpRight className="h-3 w-3 mr-1" />
-              <span>+{data?.stats?.growth?.volume}% vs période précédente</span>
+            <div className="flex items-center text-xs  mt-1">
+              {
+                data?.stats?.growth?.volume && data?.stats?.growth?.volume > 0 ? (
+                  <ArrowUpRight className="text-green-500 h-3 w-3 mr-1" />
+                ): (
+                  <ArrowDownRight className="text-red-500 h-3 w-3 mr-1" />
+                )
+              }
+              <span className={cn(data?.stats?.growth?.volume && data?.stats?.growth?.volume > 0 ? 'text-green-500' : 'text-red-500')}>{data?.stats?.growth?.volume} % vs période précédente</span>
             </div>
           </CardContent>
         </Card>
@@ -147,10 +155,16 @@ const Dashboard = () => {
             <div className="text-2xl font-bold text-white">
               {data?.stats?.totalTransactions}
             </div>
-            <div className="flex items-center text-xs text-green-500 mt-1">
-              <ArrowUpRight className="h-3 w-3 mr-1" />
-              <span>
-                +{data?.stats?.growth?.transactions}% vs période précédente
+            <div className="flex items-center text-xs  mt-1">
+              {
+                data?.stats?.growth?.transactions && data?.stats?.growth?.transactions > 0 ? (
+                  <ArrowUpRight className="text-green-500 h-3 w-3 mr-1" />
+                ): (
+                  <ArrowDownRight className="text-red-500 h-3 w-3 mr-1" />
+                )
+              }
+              <span className={cn(data?.stats?.growth?.transactions && data?.stats?.growth?.transactions > 0 ? 'text-green-500' : 'text-red-500')}>
+                {data?.stats?.growth?.transactions} % vs période précédente
               </span>
             </div>
           </CardContent>
@@ -167,10 +181,16 @@ const Dashboard = () => {
             <div className="text-2xl font-bold text-white">
               {data?.stats?.successRate}%
             </div>
-            <div className="flex items-center text-xs text-green-500 mt-1">
-              <ArrowUpRight className="h-3 w-3 mr-1" />
-              <span>
-                +{data?.stats?.growth?.successRate}% vs période précédente
+            <div className="flex items-center text-xs  mt-1">
+              {
+                data?.stats?.growth?.successRate && data?.stats?.growth?.successRate > 0 ? (
+                  <ArrowUpRight className="text-green-500 h-3 w-3 mr-1" />
+                ): (
+                  <ArrowDownRight className="text-red-500 h-3 w-3 mr-1" />
+                )
+              }
+              <span className={cn(data?.stats?.growth?.successRate && data?.stats?.growth?.successRate > 0 ? 'text-green-500' : 'text-red-500')}>
+                {data?.stats?.growth?.successRate} % vs période précédente
               </span>
             </div>
           </CardContent>

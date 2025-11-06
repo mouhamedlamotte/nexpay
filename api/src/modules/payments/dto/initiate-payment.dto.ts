@@ -100,5 +100,5 @@ export class InitiatePaymentDto {
   })
   @IsString()
   @IsOptional()
-  cancelUrl?: string;
+  failureUrl?: string;
 }
