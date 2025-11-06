@@ -125,7 +125,6 @@
     @apply bg-background text-foreground outline-0 shadow-none;
   }
 
-  /* Added better typography defaults for improved readability */
   h1,
   h2,
   h3,
