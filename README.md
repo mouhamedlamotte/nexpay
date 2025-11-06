@@ -108,7 +108,7 @@ Remplacez `pay.yourdomain.com` par votre propre domaine.
 2. Clone le repository NexPay
 3. Configure les variables d'environnement
 4. Configure Traefik pour le reverse proxy et SSL
-5. Démarre tous les services Docker avec `docker-compose -f docker-compose-prod.yml up -d`
+5. Démarre tous les services Docker avec `docker compose -f docker-compose-prod.yml up -d`
 6. Affiche les informations de connexion
 
 #### Informations post-installation
@@ -134,7 +134,7 @@ Le script d'installation crée automatiquement un fichier `.env` dans `/opt/nexp
 cd /opt/nexpay
 nano .env
 # Modifiez les variables nécessaires
-docker-compose -f docker-compose-prod.yml restart
+docker compose -f docker-compose-prod.yml restart
 ```
 
 ### Rotation des clés API
