@@ -75,8 +75,8 @@ services:
       - X_WRITE_KEY=${X_WRITE_KEY}
       - X_READ_KEY=${X_READ_KEY}
     depends_on:
-      - postgres
-      - redis
+      - nexpay-db
+      - nexpay-cache
     command: sh -c "npx prisma migrate deploy && npm run prod"
     expose:
       - "9000"
