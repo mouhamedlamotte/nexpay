@@ -192,13 +192,13 @@ download_updates() {
     log INFO "Mise à jour des fichiers..."
 
     # Supprimer les anciens fichiers
-    rm -rf api config web docker-compose.yml
+    rm -rf api config web docker-compose-prod.yml
 
     # Copier les nouveaux fichiers
     cp -r "$temp_dir/api" .
     cp -r "$temp_dir/config" .
     cp -r "$temp_dir/web" .
-    cp "$temp_dir/docker-compose.yml" .
+    cp "$temp_dir/docker-compose-prod.yml" .
 
     # Nettoyer
     rm -rf "$temp_dir"
