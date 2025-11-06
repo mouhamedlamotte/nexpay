@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsUrl } from 'class-validator';
+import { IsEmpty, IsOptional, IsUrl } from 'class-validator';
 
 export class CallBacksDto {
   @ApiPropertyOptional({
@@ -8,6 +8,7 @@ export class CallBacksDto {
   })
   @IsUrl()
   @IsOptional()
+  @IsEmpty()
   successUrl: string;
   @ApiPropertyOptional({
     example: 'https://example.com/failure',
@@ -15,6 +16,7 @@ export class CallBacksDto {
   })
   @IsUrl()
   @IsOptional()
+  @IsEmpty()
   failureUrl: string;
 
   @ApiPropertyOptional({
@@ -22,6 +24,7 @@ export class CallBacksDto {
     required: false,
   })
   @IsUrl()
+  @IsEmpty()
   @IsOptional()
   cancelUrl: string;
 }

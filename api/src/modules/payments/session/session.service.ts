@@ -216,11 +216,11 @@ export class SessionPayemtService {
         where: { projectId: session.projectId },
       });
 
-      if (!dto.successUrl) {
+      if (!dto.successUrl && callbacks && callbacks.successUrl) {
         dto.successUrl = callbacks.successUrl;
       }
 
-      if (!dto.cancelUrl) {
+      if (!dto.cancelUrl && callbacks && callbacks.cancelUrl) {
         dto.cancelUrl = callbacks.cancelUrl;
       }
       await this.prisma.session.update({

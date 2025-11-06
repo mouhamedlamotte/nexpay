@@ -16,7 +16,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { CallbacksService } from './callbacks.service';
+import { CallbacksService } from './redirects.service';
 import { CallBacksDto } from './dto/callbacks.dto';
 import { JwtAuthGuard } from 'src/guards/auth/jwt/jwt.guard';
 

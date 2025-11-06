@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CallbacksService } from './callbacks.service';
+import { CallbacksService } from './redirects.service';
 
 describe('RedirectConfigService', () => {
   let service: CallbacksService;
