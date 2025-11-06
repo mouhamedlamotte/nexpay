@@ -45,7 +45,7 @@ cp .env.example .env
 3. **Démarrer les services**
 
 ```bash
-docker-compose -f docker-compose-dev.yml up -d
+docker compose -f docker-compose-dev.yml up -d
 ```
 
 4. **Accéder à l'application**
