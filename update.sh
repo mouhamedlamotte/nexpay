@@ -138,7 +138,7 @@ backup_database() {
 
     local backup_file="backups/backup-${DATE}.sql"
 
-    if docker compose exec -T nexpay-db pg_dump -U nexpay nexpay > "$backup_file" 2>/dev/null; then
+    if docker compose -f docker-compose-prod.yml exec -T nexpay-db pg_dump -U nexpay nexpay > "$backup_file" 2>/dev/null; then
         local backup_size=$(du -h "$backup_file" | cut -f1)
         log SUCCESS "Backup créé: ${C_BOLD}$backup_file${C_RESET} (${backup_size})"
     else
@@ -167,7 +167,7 @@ backup_config() {
 stop_services() {
     log STEP "Arrêt des services"
 
-    if docker compose down; then
+    if docker compose -f docker-compose-prod.yml down; then
         log SUCCESS "Services arrêtés"
     else
         log ERROR "Échec de l'arrêt des services"
@@ -233,7 +233,7 @@ rebuild_services() {
     log STEP "Reconstruction et démarrage des services"
 
     log INFO "Construction des images Docker..."
-    if docker compose build --no-cache 2>&1 | grep -v "^#" | grep -v "^$" | tail -5; then
+    if docker compose -f docker-compose-prod.yml build --no-cache 2>&1 | grep -v "^#" | grep -v "^$" | tail -5; then
         log SUCCESS "Images construites"
     else
         log ERROR "Échec de la construction"
@@ -241,7 +241,7 @@ rebuild_services() {
     fi
 
     log INFO "Démarrage des services..."
-    if docker compose up -d; then
+    if docker compose -f docker-compose-prod.yml up -d; then
         log SUCCESS "Services démarrés"
     else
         log ERROR "Échec du démarrage"
@@ -253,7 +253,7 @@ rebuild_services() {
     sleep 10
 
     # Vérifier l'état
-    local running=$(docker compose ps --status running 2>/dev/null | grep -c "Up" || echo "0")
+    local running=$(docker compose -f docker-compose-prod.yml ps --status running 2>/dev/null | grep -c "Up" || echo "0")
     if [ "$running" -ge 3 ]; then
         log SUCCESS "Tous les services sont opérationnels (${C_BOLD}$running${C_RESET} containers)"
     else
@@ -284,13 +284,13 @@ show_completion() {
     echo ""
 
     echo -e "${C_PRIMARY}📊 État des services:${C_RESET}"
-    docker compose ps
+    docker compose -f docker-compose-prod.yml ps
     echo ""
 
     echo -e "${C_INFO}${ICON_INFO} Commandes utiles:${C_RESET}"
-    echo -e "   ${C_DIM}docker compose logs -f${C_RESET}        # Voir les logs en temps réel"
-    echo -e "   ${C_DIM}docker compose restart${C_RESET}        # Redémarrer tous les services"
-    echo -e "   ${C_DIM}docker compose ps${C_RESET}             # Voir l'état des services"
+    echo -e "   ${C_DIM}docker compose -f docker-compose-prod.yml logs -f${C_RESET}        # Voir les logs en temps réel"
+    echo -e "   ${C_DIM}docker compose -f docker-compose-prod.yml restart${C_RESET}        # Redémarrer tous les services"
+    echo -e "   ${C_DIM}docker compose -f docker-compose-prod.yml ps${C_RESET}             # Voir l'état des services"
     echo ""
 
     echo -e "${C_WARNING}${ICON_WARNING} Backups créés:${C_RESET}"
@@ -312,9 +312,9 @@ show_rollback_info() {
     echo ""
     echo -e "${C_INFO}Pour revenir à la version précédente:${C_RESET}"
     echo -e "   ${C_DIM}cd $INSTALL_DIR${C_RESET}"
-    echo -e "   ${C_DIM}docker compose down${C_RESET}"
+    echo -e "   ${C_DIM}docker compose -f docker-compose-prod.yml down${C_RESET}"
     echo -e "   ${C_DIM}cp .env.backup-${DATE} .env${C_RESET}"
-    echo -e "   ${C_DIM}docker compose up -d${C_RESET}"
+    echo -e "   ${C_DIM}docker compose -f docker-compose-prod.yml up -d${C_RESET}"
     echo ""
 }
 
