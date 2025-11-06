@@ -280,17 +280,10 @@ export class HashService {
     // Decrypt secrets
     const decryptedSecrets: Record<string, string> = {};
 
-    this.logger.log(`Decrypting secrets for`);
-    this.logger.log(JSON.stringify(secrets, null, 2));
     for (const field of secretsFields) {
       const secretValue = secrets[field] as string;
-      this.logger.log(
-        `========================= Decrypting secrets for ${secretValue}`,
-      );
-
       // Check if the value looks like encrypted data (base64 with proper structure)
       if (this.isEncryptedData(secretValue)) {
-        this.logger.log(`Decrypting secret field: ${field}`);
         try {
           decryptedSecrets[field] =
             await this.decryptSensitiveData(secretValue);
