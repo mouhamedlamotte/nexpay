@@ -1,5 +1,7 @@
 # NexPay - Plateforme de Paiement Mobile
 
+![NexPay](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/dashboard.png)
+
 NexPay est une solution de paiement mobile auto-hébergée qui permet d'accepter des paiements via Wave, Orange Money et d'autres fournisseurs de paiement mobile populaires en Afrique.
 
 ## Fonctionnalités
@@ -157,7 +159,7 @@ Chaque page de configuration contient deux onglets :
 1. **Secrets Configuration** : Configuration des clés API du provider
 2. **Webhook Configuration** : Configuration des webhooks pour recevoir les notifications
 
-![Configuration des providers - À venir]
+![NexPay](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/providers/0.png)
 
 #### Configuration Wave
 
@@ -232,7 +234,7 @@ Une fois ces deux conditions remplies, un bouton **"Test Payment"** apparaît.
    - La référence de paiement
    - La date d'expiration
 
-![Test de provider - À venir]
+![NexPay](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/providers/4.png)
 
 3. Le provider est maintenant activé et prêt à être utilisé
 
@@ -249,13 +251,19 @@ Pour recevoir les notifications de NexPay dans votre application, configurez un 
    - **Header Name** : Nom du header pour la vérification (ex: `x-webhook-secret`)
    - **Secret** : Clé secrète pour vérifier l'authenticité (optionnel - auto-généré si vide)
 
-![Configuration des webhooks]
+![NexPay](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/webhook.png)
+
+⚠️ **Attention** : le secret n'est visible que une seule fois apres la creation du webhook, copiez-le et sauvegardez-le dans un endroit sécuritaire.
+
+![NexPay](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/one_time_view.png)
+
+
 
 ### Configuration des URLs de redirection
 
 Configurez les URLs de redirection après paiement dans les paramètres de votre projet :
 
-![Configuration des redirections]
+![NexPay](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/callback.png)
 
 - **Success URL** : Redirection après paiement réussi
 - **Failure URL** : Redirection après échec de paiement
@@ -267,7 +275,7 @@ Configurez les URLs de redirection après paiement dans les paramètres de votre
 
 Le dashboard vous donne un aperçu complet de votre activité :
 
-![Dashboard NexPay]
+![Dashord](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/dashboard.png)
 
 - **Volume Total** : Montant total des transactions
 - **Transactions** : Nombre de transactions
@@ -280,13 +288,13 @@ Le dashboard vous donne un aperçu complet de votre activité :
 
 #### 1. Sélection du mode de paiement
 
-![Sélection du mode de paiement]
+![Checkout](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/checkout.png)
 
 Le client choisit son mode de paiement préféré (Wave, Orange Money, etc.)
 
 #### 2. Paiement via QR Code ou lien direct
 
-![Paiement Wave]
+![NexPay](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/scan.png)
 
 Le client peut :
 
