@@ -76,19 +76,21 @@ export class WebhookConfigService {
   // ============================================
 
   getWebhookUrl(path: string): string {
-    const appDomain = this.config.get('APP_DOMAIN');
+    const appUrl = this.config.get('app.url');
 
-    if (!appDomain) {
+    if (!appUrl) {
       this.logger.warn('APP_DOMAIN not configured, using default localhost');
       return `https://localhost:3000/webhook/${path}`;
     }
 
     // S'assurer que l'URL commence par https://
-    const domain = appDomain.startsWith('https')
-      ? appDomain
-      : `https://${appDomain.replace('http://', '')}`;
+    const url = appUrl.startsWith('https')
+      ? appUrl
+      : `${appUrl.replace('http://', '')}`;
 
-    return `${domain}/webhook/${path}`;
+    path = `${url}/webhook/${path}`;
+    this.logger.debug('Generated webhook URL:', path);
+    return path;
   }
 
   generateSecureSecret(prefix: string): string {
