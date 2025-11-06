@@ -46,8 +46,8 @@ export class WaveAdapter implements PaymentAdapter {
 
       const { api_key } = data.secrets;
 
+      // ! LOL C"EST MOI QUI AI FAIS CA ???
       const finalkey = api_key.replace('"', '').replace('"', '');
-      this.logger.debug('Wave key', finalkey);
 
       let response: any;
 
@@ -60,16 +60,13 @@ export class WaveAdapter implements PaymentAdapter {
             },
           }),
         );
+        if (![200, 201].includes(response.status)) {
+          this.logger.error('Error initiating Wave payment', response.data);
+          throw new Error('Wave initiation failed, check your API key !');
+        }
       } catch (error) {
         this.logger.error('Error initiating Wave payment', error);
-        throw new Error('Wave initiation failed, check your API key');
-      }
-
-      this.logger.debug('Wave response', response.data);
-
-      if (![200, 201].includes(response.status)) {
-        this.logger.error('Error initiating Wave payment', response.data);
-        throw new Error('Wave initiation failed');
+        throw new Error('Wave initiation failed, check your API key !');
       }
 
       const transaction = await this.transactionFactory.createTransaction({
