@@ -28,6 +28,7 @@
 - [X] fix : payment status on polling
 - [X] fix : om webhook secret not empty case
 - [X] allow reset config
+- [ ] fix : cannot read property of undefined sucessUrl on om payment
 
 #### WEB
 

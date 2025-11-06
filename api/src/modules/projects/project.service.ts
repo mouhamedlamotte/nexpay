@@ -5,6 +5,7 @@ import { GetProjectsDto } from './dto/get-project.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { PrismaService } from 'src/lib';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ProjectService {
@@ -14,6 +15,7 @@ export class ProjectService {
     private readonly prisma: PrismaService,
     private readonly filter: FilterService,
     private readonly pagination: PaginationService,
+    private readonly config: ConfigService,
   ) {}
 
   private getFilterConfig(): FilterConfig {
@@ -101,6 +103,13 @@ export class ProjectService {
             isDefault: true,
           },
         });
+      }
+      if (!callbackUrls.successUrl) {
+        callbackUrls.successUrl = `${this.config.get('app.url')}/checkout/success`;
+      }
+
+      if (!callbackUrls.failureUrl) {
+        callbackUrls.failureUrl = `${this.config.get('app.url')}/checkout/failed`;
       }
 
       if (callbackUrls) {
