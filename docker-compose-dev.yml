@@ -64,7 +64,7 @@ services:
       - APP_VERSION=1.0.0
       - GLOBAL_PREFIX=api/v1
       - APP_URL=https://${APP_DOMAIN}/api/v1
-      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:54321/${DB_NAME}
       - LOG_LEVEL=info
       - LOG_FORMAT=json
       - HELMET_CSP_DIRECTIVES=default-src 'self'
