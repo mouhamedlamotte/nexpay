@@ -1,4 +1,4 @@
-# NexPay - Plateforme de Paiement Mobile
+# NexPay - Aggregateur de Paiement Mobile open source
 
 ![NexPay](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/dashboard.png)
 
