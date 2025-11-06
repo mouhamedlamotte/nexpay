@@ -85,7 +85,7 @@ services:
     restart: unless-stopped
   nexpay-web:
     build:
-      context: ./nexpay-web
+      context: ./web
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: "http://${APP_DOMAIN}:9090/api/v1"
