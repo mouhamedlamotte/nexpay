@@ -77,10 +77,11 @@ export class WebhookConfigService {
 
   getWebhookUrl(path: string): string {
     const appUrl = this.config.get('app.url');
+    const prefix = this.config.get('app.globalPrefix');
 
     if (!appUrl) {
       this.logger.warn('APP_DOMAIN not configured, using default localhost');
-      return `https://localhost:3000/webhook/${path}`;
+      return `https://localhost:3000/${prefix}/webhook/${path}`;
     }
 
     // S'assurer que l'URL commence par https://
@@ -88,7 +89,7 @@ export class WebhookConfigService {
       ? appUrl
       : `${appUrl.replace('http://', '')}`;
 
-    path = `${url}/webhook/${path}`;
+    path = `${url}/${prefix}/webhook/${path}`;
     this.logger.debug('Generated webhook URL:', path);
     return path;
   }

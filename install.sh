@@ -669,11 +669,17 @@ show_completion() {
 }
 
 # Création des scripts utilitaires
+# Création des scripts utilitaires
 create_utility_scripts() {
     log STEP "Création des scripts utilitaires"
 
-    # chmod +x "$INSTALL_DIR/update.sh"
-    log SUCCESS "Script de mise à jour créé"
+    # Rendre le script de mise à jour exécutable
+    if [ -f "$INSTALL_DIR/update.sh" ]; then
+        chmod +x "$INSTALL_DIR/update.sh"
+        log SUCCESS "Script de mise à jour configuré"
+    else
+        log WARNING "Script update.sh non trouvé"
+    fi
 
     # Script de configuration du domaine
     cat > "$INSTALL_DIR/configure-domain.sh" << 'DOMAIN_SCRIPT'
@@ -714,9 +720,8 @@ echo -e "${C_SUCCESS}✓ Domaine configuré: https://$NEW_DOMAIN${C_RESET}"
 DOMAIN_SCRIPT
 
     chmod +x "$INSTALL_DIR/configure-domain.sh"
-    log SUCCESS "Script de configuration créé"
+    log SUCCESS "Script de configuration de domaine créé"
 }
-
 ################################################################################
 # FONCTION PRINCIPALE
 ################################################################################

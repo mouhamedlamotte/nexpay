@@ -191,6 +191,13 @@ download_updates() {
 
     log INFO "Mise à jour des fichiers..."
 
+    # Sauvegarder temporairement les certificats SSL
+    local ssl_backup_dir=$(mktemp -d)
+    if [ -d "config/traefik/letsencrypt" ]; then
+        cp -r config/traefik/letsencrypt "$ssl_backup_dir/"
+        log INFO "Certificats SSL temporairement sauvegardés"
+    fi
+
     # Supprimer les anciens fichiers
     rm -rf api config web docker-compose-prod.yml
 
@@ -200,32 +207,35 @@ download_updates() {
     cp -r "$temp_dir/web" .
     cp "$temp_dir/docker-compose-prod.yml" .
 
+    # Créer la structure de répertoires SSL si elle n'existe pas
+    mkdir -p config/traefik/letsencrypt
+
+    # Restaurer les certificats SSL sauvegardés
+    if [ -d "$ssl_backup_dir/letsencrypt" ]; then
+        cp -r "$ssl_backup_dir/letsencrypt/"* config/traefik/letsencrypt/
+        log INFO "Certificats SSL restaurés"
+    fi
+
     # Nettoyer
-    rm -rf "$temp_dir"
+    rm -rf "$temp_dir" "$ssl_backup_dir"
 
     log SUCCESS "Fichiers mis à jour"
 }
-
 restore_ssl_certificates() {
-    log STEP "Restauration des certificats SSL"
+    log STEP "Vérification des certificats SSL"
 
-    # Restaurer acme.json si disponible
-    if [ -f "config/traefik/letsencrypt/acme.json.backup-${DATE}" ]; then
-        cp "config/traefik/letsencrypt/acme.json.backup-${DATE}" config/traefik/letsencrypt/acme.json
+    # S'assurer que la structure existe
+    mkdir -p config/traefik/letsencrypt
+
+    # Vérifier si acme.json existe et est valide
+    if [ -f "config/traefik/letsencrypt/acme.json" ] && [ -s "config/traefik/letsencrypt/acme.json" ]; then
         chmod 600 config/traefik/letsencrypt/acme.json
-        log SUCCESS "Certificats SSL restaurés"
+        log SUCCESS "Certificats SSL existants préservés"
     else
-        # Chercher le backup le plus récent
-        local latest_backup=$(ls -t config/traefik/letsencrypt/acme.json.backup-* 2>/dev/null | head -1)
-        if [ -n "$latest_backup" ]; then
-            cp "$latest_backup" config/traefik/letsencrypt/acme.json
-            chmod 600 config/traefik/letsencrypt/acme.json
-            log SUCCESS "Certificats SSL restaurés depuis backup précédent"
-        else
-            touch config/traefik/letsencrypt/acme.json
-            chmod 600 config/traefik/letsencrypt/acme.json
-            log WARNING "Aucun certificat SSL trouvé - un nouveau sera généré"
-        fi
+        # Créer un fichier vide si nécessaire
+        touch config/traefik/letsencrypt/acme.json
+        chmod 600 config/traefik/letsencrypt/acme.json
+        log WARNING "Nouveau fichier acme.json créé - certificat SSL sera généré automatiquement"
     fi
 }
 
