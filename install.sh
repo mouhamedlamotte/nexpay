@@ -591,7 +591,7 @@ start_services() {
     local pull_pid=$!
     spinner $pull_pid "Téléchargement des images"
 
-    log INFO "Construction et démarrage des containers..."
+    log INFO "Construction et démarrage des containers... (Cela peut prendre quelques minutes, veuillez patienter...)"
     if docker compose -f docker-compose-prod.yml up -d --build >> "$LOG_FILE" 2>&1; then
         log SUCCESS "Services démarrés"
     else
