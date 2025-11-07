@@ -86,7 +86,10 @@ export class ProjectService {
 
   async create(data: CreateProjectDto) {
     try {
-      const callbackUrls = data.callbackUrls;
+      const callbackUrls: {
+        successUrl?: string;
+        failureUrl?: string;
+      } = data.callbackUrls ?? {};
       delete data.callbackUrls;
       const project = await this.prisma.project.create({
         data: {

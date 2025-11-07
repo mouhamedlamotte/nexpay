@@ -56,11 +56,11 @@ export class PaymentsService {
         where: { projectId: data.projectId },
       });
 
-      if (!data.successUrl) {
+      if (!data.successUrl && callbacks) {
         data.successUrl = callbacks.successUrl;
       }
 
-      if (!data.failureUrl) {
+      if (!data.failureUrl && callbacks) {
         data.failureUrl = callbacks.failureUrl;
       }
 

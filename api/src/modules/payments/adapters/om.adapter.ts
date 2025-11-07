@@ -10,6 +10,7 @@ import {
 import { TransactionFactory } from '../helpers/transaction.factory';
 import { OMService } from 'src/modules/providers/services/om.service';
 import { ConfigService } from '@nestjs/config';
+import { AxiosResponse } from 'axios';
 
 interface OMCheckoutParams {
   amount: { value: number; unit: string };
@@ -57,19 +58,25 @@ export class OMAdapder implements PaymentAdapter {
         client_secret,
       });
 
-      const response = await firstValueFrom(
-        this.http.post(
-          `${ORANGE_MONEY_API_URL}/api/eWallet/v4/qrcode`,
-          checkoutParams,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        ),
-      );
+      let response: AxiosResponse;
 
-      if (![200, 201].includes(response.status)) {
-        this.logger.error('Error initiating OM payment', response.data);
-        throw new Error('OM initiation failed');
+      try {
+        response = await firstValueFrom(
+          this.http.post(
+            `${ORANGE_MONEY_API_URL}/api/eWallet/v4/qrcode`,
+            checkoutParams,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          ),
+        );
+        if (![200, 201].includes(response.status)) {
+          this.logger.error('Error initiating OM payment', response.data);
+          throw new Error('OM initiation failed, check your credentials !');
+        }
+      } catch (error) {
+        this.logger.error('Error initiating OM payment', error);
+        throw new Error('OM initiation failed, check your credentials !');
       }
 
       const transaction = await this.transactionFactory.createTransaction({
@@ -98,16 +105,16 @@ export class OMAdapder implements PaymentAdapter {
         checkout_urls: [
           {
             name: 'MaxIt',
-            url: response.data.deepLinks?.MAXIT,
+            url: response.data?.deepLinks?.MAXIT,
             thumb: `${THUMB_URL}/maxit.png`,
           },
           {
             name: 'Orange Money',
-            url: response.data.deepLinks?.OM,
+            url: response.data?.deepLinks?.OM,
             thumb: `${THUMB_URL}/om.png`,
           },
         ],
-        qr_code: { data: response.data.qrCode },
+        qr_code: { data: response.data?.qrCode },
         expiration: transaction.expiresAt?.toISOString(),
       };
     } catch (error) {

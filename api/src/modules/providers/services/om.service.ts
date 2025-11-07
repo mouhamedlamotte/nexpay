@@ -13,11 +13,12 @@ export class OMService {
     @Inject('KEYV') private readonly keyv: Keyv,
   ) {}
 
+  // TODO: HASH THE OM_TOKEN BEFOR STORING IT
+  // ! IMPORTANT !
   async getToken(creds: { client_id: string; client_secret: string }) {
     const cacheKey = `om-token`;
     const cachedToken = await this.keyv.get(cacheKey);
     if (cachedToken) return cachedToken;
-
     this.logger.debug('Fetching new OM access token');
     try {
       const response = await firstValueFrom(
@@ -32,8 +33,6 @@ export class OMService {
           },
         ),
       );
-
-      this.logger.debug('OM access token response', response.data);
 
       const { access_token, expires_in } = response.data;
       this.keyv.set(cacheKey, access_token, expires_in * 1000);
