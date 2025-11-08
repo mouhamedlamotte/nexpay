@@ -1,8 +1,4 @@
-## TASK TODAY
-
-```
-01-01-2025
-```
+TODO
 
 #### API
 
@@ -28,7 +24,11 @@
 - [X] fix : payment status on polling
 - [X] fix : om webhook secret not empty case
 - [X] allow reset config
-- [ ] fix : cannot read property of undefined sucessUrl on om payment
+- [X] fix : cannot read property of undefined sucessUrl on om payment
+- [ ] add wehbook logs
+- [ ] add webhook retry logic
+- [ ] add support request feature
+- [ ] copy a project settings to a new project
 
 #### WEB
 
@@ -45,6 +45,8 @@
 * [X] add paddings to user mangement page
 * [X] change password button deabled if form is not dirty
 * [X] not allow empy sting on scret config
+* [X] add default support page
+* [ ] add suport requests to dashnord page
 
 #### INSTALATION
 

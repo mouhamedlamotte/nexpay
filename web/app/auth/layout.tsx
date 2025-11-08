@@ -1,7 +1,12 @@
-// app/app/organizations/layout.tsx
-"use client";
 
+import { Metadata } from "next";
 import { ReactNode } from "react";
+
+export const metadata: Metadata = {
+  title: "NEXPAY AUTH",
+  description: "Auth for NEXPAY payment gateway",
+}
+
 
 export default function AuthLayout({
   children,
