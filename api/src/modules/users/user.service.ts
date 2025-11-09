@@ -47,9 +47,9 @@ export class UserService implements OnModuleInit {
       update: {},
       create: {
         email: this.env.get('ADMIN_EMAIL'),
-        firstName: '',
+        firstName: 'Default',
         isSuperUser: true,
-        lastName: '',
+        lastName: 'Admin',
         hasDefaultPassword: true,
         password: password,
       },
@@ -60,7 +60,9 @@ export class UserService implements OnModuleInit {
 
   private getUsersFilterConfig(): FilterConfig {
     return {
-      baseWhere: {},
+      baseWhere: {
+        deletedAt: null,
+      },
       allowedFilters: ['isActive'],
       searchConfig: {
         searchFields: ['email', 'firstName', 'lastName'],
