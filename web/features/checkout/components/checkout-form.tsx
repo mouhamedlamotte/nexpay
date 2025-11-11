@@ -229,21 +229,6 @@ export function CheckoutForm({ sessionId }: CheckoutFormProps) {
               </p>
             </div>
           </div>
-          <div className="flex flex-col gap-3">
-            <Button 
-              onClick={() => router.back()} 
-              variant="outline"
-              className="w-full"
-            >
-              Retour
-            </Button>
-            <Button 
-              onClick={() => router.push('/')} 
-              className="w-full"
-            >
-              Retour à l'accueil
-            </Button>
-          </div>
         </div>
       </div>
     );

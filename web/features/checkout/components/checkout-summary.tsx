@@ -70,12 +70,6 @@ export function CheckoutSummary({ session }: CheckoutSummaryProps) {
             </div>
           </div>
         </div>
-
-        <Separator className="bg-border" />
-
-        <div className="text-xs text-muted-foreground inline-flex gap-2">
-          <span className="mt-1">Statut: </span> {getStatusBadge(session.status)}
-        </div>
       </CardContent>
     </Card>
   )

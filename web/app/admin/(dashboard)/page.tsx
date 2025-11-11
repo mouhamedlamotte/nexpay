@@ -26,10 +26,13 @@ import { dashboardApi } from "@/lib/api/dashboard";
 import { useProjectStore } from "@/stores/project.store";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
+import { useAuthStore } from "./stores/auth/auth-store";
 
 const Dashboard = () => {
   const projectId = useProjectStore((state) => state.currentProject?.id!);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'| '1d'>('7d');
+  const user = useAuthStore((state) => state.user);
 
   const { data } = useQuery({
     queryKey: ["dashboard", timeRange],
@@ -78,7 +81,7 @@ const Dashboard = () => {
       <div className="md:flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-white">
-            Dashboard
+            Hello, {user?.firstName || user?.email }
           </h2>
           <p className="text-gray-400 mt-1">Vue d'ensemble de votre activité</p>
         </div>
@@ -214,10 +217,12 @@ const Dashboard = () => {
                 <div key={provider.name} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <div
-                        className={`w-3 h-3 rounded-full ${getProviderColor(
-                          provider.code
-                        )}`}
+                      <Image
+                        src={provider.logoUrl || ''}
+                        alt={provider.name}
+                        width={20}
+                        height={20}
+                        className="rounded-full"
                       />
                       <span className="text-sm font-medium text-white">
                         {provider.name}
