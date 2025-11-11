@@ -15,4 +15,4 @@ http:
         servers:
           # For docker, use: http://nexpay-api:9000
           # For live update (run api with `pnpm dev`) , use: http://host.docker.internal:3000
-          - url: "http://nexpay-api:9000"
+          - url: "http://host.docker.internal:9000"

@@ -19,7 +19,7 @@ model Session {
     clientReference String? @map("client_reference")
 
     projectId String
-    project   Project @relation(fields: [projectId], references: [id] ,  onDelete: NoAction)
+    project   Project @relation(fields: [projectId], references: [id] ,  onDelete: Cascade)
 
     expiresAt DateTime @map("expires_at")
 
