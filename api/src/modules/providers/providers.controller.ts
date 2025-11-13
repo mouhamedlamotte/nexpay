@@ -7,7 +7,6 @@ import {
   Param,
   Put,
   Query,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ProvidersService } from './providers.service';
@@ -21,7 +20,6 @@ import {
 import { UpdatePaymentProviderSecretsDto } from './dto/update-payment-provider.dto';
 import { GetPaymentProviderDto } from './dto/get-payment-provider.dto';
 import { JwtAuthGuard } from 'src/guards/auth/jwt/jwt.guard';
-import { TestPaymentDto } from './dto/test-payment.dto';
 
 @ApiTags('Providers')
 @Controller('/providers')
@@ -83,27 +81,6 @@ export class ProvidersController {
     return {
       statusCode: HttpStatus.OK,
       message: 'Le payment provider a été mis à jour avec succès.',
-      data: res,
-    };
-  }
-
-  @ApiOperation({ summary: 'Test a payment provider' })
-  @ApiResponse({
-    status: 200,
-    description: 'The test has been successfully done.',
-  })
-  @ApiBody({ type: TestPaymentDto })
-  @HttpCode(HttpStatus.OK)
-  @Put('/:code/test')
-  async testSecret(
-    @Body() dto: TestPaymentDto,
-    @Param('code') code: string,
-    @Req() req: any,
-  ) {
-    const res = await this.service.testSecret(req.user.id, code, dto);
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'Le test est passé avec succès.',
       data: res,
     };
   }

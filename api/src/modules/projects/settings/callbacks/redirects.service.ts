@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { LoggerService, PrismaService } from 'src/lib';
 import { CallBacksDto } from './dto/callbacks.dto';
+import { CallbackUrls } from './interface';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CallbacksService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
+    private readonly config: ConfigService,
   ) {
     this.logger.setContext(CallbacksService.name);
   }
@@ -53,5 +56,38 @@ export class CallbacksService {
       this.logger.error('Error updating redirect config', error);
       throw error;
     }
+  }
+
+  async getCallbackUrls(projectId: string): Promise<CallbackUrls> {
+    const callbacks = await this.prisma.callback.findUnique({
+      where: { projectId },
+      select: { successUrl: true, failureUrl: true },
+    });
+
+    return {
+      successUrl: callbacks?.successUrl ?? undefined,
+      failureUrl: callbacks?.failureUrl ?? undefined,
+    };
+  }
+
+  mergeCallbackUrls(
+    dtoUrls: CallbackUrls,
+    defaultUrls: CallbackUrls,
+  ): CallbackUrls {
+    const APP_URL = this.config.get('app.url');
+    const defaultSystemUrls = {
+      successUrl: `${APP_URL}/checkout/success`,
+      failureUrl: `${APP_URL}/checkout/failed`,
+    };
+    return {
+      successUrl:
+        dtoUrls.successUrl ||
+        defaultUrls.successUrl ||
+        defaultSystemUrls.successUrl,
+      failureUrl:
+        dtoUrls.failureUrl ||
+        defaultUrls.failureUrl ||
+        defaultSystemUrls.failureUrl,
+    };
   }
 }

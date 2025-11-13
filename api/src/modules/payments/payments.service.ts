@@ -6,6 +6,7 @@ import { randomUUID } from 'crypto';
 import { HashService, PrismaService } from 'src/lib';
 import { LoggerService } from 'src/lib/services/logger.service';
 import { PaymentAdapter } from './adapters/interface';
+import { CallbacksService } from '../projects/settings/callbacks/redirects.service';
 
 @Injectable()
 export class PaymentsService {
@@ -17,6 +18,7 @@ export class PaymentsService {
     private readonly wave: WaveAdapter,
     private readonly om: OMAdapder,
     private readonly hash: HashService,
+    private readonly callbackService: CallbacksService,
   ) {
     this.logger.setContext(PaymentsService.name);
     this.adapters = {
@@ -52,17 +54,16 @@ export class PaymentsService {
       const adapter = this.adapters[provider.code];
       if (!adapter) throw new NotFoundException('Provider not supported');
 
-      const callbacks = await this.prisma.callback.findUnique({
-        where: { projectId: data.projectId },
-      });
+      const defaultCallbacks = await this.callbackService.getCallbackUrls(
+        data.projectId,
+      );
+      const callbacks = this.callbackService.mergeCallbackUrls(
+        data,
+        defaultCallbacks,
+      );
 
-      if (!data.successUrl && callbacks) {
-        data.successUrl = callbacks.successUrl;
-      }
-
-      if (!data.failureUrl && callbacks) {
-        data.failureUrl = callbacks.failureUrl;
-      }
+      data.successUrl = callbacks.successUrl;
+      data.failureUrl = callbacks.failureUrl;
 
       return adapter.initiate({
         ...data,

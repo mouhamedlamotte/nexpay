@@ -9,9 +9,7 @@ import { UpdatePaymentProviderSecretsDto } from './dto/update-payment-provider.d
 import { FilterConfig, FilterService } from 'src/lib/services/filter.service';
 import { PaginationService } from 'src/lib/services/pagination.service';
 import { GetPaymentProviderDto } from './dto/get-payment-provider.dto';
-import { InitiatePaymentDto } from 'src/modules/payments/dto/initiate-payment.dto';
-import { TestPaymentDto } from './dto/test-payment.dto';
-import { SessionPayemtService } from 'src/modules/payments/session/session.service';
+import { PaymentProviderInfo } from './interface';
 
 @Injectable()
 export class ProvidersService {
@@ -21,7 +19,6 @@ export class ProvidersService {
     private readonly hash: HashService,
     private readonly pagination: PaginationService,
     private readonly filter: FilterService,
-    private readonly sessionService: SessionPayemtService,
   ) {
     this.logger.setContext(ProvidersService.name);
   }
@@ -144,45 +141,6 @@ export class ProvidersService {
     });
   }
 
-  async testSecret(userId: string, code: string, dto: TestPaymentDto) {
-    try {
-      const user = await this.prisma.user.findUnique({ where: { id: userId } });
-
-      const data: InitiatePaymentDto = {
-        ...dto,
-        email: user.email,
-        name: user.firstName + ' ' + user.lastName,
-        userId: user.id,
-        provider: code,
-      };
-
-      if (!user) throw new NotFoundException('User not found');
-      const session = await this.sessionService.initiateSessionPayment(data);
-      try {
-        const checkout = await this.sessionService.checkoutSessionPayment(
-          session.sessionId,
-          { provider: code },
-        );
-        if (checkout) {
-          await this.prisma.paymentProvider.update({
-            where: { code },
-            data: { hasValidSecretConfig: true, hastSecretTestPassed: true },
-          });
-          return session;
-        }
-      } catch (error) {
-        await this.prisma.paymentProvider.update({
-          where: { code },
-          data: { hastSecretTestPassed: false },
-        });
-        throw error;
-      }
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
-    }
-  }
-
   async getProviderByCode(code: string) {
     return this.handleError(() =>
       this.prisma.paymentProvider.findUnique({ where: { code } }),
@@ -193,5 +151,24 @@ export class ProvidersService {
     return this.handleError(() =>
       this.prisma.paymentProvider.findUnique({ where: { id } }),
     );
+  }
+
+  async getActiveProviders(): Promise<PaymentProviderInfo[]> {
+    return this.prisma.paymentProvider.findMany({
+      where: { isActive: true, hasValidSecretConfig: true },
+      select: { id: true, name: true, code: true, logoUrl: true },
+    });
+  }
+
+  async validateActiveProvidersExist(): Promise<void> {
+    const count = await this.prisma.paymentProvider.count({
+      where: { isActive: true },
+    });
+
+    if (count === 0) {
+      throw new NotFoundException(
+        'No payment provider is active for this app. Please add and activate configuration for your payment provider.',
+      );
+    }
   }
 }

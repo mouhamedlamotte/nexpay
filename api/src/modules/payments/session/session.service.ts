@@ -4,99 +4,61 @@ import { InitiateSessionPaymentDto } from './dto/initiate-session-payment.dto';
 import { ConfigService } from '@nestjs/config';
 import { CheckoutSessionPaymentDto } from './dto/CheckoutSessionPaymentDto';
 import { PaymentsService } from '../payments.service';
-
-export interface SessionPaymenResponse {
-  sessionId: string;
-  checkoutUrl: string;
-  status: SessionStatus;
-  expiresAt: Date;
-}
+import { SessionRepository } from './session.repository';
+import { PaymentDataService } from './payment-data.service';
+import { CallbacksService } from 'src/modules/projects/settings/callbacks/redirects.service';
+import { PayerService } from 'src/modules/projects/transactions/payer.service';
+import { ProvidersService } from 'src/modules/providers/providers.service';
+import { SessionPaymentResponse, SessionStatusResponse } from './interfaces';
+import { SESSION_CONSTANTS } from 'src/lib/constants/session-payment.constants';
+import { InitiatePaymentDto } from '../dto/initiate-payment.dto';
+import { TestSessionPaymentDto } from 'src/modules/payments/session/dto/test-session-payment.dto';
 
 @Injectable()
-export class SessionPayemtService {
+export class SessionPaymentService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
     private readonly env: ConfigService,
     private readonly payment: PaymentsService,
+    private readonly callbackService: CallbacksService,
+    private readonly payerService: PayerService,
+    private readonly providerService: ProvidersService,
+    private readonly sessionRepo: SessionRepository,
+    private readonly paymentDataService: PaymentDataService,
   ) {
-    this.logger.setContext(SessionPayemtService.name);
+    this.logger.setContext(SessionPaymentService.name);
   }
 
   async initiateSessionPayment(
     dto: InitiateSessionPaymentDto,
-  ): Promise<SessionPaymenResponse> {
+  ): Promise<SessionPaymentResponse> {
     try {
-      const project = await this.prisma.project.findUnique({
-        where: { id: dto.projectId },
-      });
-      if (!project) {
-        throw new NotFoundException('This project does not exist');
-      }
+      await this.validateProject(dto.projectId);
 
-      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      await this.providerService.validateActiveProvidersExist();
 
-      const payerData = {
+      const payer = await this.payerService.upsertPayer({
         name: dto.name,
         email: dto.email,
         userId: dto.userId,
-      };
-      const payer = await this.prisma.payer.upsert({
-        where: {
-          phone: dto.phone,
-        },
-        update: payerData,
-        create: {
-          ...payerData,
-          phone: dto.phone,
-        },
+        phone: dto.phone,
       });
 
-      const appHasActivePaymentProvider =
-        await this.prisma.paymentProvider.count({
-          where: {
-            isActive: true,
-          },
-        });
-
-      if (appHasActivePaymentProvider === 0) {
-        throw new NotFoundException(
-          'No payment provider is active for this app, please add and activate configation for your payment provider',
-        );
-      }
-
-      const callbacks = await this.prisma.callback.findUnique({
-        where: { projectId: dto.projectId },
+      // Create session
+      const expiresAt = new Date(
+        Date.now() + SESSION_CONSTANTS.EXPIRATION_TIME_MS,
+      );
+      const session = await this.sessionRepo.createSession({
+        amount: dto.amount,
+        currency: dto.currency,
+        expiresAt,
+        clientReference: dto.client_reference,
+        projectId: dto.projectId,
+        payerId: payer.id,
       });
 
-      if (!dto.successUrl && callbacks && callbacks.successUrl) {
-        dto.successUrl = callbacks.successUrl;
-      }
-
-      if (!dto.failureUrl && callbacks && callbacks.failureUrl) {
-        dto.failureUrl = callbacks.failureUrl;
-      }
-
-      const session = await this.prisma.session.create({
-        data: {
-          amount: dto.amount,
-          currency: dto.currency,
-          expiresAt,
-          clientReference: dto.client_reference,
-          project: {
-            connect: {
-              id: dto.projectId,
-            },
-          },
-          payer: {
-            connect: {
-              id: payer.id,
-            },
-          },
-        },
-      });
-
-      const checkoutUrl = `${this.env.get('app.url')}/checkout/${session.id}`;
+      const checkoutUrl = this.buildCheckoutUrl(session.id);
 
       return {
         sessionId: session.id,
@@ -110,47 +72,30 @@ export class SessionPayemtService {
     }
   }
 
-  async getSession(id: string, selectExpired: boolean = false) {
+  async getSession(id: string, selectExpired = false) {
     try {
-      const session = await this.prisma.session.findUnique({
-        where: {
-          id,
-          expiresAt: selectExpired ? undefined : { gt: new Date() },
-          status: {
-            in: [SessionStatus.opened, SessionStatus.pending],
-          },
-        },
-        include: {
-          payer: true,
-          project: true,
-        },
-      });
+      const session = await this.sessionRepo.findActiveSession(
+        id,
+        selectExpired,
+      );
+
       if (!session) {
         throw new NotFoundException('Checkout session not found or expired');
       }
 
-      let paymentData;
-      if (session.paymentData) {
-        paymentData = JSON.parse(session.paymentData);
-      }
+      const paymentData = this.paymentDataService.parsePaymentData(
+        session.paymentData,
+      );
 
-      if (
-        paymentData &&
-        paymentData.expiration &&
-        new Date(paymentData.expiration) < new Date()
-      ) {
+      if (this.paymentDataService.isPaymentDataExpired(paymentData)) {
+        await this.sessionRepo.updateSession(id, { paymentData: null });
         session.paymentData = null;
-        await this.prisma.session.update({
-          where: { id },
-          data: { paymentData: null },
-        });
       }
 
-      const providers = await this.prisma.paymentProvider.findMany({
-        where: { isActive: true, hasValidSecretConfig: true },
-        select: { id: true, name: true, code: true, logoUrl: true },
-      });
-      const checkoutUrl = `${this.env.get('app.url')}/checkout/${session.id}`;
+      const providers = await this.providerService.getActiveProviders();
+
+      const checkoutUrl = this.buildCheckoutUrl(session.id);
+
       return {
         ...session,
         checkoutUrl,
@@ -167,37 +112,26 @@ export class SessionPayemtService {
     dto: CheckoutSessionPaymentDto,
   ) {
     try {
-      const session = await this.prisma.session.findUnique({
-        where: {
-          id: sessionId,
-          status: {
-            in: [SessionStatus.opened, SessionStatus.pending],
-          },
-          expiresAt: { gt: new Date() },
-        },
-        include: {
-          payer: true,
-          project: true,
-        },
-      });
+      const session = await this.sessionRepo.findActiveSession(sessionId);
+
       if (!session) {
         throw new NotFoundException('Checkout session not found or expired');
       }
 
-      let paymentData;
-      if (session.paymentData) {
-        paymentData = JSON.parse(session.paymentData);
-      }
+      const existingPaymentData = this.paymentDataService.parsePaymentData(
+        session.paymentData,
+      );
 
       if (
-        paymentData &&
-        paymentData.expiration &&
-        new Date(paymentData.expiration) > new Date() &&
-        paymentData.provider?.code === dto.provider
+        this.paymentDataService.isPaymentDataValid(
+          existingPaymentData,
+          dto.provider,
+        )
       ) {
-        return paymentData;
+        return existingPaymentData;
       }
-      paymentData = await this.payment.initiatePayment(
+
+      const paymentData = await this.payment.initiatePayment(
         {
           ...dto,
           amount: Number(session.amount),
@@ -212,57 +146,43 @@ export class SessionPayemtService {
         sessionId,
       );
 
-      const callbacks = await this.prisma.callback.findUnique({
-        where: { projectId: session.projectId },
-      });
+      const defaultCallbacks = await this.callbackService.getCallbackUrls(
+        session.projectId,
+      );
+      const callbacks = this.callbackService.mergeCallbackUrls(
+        dto,
+        defaultCallbacks,
+      );
 
-      if (!dto.successUrl && callbacks && callbacks.successUrl) {
-        dto.successUrl = callbacks.successUrl;
-      }
-
-      if (!dto.failureUrl && callbacks && callbacks.failureUrl) {
-        dto.failureUrl = callbacks.failureUrl;
-      }
-      await this.prisma.session.update({
-        where: {
-          id: sessionId,
-        },
-        data: {
-          status: SessionStatus.pending,
-          paymentData: JSON.stringify(paymentData),
-          successUrl: dto.successUrl,
-          failureUrl: dto.failureUrl,
-        },
+      await this.sessionRepo.updateSession(sessionId, {
+        status: SessionStatus.pending,
+        paymentData: this.paymentDataService.serializePaymentData(paymentData),
+        successUrl: callbacks.successUrl,
+        failureUrl: callbacks.failureUrl,
       });
 
       return paymentData;
     } catch (error) {
-      this.logger.error('Error fetching session', error);
+      this.logger.error('Error processing checkout session payment', error);
       throw error;
     }
   }
 
-  async waitSessionPaymentStatus(id: string): Promise<{
-    sessionId: string;
-    status: SessionStatus;
-    redirectUrl: string | null;
-  }> {
+  async waitSessionPaymentStatus(id: string): Promise<SessionStatusResponse> {
     try {
-      const start = new Date();
-      const timeout = 30000;
+      const startTime = Date.now();
 
-      while (Date.now() - start.getTime() < timeout) {
-        const session = await this.prisma.session.findUnique({
-          where: {
-            id,
-          },
-        });
+      while (
+        Date.now() - startTime <
+        SESSION_CONSTANTS.STATUS_POLL_TIMEOUT_MS
+      ) {
+        const session = await this.sessionRepo.findSessionById(id);
 
         if (!session) {
-          throw new NotFoundException('Checkout session not found or expired');
+          throw new NotFoundException('Checkout session not found');
         }
 
-        if (session.status !== 'pending') {
+        if (session.status !== SessionStatus.pending) {
           return {
             sessionId: session.id,
             status: session.status,
@@ -274,7 +194,7 @@ export class SessionPayemtService {
           };
         }
 
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await this.sleep(SESSION_CONSTANTS.STATUS_POLL_INTERVAL_MS);
       }
 
       return {
@@ -283,18 +203,78 @@ export class SessionPayemtService {
         redirectUrl: null,
       };
     } catch (error) {
-      this.logger.error('Error fetching session', error);
+      this.logger.error('Error waiting for session payment status', error);
       throw error;
     }
   }
 
-  getRedirectUrl(
+  private async validateProject(projectId: string): Promise<void> {
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      throw new NotFoundException('This project does not exist');
+    }
+  }
+
+  private buildCheckoutUrl(sessionId: string): string {
+    return `${this.env.get('app.url')}/checkout/${sessionId}`;
+  }
+
+  private getRedirectUrl(
     status: SessionStatus,
-    failureUrl: string,
-    successUrl: string,
-  ) {
-    if (status === 'failed') return failureUrl;
-    if (status === 'completed') return successUrl;
+    failureUrl: string | null,
+    successUrl: string | null,
+  ): string | null {
+    if (status === SessionStatus.failed) return failureUrl;
+    if (status === SessionStatus.completed) return successUrl;
     return null;
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async testSessionPayment(
+    userId: string,
+    code: string,
+    dto: TestSessionPaymentDto,
+  ) {
+    try {
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
+      const data: InitiatePaymentDto = {
+        ...dto,
+        email: user.email,
+        name: user.firstName + ' ' + user.lastName,
+        userId: user.id,
+        provider: code,
+      };
+
+      if (!user) throw new NotFoundException('User not found');
+      const session = await this.initiateSessionPayment(data);
+      try {
+        const checkout = await this.checkoutSessionPayment(session.sessionId, {
+          provider: code,
+        });
+        if (checkout) {
+          await this.prisma.paymentProvider.update({
+            where: { code },
+            data: { hasValidSecretConfig: true, hastSecretTestPassed: true },
+          });
+          return session;
+        }
+      } catch (error) {
+        await this.prisma.paymentProvider.update({
+          where: { code },
+          data: { hastSecretTestPassed: false },
+        });
+        throw error;
+      }
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
   }
 }

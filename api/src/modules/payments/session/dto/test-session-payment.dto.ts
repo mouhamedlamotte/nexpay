@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsString } from 'class-validator';
 
-export class TestPaymentDto {
+export class TestSessionPaymentDto {
   @ApiProperty({
     example: 5000,
     required: true,

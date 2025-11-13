@@ -7,14 +7,15 @@ import {
   Get,
   Param,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import {
+  ApiBody,
   ApiOperation,
   ApiResponse,
   ApiSecurity,
   ApiTags,
 } from '@nestjs/swagger';
-import { SessionPayemtService } from './session.service';
 import { InitiateSessionPaymentDto } from './dto/initiate-session-payment.dto';
 import { CheckoutSessionPaymentDto } from './dto/CheckoutSessionPaymentDto';
 import {
@@ -27,17 +28,20 @@ import {
   ApiKeyPermission,
   RequireApiKey,
 } from 'src/guards/api-key.guard';
+import { SessionPaymentService } from './session.service';
+import { JwtAuthGuard } from 'src/guards/auth';
+import { TestSessionPaymentDto } from './dto/test-session-payment.dto';
 
 @ApiTags('Payment > Session')
 @Controller('payment/session')
 @ApiSecurity('api_key', ['x-api-key'])
-@UseGuards(ApiKeyGuard)
 export class SessionPaymentController {
-  constructor(private readonly service: SessionPayemtService) {}
+  constructor(private readonly service: SessionPaymentService) {}
 
   @Post('/initiate')
   @HttpCode(HttpStatus.CREATED)
   @RequireApiKey(ApiKeyPermission.WRITE)
+  @UseGuards(ApiKeyGuard)
   @ApiOperation({ summary: 'Initiate a new payment session' })
   @ApiResponse({
     status: 201,
@@ -57,6 +61,7 @@ export class SessionPaymentController {
   @Get('/:id')
   @HttpCode(HttpStatus.OK)
   @RequireApiKey(ApiKeyPermission.READ, ApiKeyPermission.WRITE)
+  @UseGuards(ApiKeyGuard)
   @ApiOperation({ summary: 'Get a payment session' })
   @ApiResponse({
     status: 201,
@@ -76,6 +81,7 @@ export class SessionPaymentController {
   @Post('/:id/checkout')
   @HttpCode(HttpStatus.OK)
   @RequireApiKey(ApiKeyPermission.READ, ApiKeyPermission.WRITE)
+  @UseGuards(ApiKeyGuard)
   @ApiOperation({ summary: 'Checkout a payment session' })
   @ApiResponse({
     status: 201,
@@ -98,6 +104,7 @@ export class SessionPaymentController {
   @Post('/:id/status')
   @HttpCode(HttpStatus.OK)
   @RequireApiKey(ApiKeyPermission.READ, ApiKeyPermission.WRITE)
+  @UseGuards(ApiKeyGuard)
   @ApiOperation({ summary: 'Check status of a payment session' })
   @ApiResponse({
     status: 200,
@@ -114,6 +121,28 @@ export class SessionPaymentController {
     return {
       statusCode: HttpStatus.OK,
       message: 'Payment status data successfully fetched',
+      data: res,
+    };
+  }
+
+  @ApiOperation({ summary: 'Test a payment provider' })
+  @ApiResponse({
+    status: 200,
+    description: 'The test has been successfully done.',
+  })
+  @ApiBody({ type: TestSessionPaymentDto })
+  @HttpCode(HttpStatus.OK)
+  @Post('providers/:code/test')
+  @UseGuards(JwtAuthGuard())
+  async testSecret(
+    @Body() dto: TestSessionPaymentDto,
+    @Param('code') code: string,
+    @Req() req: any,
+  ) {
+    const res = await this.service.testSessionPayment(req.user.id, code, dto);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Le test est passé avec succès.',
       data: res,
     };
   }

@@ -31,18 +31,26 @@ export class WaveAdapter implements PaymentAdapter {
   }
 
   async initiate(data: PaymentInitiationData): Promise<PaymentResponse> {
+    const APP_URL = this.config.get('app.url');
     try {
-      const APP_URL = this.config.get('app.url');
-
-      const success_url = data.successUrl ?? `${APP_URL}/success`;
-      const error_url = data.failureUrl ?? `${APP_URL}/failed`;
       const checkoutParams: WaveCheckoutParams = {
         amount: data.amount.toString(),
         currency: data.currency,
         client_reference: data.reference,
-        success_url,
-        error_url,
+        success_url: data.successUrl,
+        error_url: data.failureUrl,
       };
+
+      if (
+        checkoutParams.success_url &&
+        checkoutParams.success_url?.includes('localhost')
+      ) {
+        checkoutParams.success_url = 'https://exemple.com/success';
+      }
+
+      if (data.failureUrl && data.failureUrl?.includes('localhost')) {
+        checkoutParams.error_url = 'https://exemple.com/failure';
+      }
 
       const { api_key } = data.secrets;
 

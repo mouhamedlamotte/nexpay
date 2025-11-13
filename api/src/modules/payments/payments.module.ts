@@ -15,6 +15,8 @@ import {
   WebhookValidatorFactory,
 } from 'src/lib/validators';
 import { OMService } from 'src/modules/providers/services/om.service';
+import { PayerService } from '../projects/transactions/payer.service';
+import { CallbacksService } from '../projects/settings/callbacks/redirects.service';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { OMService } from 'src/modules/providers/services/om.service';
     WebhookService,
     TransactionsService,
     OMService,
+    PayerService,
+    CallbacksService,
 
     // Adapters
     WaveAdapter,

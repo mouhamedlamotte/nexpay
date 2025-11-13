@@ -58,7 +58,7 @@ export const providersApi = {
   },
 
   testPayment: async (code: string, dto: TestPaymentDto) => {
-    const { data } = await apiClient.put<ApiResponse<TestPaymentResponse>>(`/providers/${code}/test`, dto)
+    const { data } = await apiClient.post<ApiResponse<TestPaymentResponse>>(`/payment/session/providers/${code}/test`, dto)
     return data
   },
 
