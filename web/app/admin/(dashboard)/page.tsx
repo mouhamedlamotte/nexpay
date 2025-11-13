@@ -28,6 +28,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useAuthStore } from "./stores/auth/auth-store";
+import { toast } from "sonner";
 
 const Dashboard = () => {
   const projectId = useProjectStore((state) => state.currentProject?.id!);
@@ -38,6 +39,21 @@ const Dashboard = () => {
     queryKey: ["dashboard", timeRange],
     queryFn: () => dashboardApi.get(projectId, { timeRange }),
   });
+
+ const getPercent = (value: number | undefined) => {
+  if (!value){
+    return 0
+  }
+   if (value > 100){
+     return 100
+   }
+
+   if (value < -100){
+     return value
+   }
+   return value
+ }
+  
 
   const handleTimeRangeChange = (range: '7d' | '30d' | '90d'| '1d') => {
     setTimeRange(range);
@@ -142,7 +158,7 @@ const Dashboard = () => {
                   <ArrowDownRight className="text-red-500 h-3 w-3 mr-1" />
                 )
               }
-              <span className={cn(data?.stats?.growth?.volume && data?.stats?.growth?.volume > 0 ? 'text-green-500' : 'text-red-500')}>{data?.stats?.growth?.volume} % vs période précédente</span>
+              <span className={cn(data?.stats?.growth?.volume && data?.stats?.growth?.volume > 0 ? 'text-green-500' : 'text-red-500')}>{getPercent(data?.stats?.growth?.volume)} % vs période précédente</span>
             </div>
           </CardContent>
         </Card>
@@ -167,7 +183,7 @@ const Dashboard = () => {
                 )
               }
               <span className={cn(data?.stats?.growth?.transactions && data?.stats?.growth?.transactions > 0 ? 'text-green-500' : 'text-red-500')}>
-                {data?.stats?.growth?.transactions} % vs période précédente
+                {getPercent(data?.stats?.growth?.transactions)} % vs période précédente
               </span>
             </div>
           </CardContent>
@@ -182,7 +198,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {data?.stats?.successRate}%
+              {getPercent(data?.stats?.successRate)}%
             </div>
             <div className="flex items-center text-xs  mt-1">
               {
@@ -193,7 +209,7 @@ const Dashboard = () => {
                 )
               }
               <span className={cn(data?.stats?.growth?.successRate && data?.stats?.growth?.successRate > 0 ? 'text-green-500' : 'text-red-500')}>
-                {data?.stats?.growth?.successRate} % vs période précédente
+                {getPercent(data?.stats?.growth?.successRate)} % vs période précédente
               </span>
             </div>
           </CardContent>

@@ -24,6 +24,8 @@ export class WebhookAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
+
+    // * NOTE :  WE USE A DECORATOR TO PASS THE PROVIDER CODE
     const providerCode = this.reflector.get<string>(
       WEBHOOK_PROVIDER,
       context.getHandler(),
