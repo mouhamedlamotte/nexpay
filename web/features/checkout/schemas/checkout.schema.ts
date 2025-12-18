@@ -10,6 +10,19 @@ export const PayerSchema = z.object({
   metadata: z.record(z.any()).nullable(),
 })
 
+export const ItemSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  unitPrice: z.number().min(0),
+  quantity: z.number().min(1),
+  subtotal: z.number().min(0),
+  taxRate: z.number().min(0).nullable(),
+  taxAmount: z.number().min(0).nullable(),
+  discount: z.number().min(0).nullable(),
+  total: z.number().min(0),
+  sessionId: z.string().nullable(),
+})
+
 export const ProvidersSchema = z.object({
     id: z.string(),
     name: z.string(),
@@ -43,6 +56,7 @@ export const CheckoutSessionSchema = z.object({
   updatedAt: z.string(),
   payer: PayerSchema,
   project: ProjectSchema,
+  items: ItemSchema.array(),
   providers: ProvidersSchema.array(),
   checkoutUrl: z.string(),
 })
@@ -105,3 +119,4 @@ export type CheckoutUrl = z.infer<typeof CheckoutUrlSchema>
 export type Payer = z.infer<typeof PayerSchema>
 export type Project = z.infer<typeof ProjectSchema>
 export type Providers = z.infer<typeof ProvidersSchema>
+export type Item = z.infer<typeof ItemSchema>
