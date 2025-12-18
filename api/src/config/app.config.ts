@@ -8,7 +8,7 @@ export default registerAs('app', () => ({
   domain: process.env.APP_DOMAIN,
   globalPrefix: process.env.GLOBAL_PREFIX,
   url:
-    `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${process.env.APP_DOMAIN}:${process.env.APP_PORT}` ||
+    `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${process.env.APP_DOMAIN}:9090` ||
     'http://localhost:9000',
 
   security: {
