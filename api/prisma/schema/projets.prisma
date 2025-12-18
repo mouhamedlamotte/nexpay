@@ -4,47 +4,46 @@ model Project {
 
   isDefault Boolean @default(false)
 
-
   description String?
 
-  metadata     Json?
+  metadata Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  webhooks  Webhook[]
+  webhooks Webhook[]
   callback Callback?
 
   transactions Transaction[]
-  sessions Session[]
+  sessions     Session[]
 
   @@map("projects")
 }
 
 model Webhook {
-  id        String   @id @default(cuid())
-  url       String
+  id          String   @id @default(cuid())
+  url         String
   description String?
-  secret    String?
-  header    String?
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  events    String[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  secret      String?
+  header      String?
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  events      String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 
   @@unique([projectId, url])
   @@map("webhooks")
 }
 
 model Callback {
-  id        String   @id @default(cuid())
+  id         String   @id @default(cuid())
   successUrl String?
   failureUrl String?
-  projectId String @unique
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  projectId  String   @unique
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
 
   @@map("callbacks")
 }

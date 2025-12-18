@@ -7,7 +7,7 @@ export class CreateWebhooksConfigDto {
     example: 'https://example.com/success',
   })
   @IsString()
-  @IsUrl()
+  // @IsUrl()
   url: string;
 
   @ApiPropertyOptional({

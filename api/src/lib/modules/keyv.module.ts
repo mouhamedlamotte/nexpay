@@ -13,7 +13,7 @@ import { CACHE_TTL } from '../constants/cache.constants';
       useFactory: async (configService: ConfigService) => {
         const redisUrl = configService.get(
           'REDIS_URI',
-          'redis://localhost:6379',
+          'redis://localhost:63791',
         );
         const keyvRedis = new KeyvRedis(redisUrl);
         const keyv = new Keyv({

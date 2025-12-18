@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Currency, PrismaService, SessionStatus } from 'src/lib';
+import { Currency, Prisma, PrismaService, SessionStatus } from 'src/lib';
 import { SESSION_STATUSES } from 'src/lib/constants/session-payment.constants';
+import { SessionItemsDto } from './dto/initiate-session-payment.dto';
 
 @Injectable()
 export class SessionRepository {
@@ -13,7 +14,26 @@ export class SessionRepository {
     clientReference?: string;
     projectId: string;
     payerId: string;
+    items: SessionItemsDto[];
   }) {
+    const itemsData = data.items?.map((item) => {
+      const subtotal = item.unitPrice * item.quantity;
+      const taxAmount = item.taxRate ? (subtotal * item.taxRate) / 100 : 0;
+
+      const total = subtotal + taxAmount - (item.discount ?? 0);
+
+      return {
+        label: item.label,
+        unitPrice: new Prisma.Decimal(item.unitPrice),
+        quantity: new Prisma.Decimal(item.quantity),
+        subtotal: new Prisma.Decimal(subtotal),
+        taxRate: item.taxRate ? new Prisma.Decimal(item.taxRate) : null,
+        taxAmount: taxAmount ? new Prisma.Decimal(taxAmount) : null,
+        discount: item.discount ? new Prisma.Decimal(item.discount) : null,
+        total: new Prisma.Decimal(total),
+      };
+    });
+
     return this.prisma.session.create({
       data: {
         amount: data.amount,
@@ -22,6 +42,12 @@ export class SessionRepository {
         clientReference: data.clientReference,
         project: { connect: { id: data.projectId } },
         payer: { connect: { id: data.payerId } },
+        items: { create: itemsData },
+      },
+      include: {
+        payer: true,
+        project: true,
+        items: true,
       },
     });
   }
@@ -36,6 +62,7 @@ export class SessionRepository {
       include: {
         payer: true,
         project: true,
+        items: true,
       },
     });
   }

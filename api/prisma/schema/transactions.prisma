@@ -12,7 +12,6 @@ enum Currency {
   NZD
 }
 
-
 enum TransactionStatus {
   PENDING
   SUCCEEDED
@@ -31,14 +30,13 @@ model Payer {
   id           String        @id @default(cuid())
   name         String?
   email        String?
-  phone        String @unique
+  phone        String        @unique
   userId       String?
   metadata     Json?
   transactions Transaction[]
 
   sessions Session[]
 }
-
 
 model Transaction {
   id String @id @default(cuid())
@@ -51,7 +49,6 @@ model Transaction {
   payerId String? @map("payer_id")
   payer   Payer?  @relation(fields: [payerId], references: [id])
 
-
   reference       String  @unique
   clientReference String? @map("client_reference")
 
@@ -62,7 +59,7 @@ model Transaction {
   projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  idempotencyKey String? @unique @default(cuid()) @map("idempotency_key")
+  idempotencyKey String?          @unique @default(cuid()) @map("idempotency_key")
   type           TransactionType? @default(PAYMENT)
 
   metadata Json?
@@ -73,7 +70,7 @@ model Transaction {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  sessionId String? @map("session_id") @unique
+  sessionId String?  @unique @map("session_id")
   session   Session? @relation(fields: [sessionId], references: [id])
 
   @@index([payerId, providerId, providerTransactionId, reference])

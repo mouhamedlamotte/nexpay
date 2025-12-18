@@ -32,45 +32,43 @@ model PaymentProvider {
 
   secretsFields String[] @map("secrets_fields") // eg: ['client_id', 'client_secret', 'name', 'code']
 
-  hasValidSecretConfig Boolean @default(false)
-  hastSecretTestPassed Boolean @default(false)
+  hasValidSecretConfig  Boolean @default(false)
+  hastSecretTestPassed  Boolean @default(false)
   hasValidWebhookConfig Boolean @default(false)
-  hasWebhookTestPassed Boolean @default(false)
+  hasWebhookTestPassed  Boolean @default(false)
 
   secrets String? @db.Text // eg. '{ "client_id": "xxx", "client_secret": "xxx" }'
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  transactions Transaction[]
+  transactions  Transaction[]
   webhookConfig ProviderWebhook?
 
   @@map("payment_providers")
 }
 
-
-
 model ProviderWebhook {
-  id        String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  providerId String @unique
-  provider  PaymentProvider @relation(fields: [providerId], references: [id])
+  providerId String          @unique
+  provider   PaymentProvider @relation(fields: [providerId], references: [id])
 
   authType WebhookAuthType
 
   header String // eg: 'Authorization'
   prefix WebhookHeaderPrefix?
 
-  secret  String
+  secret String
 
-  algo WebhookAlgo?
+  algo     WebhookAlgo?
   encoding WebhookEncoding?
 
   timestampTolerance Int?
 
   bodyFormat bodyFormat?
 
-  lastTestedAt DateTime?
+  lastTestedAt   DateTime?
   lastVerifiedAt DateTime?
 
   createdAt DateTime @default(now()) @map("created_at")

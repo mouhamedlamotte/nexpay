@@ -1,7 +1,7 @@
 services:
   traefik:
       image: traefik:v3.5
-      container_name: traefik
+      container_name: traefik-nexpay-dev
       command:
         - "--api.insecure=true"
         - "--providers.docker=true"
@@ -46,7 +46,7 @@ services:
     command: /bin/sh -c "redis-server --requirepass $REDIS_PASSWORD"
     hostname: nexpay-cache
     ports:
-      - "6379:6379"
+      - "63791:6379"
     volumes:
       - redis_data:/data
     networks:

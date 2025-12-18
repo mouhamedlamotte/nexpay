@@ -56,6 +56,7 @@ export class SessionPaymentService {
         clientReference: dto.client_reference,
         projectId: dto.projectId,
         payerId: payer.id,
+        items: dto.items,
       });
 
       const checkoutUrl = this.buildCheckoutUrl(session.id);

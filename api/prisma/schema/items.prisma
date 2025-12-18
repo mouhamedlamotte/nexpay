@@ -1,0 +1,15 @@
+model SessionItem {
+  id        String  @id @default(cuid())
+  label     String
+  unitPrice Decimal @db.Decimal(18, 2)
+  quantity  Decimal @db.Decimal(18, 2)
+
+  subtotal  Decimal  @db.Decimal(18, 2)
+  taxRate   Decimal? @db.Decimal(18, 2)
+  taxAmount Decimal? @db.Decimal(18, 2)
+  discount  Decimal? @db.Decimal(18, 2)
+
+  total     Decimal  @db.Decimal(18, 2)
+  Session   Session? @relation(fields: [sessionId], references: [id])
+  sessionId String?
+}

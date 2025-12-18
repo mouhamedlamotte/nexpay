@@ -1,6 +1,58 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Currency } from 'src/lib';
-import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class SessionItemsDto {
+  @ApiProperty({
+    example: 'Item 1',
+    description: 'Label or name of the item',
+  })
+  @IsString()
+  label: string;
+
+  @ApiProperty({
+    example: 5000,
+    description: 'Unit price of the item (in smallest currency unit)',
+  })
+  @IsNumber()
+  @Min(0)
+  unitPrice: number;
+
+  @ApiProperty({
+    example: 1,
+    description: 'Quantity of the item',
+  })
+  @IsNumber()
+  @Min(1)
+  quantity: number;
+
+  @ApiPropertyOptional({
+    example: 18,
+    description: 'Tax rate in percentage (e.g. 18 for 18%)',
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  taxRate?: number;
+
+  @ApiPropertyOptional({
+    example: 500,
+    description: 'Discount amount applied to the item',
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discount?: number;
+}
 
 export class InitiateSessionPaymentDto {
   @ApiProperty({
@@ -94,4 +146,14 @@ export class InitiateSessionPaymentDto {
   @IsString()
   @IsOptional()
   failureUrl?: string;
+
+  @ApiPropertyOptional({
+    description: 'List of items to be displayed and paid',
+    type: [SessionItemsDto],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SessionItemsDto)
+  items?: SessionItemsDto[];
 }
