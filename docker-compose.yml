@@ -1,37 +1,4 @@
 services:
-  traefik:
-    image: traefik:v3.5
-    container_name: traefik
-    command:
-      - "--api.dashboard=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ADMIN_EMAIL}"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/acme.json"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./config/traefik/letsencrypt/acme.json:/letsencrypt/acme.json
-    environment:
-      - APP_DOMAIN=${APP_DOMAIN}
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.${APP_DOMAIN}`)"
-      - "traefik.http.routers.traefik.service=api@internal"
-      - "traefik.http.routers.traefik.middlewares=traefik-auth"
-      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_AUTH}"
-    networks:
-      - nexpay-web
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    restart: unless-stopped
-
   nexpay-db:
     image: postgres:17-alpine
     container_name: nexpay-db
@@ -101,21 +68,7 @@ services:
       - ./media:/app/media
       - ./logs:/app/logs
     networks:
-      - nexpay-web
       - nexpay-backend
-    labels:
-      # API routes
-      - "traefik.enable=true"
-      - "traefik.http.routers.api.rule=Host(`${APP_DOMAIN}`) && PathPrefix(`/api/v1`)"
-      - "traefik.http.routers.api.entrypoints=websecure"
-      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
-      - "traefik.http.services.api.loadbalancer.server.port=9000"
-      
-      # Web routes
-      - "traefik.http.routers.web.rule=Host(`${APP_DOMAIN}`)"
-      - "traefik.http.routers.web.entrypoints=websecure"
-      - "traefik.http.routers.web.tls.certresolver=letsencrypt"
-      - "traefik.http.services.web.loadbalancer.server.port=9001"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/api/v1/health"]
@@ -125,11 +78,8 @@ services:
       start_period: 40s
 
 networks:
-  nexpay-web:
-    name: nexpay-web
-    driver: bridge
-  nexpay-backend:
-    name: nexpay-backend
+  nexpay-app:
+    name: nexpay-app
     driver: bridge
     internal: true
 
