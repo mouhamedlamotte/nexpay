@@ -80,7 +80,7 @@ FROM node:${NODE_VERSION}-alpine AS runner
 
 ENV TZ=UTC \
     NODE_ENV=production \
-    API_PORT=9000 \
+    APP_PORT=9000 \
     WEB_PORT=9001 \
     PNPM_HOME="/pnpm" \
     PATH="$PNPM_HOME:$PATH"
@@ -140,7 +140,7 @@ stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
 stderr_logfile=/dev/stderr
 stderr_logfile_maxbytes=0
-environment=NODE_ENV="production",PORT="%(ENV_API_PORT)s"
+environment=NODE_ENV="production",PORT="%(ENV_APP_PORT)s"
 
 [program:frontend]
 command=node /app/web/server.js

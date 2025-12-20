@@ -14,9 +14,19 @@ run_migration() {
     echo "✅ Database migration completed successfully"
 }
 
-# Always run migrations
-run_migration
+inject_frontend_config() {
+    echo "⚙️ Injecting frontend runtime configuration..."
+    cat > /app/web/public/config.js <<EOF
+window.__RUNTIME_CONFIG__ = {
+  NEXT_PUBLIC_API_URL: '${NEXT_PUBLIC_API_URL}',
+  NEXT_PUBLIC_READ_API_KEY: '${NEXT_PUBLIC_READ_API_KEY}'
+};
+EOF
+    echo "✅ Frontend config: API_URL=${NEXT_PUBLIC_API_URL}"
+}
 
-# Start both applications with supervisor
+run_migration
+inject_frontend_config
+
 echo "Starting API (port 9000) and Web (port 9001)..."
 exec /usr/bin/supervisord -c /etc/supervisord.conf

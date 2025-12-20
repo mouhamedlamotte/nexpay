@@ -62,7 +62,7 @@ services:
         condition: service_healthy
       nexpay-cache:
         condition: service_started
-    # don't bind the web port, your getway will handle it
+    # don't bind the web port if you use a gateway
     # ports:
     #   - "9000:9000"
     #   - "9001:9001"

@@ -1,0 +1,17 @@
+name: Publish nexpay service to github container registry
+
+on:
+    push:
+        branches:
+            - release
+
+jobs:
+    build_and_push:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - name: Build and push Docker image
+              run: |
+                    docker login ghcr.io -u mouhamedlamotte -p ${{ secrets.GH_PAT }}
+                    docker build -t ghcr.io/mouhamedlamotte/nexpay:latest .
+                    docker push ghcr.io/mouhamedlamotte/nexpay:latest

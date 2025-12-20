@@ -1,18 +1,18 @@
 import axios from "axios";
 import { getCookie } from "cookies-next";
+import { config } from "./config";
 
 export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:9090/api/v1",
+  baseURL: config.API_URL,
   headers: {
     "Content-Type": "application/json",
-    "x-api-key": process.env.NEXT_PUBLIC_READ_API_KEY || 'read',
+    "x-api-key": config.READ_API_KEY,
   },
 });
 
 // Request interceptor for adding auth token
 apiClient.interceptors.request.use(
   (config) => {
-    // Add auth token here if needed
     const token = getCookie("access_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -28,7 +28,6 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle errors globally
     console.error("API Error:", error.response?.data || error.message);
     return Promise.reject(error);
   }

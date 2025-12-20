@@ -15,6 +15,7 @@ import { useInitiatePayment } from "../hooks/use-initiate-payment";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { apiClient } from "@/lib/api-client";
 
 interface CheckoutFormProps {
   sessionId: string;
@@ -60,19 +61,29 @@ export function CheckoutForm({ sessionId }: CheckoutFormProps) {
     const poll = async () => {
       try {
         // Backend waits up to 30 seconds per request
-        const response = await fetch(`/api/v1/payment/session/${sessionId}/status`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': process.env.NEXT_PUBLIC_READ_API_KEY || '',
-          },
-        });
+        // const response = await fetch(`/api/v1/payment/session/${sessionId}/status`, {
+        //   method: 'POST',
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //     'x-api-key': process.env.NEXT_PUBLIC_READ_API_KEY || '',
+        //   },
+        // });
 
-        if (!response.ok) {
+        // if (!response.ok) {
+        //   throw new Error('Failed to fetch payment status');
+        // }
+
+        // const result = await response.json();
+
+        const result = await apiClient.post<PaymentStatusResponse>(
+          `/payment/session/${sessionId}/status`,
+          {}
+        );
+
+        if (!result.data) {
           throw new Error('Failed to fetch payment status');
         }
 
-        const result = await response.json();
         const { status, redirectUrl }: PaymentStatusResponse = result.data;
 
         // Handle terminal states
