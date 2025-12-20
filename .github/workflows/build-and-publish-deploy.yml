@@ -15,3 +15,6 @@ jobs:
                     docker login ghcr.io -u mouhamedlamotte -p ${{ secrets.GH_PAT }}
                     docker build -t ghcr.io/mouhamedlamotte/nexpay:latest .
                     docker push ghcr.io/mouhamedlamotte/nexpay:latest
+            - name: Deploy on Dokploy
+              run: |
+                curl -X POST ${{ secrets.DOKPLOY_WEBHOOK }}
