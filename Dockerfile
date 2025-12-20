@@ -108,6 +108,12 @@ COPY --from=post-builder --chown=nodejs:nodejs /workspace-install/api/dist ./api
 COPY --from=post-builder --chown=nodejs:nodejs /workspace-install/api/prisma ./api/prisma
 COPY --from=post-builder --chown=nodejs:nodejs /workspace-install/api/package.json ./api/package.json
 
+
+# Copy Media files
+COPY --from=post-builder --chown=nodejs:nodejs /workspace-install/api/media ./api/media
+
+
+
 # Copy Web application
 COPY --from=post-builder --chown=nodejs:nodejs /workspace-install/web/public ./web/public
 COPY --from=post-builder --chown=nodejs:nodejs /workspace-install/web/.next/standalone ./web/
