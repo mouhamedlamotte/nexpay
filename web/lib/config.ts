@@ -2,7 +2,7 @@ export function getRuntimeConfig() {
   if (typeof window !== 'undefined') {
     // Côté client : lire depuis window.__RUNTIME_CONFIG__
     const runtimeConfig = (window as any).__RUNTIME_CONFIG__;
-    if (runtimeConfig) {
+    if (runtimeConfig && process.env.NODE_ENV === 'production') {
       return {
         API_URL: runtimeConfig.NEXT_PUBLIC_API_URL,
         READ_API_KEY: runtimeConfig.NEXT_PUBLIC_READ_API_KEY,
