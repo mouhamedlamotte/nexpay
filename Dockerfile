@@ -110,7 +110,7 @@ COPY --from=post-builder --chown=nodejs:nodejs /workspace-install/api/package.js
 
 
 # Copy Media files
-COPY --from=post-builder --chown=nodejs:nodejs /workspace-install/api/media ./media
+COPY --from=post-builder --chown=nodejs:nodejs /workspace-install/api/media ./api/media
 
 
 

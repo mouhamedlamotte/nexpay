@@ -1,6 +1,11 @@
 ```
 └── 📁nexpay
     └── 📁api
+        ├── media
+            ├── 📁images
+                └── 📁providers
+                    ├── wave.png
+                    ├── om.png
         └── 📁src
         ├── .dockerignore
         ├── .env
@@ -66,6 +71,7 @@
     ├── .env
     ├── .env.example
     ├── .gitignore
+    ├── Dockerfile
     ├── docker-compose-dev.yml
     ├── docker-compose-prod.yml
     ├── install.sh
