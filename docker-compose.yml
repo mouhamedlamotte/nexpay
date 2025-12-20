@@ -11,7 +11,7 @@ services:
     volumes:
       - postgres_data_nexpay:/var/lib/postgresql/data
     networks:
-      - nexpay-backend
+      - nexpay-app
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
@@ -29,17 +29,18 @@ services:
     volumes:
       - redis_data_nexpay:/data
     networks:
-      - nexpay-backend
+      - nexpay-app
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     restart: unless-stopped
 
   nexpay-app:
     image: ghcr.io/mouhamedlamotte/nexpay:latest
+    container_name: nexpay-app
     environment:
-      # Backend environment
+      # app environment
       - NODE_ENV=production
-      - API_PORT=9000
+      - APP_PORT=9000
       - WEB_PORT=9001
       - APP_NAME=${APP_NAME}
       - APP_DOMAIN=${APP_DOMAIN}
@@ -52,7 +53,7 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - X_WRITE_KEY=${X_WRITE_KEY}
       - X_READ_KEY=${X_READ_KEY}
-      
+
       # Frontend environment
       - NEXT_PUBLIC_API_URL=https://${APP_DOMAIN}/api/v1
       - NEXT_PUBLIC_READ_API_KEY=${X_READ_KEY}
@@ -61,27 +62,24 @@ services:
         condition: service_healthy
       nexpay-cache:
         condition: service_started
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+    # don't bind the web port, your getway will handle it
+    # ports:
+    #   - "9000:9000"
+    #   - "9001:9001"
+    expose:
+      - "9000"
+      - "9001"
     volumes:
       - ./media:/app/media
       - ./logs:/app/logs
     networks:
-      - nexpay-backend
+      - nexpay-app
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/api/v1/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
 networks:
   nexpay-app:
     name: nexpay-app
     driver: bridge
-    internal: true
 
 volumes:
   postgres_data_nexpay:

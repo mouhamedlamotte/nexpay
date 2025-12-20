@@ -126,7 +126,8 @@ COPY <<EOF /etc/supervisord.conf
 [supervisord]
 nodaemon=true
 user=root
-logfile=/var/log/supervisor/supervisord.log
+logfile=/dev/stdout
+logfile_maxbytes=0
 pidfile=/var/run/supervisord.pid
 
 [program:backend]
@@ -135,8 +136,10 @@ directory=/app/api
 user=nodejs
 autostart=true
 autorestart=true
-stdout_logfile=/app/logs/backend.log
-stderr_logfile=/app/logs/backend-error.log
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
 environment=NODE_ENV="production",PORT="%(ENV_API_PORT)s"
 
 [program:frontend]
@@ -145,8 +148,10 @@ directory=/app/web
 user=nodejs
 autostart=true
 autorestart=true
-stdout_logfile=/app/logs/frontend.log
-stderr_logfile=/app/logs/frontend-error.log
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
 environment=NODE_ENV="production",PORT="%(ENV_WEB_PORT)s"
 EOF
 
