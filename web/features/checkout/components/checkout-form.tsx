@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
+import { ApiResponse } from "@/lib/types";
 
 interface CheckoutFormProps {
   sessionId: string;
@@ -60,25 +61,10 @@ export function CheckoutForm({ sessionId }: CheckoutFormProps) {
 
     const poll = async () => {
       try {
-        // Backend waits up to 30 seconds per request
-        // const response = await fetch(`/api/v1/payment/session/${sessionId}/status`, {
-        //   method: 'POST',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //     'x-api-key': process.env.NEXT_PUBLIC_READ_API_KEY || '',
-        //   },
-        // });
+        const result = (await apiClient.post<ApiResponse<PaymentStatusResponse>>(
+          `/payment/session/${sessionId}/status`
+        )).data;
 
-        // if (!response.ok) {
-        //   throw new Error('Failed to fetch payment status');
-        // }
-
-        // const result = await response.json();
-
-        const result = await apiClient.post<PaymentStatusResponse>(
-          `/payment/session/${sessionId}/status`,
-          {}
-        );
 
         if (!result.data) {
           throw new Error('Failed to fetch payment status');
@@ -91,7 +77,7 @@ export function CheckoutForm({ sessionId }: CheckoutFormProps) {
           pollingRef.current = false;
           setIsPolling(false);
           toast.success('Paiement réussi !');
-          
+
           // Redirect to success URL
           if (redirectUrl) {
             setTimeout(() => window.location.href = redirectUrl, 1000);
