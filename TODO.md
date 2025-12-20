@@ -53,3 +53,4 @@ TODO
 * [X] persit admin credentials
 * [ ] add update script
 * [ ] modify the persisted admin credentials if there are any changes
+* [ ] Test webhook
