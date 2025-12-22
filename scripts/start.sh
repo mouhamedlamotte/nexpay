@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "🚀 NexPay Starting..."
+echo "NexPay Starting..."
 
 run_migration() {
     echo "📦 Running database migration..."
@@ -11,7 +11,7 @@ run_migration() {
         echo "❌ Database migration failed"
         exit 1
     fi
-    echo "✅ Database migration completed successfully"
+    echo "Database migration completed successfully"
 }
 
 inject_frontend_config() {
@@ -22,7 +22,7 @@ window.__RUNTIME_CONFIG__ = {
   NEXT_PUBLIC_READ_API_KEY: '${NEXT_PUBLIC_READ_API_KEY}'
 };
 EOF
-    echo "✅ Frontend config: API_URL=${NEXT_PUBLIC_API_URL}"
+    echo "Frontend config: API_URL=${NEXT_PUBLIC_API_URL}"
 }
 
 run_migration

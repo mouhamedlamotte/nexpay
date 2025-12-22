@@ -65,7 +65,7 @@ async function retry(fn, retries = 10, delay = 3000) {
         throw err;
       }
       console.log(
-        `⚠️  Attempt ${i}/${retries} failed. Retrying in ${delay / 1000}s...`
+        `Attempt ${i}/${retries} failed. Retrying in ${delay / 1000}s...`
       );
       await new Promise((r) => setTimeout(r, delay));
     }
@@ -77,7 +77,7 @@ async function retry(fn, retries = 10, delay = 3000) {
  */
 function runPrismaMigrate() {
   return new Promise((resolve, reject) => {
-    console.log('🔄 Running Prisma migrate deploy...');
+    console.log('Running Prisma migrate deploy...');
 
     const child = spawn(
       'npx',
@@ -91,7 +91,7 @@ function runPrismaMigrate() {
 
     child.on('close', (code) => {
       if (code === 0) {
-        console.log('✅ Prisma migration completed');
+        console.log('Prisma migration completed');
         resolve();
       } else {
         reject(new Error(`Prisma exited with code ${code}`));
@@ -104,23 +104,23 @@ function runPrismaMigrate() {
  * Main
  */
 (async () => {
-  console.log('🗄️  DB Migration Starting...');
+  console.log('DB Migration Starting...');
 
   try {
     const { host, port, driver } = parseDsn(DATABASE_URL);
 
-    console.log(`⏳ Waiting for ${driver} database at ${host}:${port}...`);
+    console.log(`Waiting for ${driver} database at ${host}:${port}...`);
 
     await retry(() => waitForPort(host, port), 10, 3000);
 
-    console.log('✅ Database is reachable');
+    console.log('Database is reachable');
 
     await retry(runPrismaMigrate, 5, 3000);
 
-    console.log('🎉 Database migration SUCCESS');
+    console.log('Database migration SUCCESS');
     process.exit(0);
   } catch (err) {
-    console.error('❌ Migration failed:', err.message);
+    console.error('Migration failed:', err.message);
     process.exit(1);
   }
 })();
