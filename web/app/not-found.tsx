@@ -1,7 +1,3 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Home, ArrowLeft } from "lucide-react"
-
 export default function NotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -19,23 +15,6 @@ export default function NotFound() {
             Désolé, la page que vous recherchez n'existe pas ou a été déplacée.
           </p>
         </div>
-
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
-          <Button asChild size="lg" className="gap-2">
-            <Link href="/">
-              <Home className="h-4 w-4" />
-              Retour à l'accueil
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="lg" className="gap-2 bg-transparent">
-            <Link href="javascript:history.back()">
-              <ArrowLeft className="h-4 w-4" />
-              Page précédente
-            </Link>
-          </Button>
-        </div>
-
         {/* Decorative element */}
         <div className="pt-8 opacity-50">
           <svg
