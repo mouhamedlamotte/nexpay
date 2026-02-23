@@ -18,7 +18,6 @@ export class HmacValidator implements IWebhookValidator {
       return false;
     }
 
-    // Parser le header (format Wave: t=timestamp,v1=signature,v1=signature)
     const { timestamp, signatures } =
       this.parseSignatureHeader(signatureHeader);
 
@@ -27,7 +26,6 @@ export class HmacValidator implements IWebhookValidator {
       return false;
     }
 
-    // Vérifier le timestamp si tolérance configurée
     if (config.timestampTolerance) {
       if (!this.isTimestampValid(timestamp, config.timestampTolerance)) {
         this.logger.warn('Timestamp too old or invalid');
@@ -35,7 +33,6 @@ export class HmacValidator implements IWebhookValidator {
       }
     }
 
-    // Récupérer le body brut
     const rawBody = this.getRawBody(request);
 
     if (!rawBody) {
@@ -43,10 +40,8 @@ export class HmacValidator implements IWebhookValidator {
       return false;
     }
 
-    // Construire le payload selon le format
     const payload = this.buildPayload(timestamp, rawBody, config.bodyFormat);
 
-    // Calculer le HMAC attendu
     const expectedSignature = await this.computeHmac(
       payload,
       config.secret,
@@ -54,7 +49,6 @@ export class HmacValidator implements IWebhookValidator {
       config.encoding || WebhookEncoding.hex,
     );
 
-    // Vérifier si une des signatures correspond
     const isValid = signatures.some((sig) =>
       this.secureCompare(sig, expectedSignature),
     );
@@ -106,13 +100,10 @@ export class HmacValidator implements IWebhookValidator {
   }
 
   private getRawBody(request: Request): string | null {
-    // NestJS stocke le body brut dans request.body si on utilise le middleware approprié
-    // Voir la configuration dans main.ts
     if ((request as any).rawBody) {
       return (request as any).rawBody;
     }
 
-    // Fallback: si le body est déjà parsé, le re-stringify
     if (request.body && typeof request.body === 'object') {
       return JSON.stringify(request.body);
     }
@@ -128,7 +119,6 @@ export class HmacValidator implements IWebhookValidator {
     if (format === 'timestampPlusBody') {
       return timestamp + body;
     }
-    // Ajouter d'autres formats si nécessaire
     return timestamp + body;
   }
 

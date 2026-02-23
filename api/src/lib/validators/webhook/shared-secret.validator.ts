@@ -33,7 +33,6 @@ export class SharedSecretValidator implements IWebhookValidator {
   }
 
   private getHeader(request: Request, headerName: string): string | undefined {
-    // Normaliser le nom du header (Express met tout en minuscule)
     const normalizedHeader = headerName.toLowerCase();
 
     return request.headers[normalizedHeader] as string;
@@ -61,7 +60,6 @@ export class SharedSecretValidator implements IWebhookValidator {
   }
 
   private secureCompare(a: string, b: string): boolean {
-    // Utiliser timingSafeEqual pour éviter les timing attacks
     if (a.length !== b.length) return false;
 
     const bufA = Buffer.from(a);

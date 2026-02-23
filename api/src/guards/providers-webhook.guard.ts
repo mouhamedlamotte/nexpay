@@ -37,7 +37,6 @@ export class WebhookAuthGuard implements CanActivate {
     }
 
     try {
-      // Récupérer la configuration du webhook pour ce provider
       const provider = await this.prisma.paymentProvider.findUnique({
         where: { code: providerCode },
         include: { webhookConfig: true },
@@ -49,16 +48,13 @@ export class WebhookAuthGuard implements CanActivate {
         );
         throw new UnauthorizedException('Webhook not configured');
       }
-      // Obtenir le validateur approprié
       const validator = this.validatorFactory.getValidator(
         provider.webhookConfig.authType,
       );
 
-      // Valider la requête
       const isValid = await validator.validate(request, provider.webhookConfig);
 
       if (isValid) {
-        // Mettre à jour la date de dernière vérification
         await this.prisma.providerWebhook.update({
           where: { id: provider.webhookConfig.id },
           data: { lastVerifiedAt: new Date() },
