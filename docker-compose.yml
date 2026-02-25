@@ -48,6 +48,7 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=redis://:${REDIS_PASSWORD}@nexpay-cache:6379
       - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGIN=http://localhost:9001
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
@@ -55,7 +56,7 @@ services:
       - X_READ_KEY=${X_READ_KEY}
 
       # Frontend environment
-      - NEXT_PUBLIC_API_URL=https://${APP_DOMAIN}/api/v1
+      - NEXT_PUBLIC_API_URL=${API_URL}
       - NEXT_PUBLIC_READ_API_KEY=${X_READ_KEY}
     depends_on:
       nexpay-db:
@@ -63,9 +64,9 @@ services:
       nexpay-cache:
         condition: service_started
     # don't bind the web port if you use a gateway
-    # ports:
-    #   - "9000:9000"
-    #   - "9001:9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     expose:
       - "9000"
       - "9001"
