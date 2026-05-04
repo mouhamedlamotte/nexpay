@@ -1,485 +1,511 @@
-# NexPay - Aggregateur de Paiement Mobile open source
+# NexPay — Agrégateur de paiement mobile open source
 
-![NexPay](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/dashboard.png)
+NexPay est une solution auto-hébergée qui unifie Wave, Orange Money et d'autres providers mobiles africains derrière une seule API REST. Un dashboard permet de configurer les providers, gérer plusieurs projets, consulter les transactions et piloter les webhooks.
 
-NexPay est une solution de paiement mobile auto-hébergée qui permet d'accepter des paiements via Wave, Orange Money et d'autres fournisseurs de paiement mobile populaires en Afrique.
+![Dashboard](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/dashboard.png)
+
+---
+
+## Table des matières
+
+1. [Fonctionnalités](#fonctionnalités)
+2. [Architecture](#architecture)
+3. [Installation](#installation)
+   - [Option A — Image pré-construite (recommandé)](#option-a--image-pré-construite-recommandé)
+   - [Option B — Avec Traefik intégré (HTTPS automatique)](#option-b--avec-traefik-intégré-https-automatique)
+   - [Option C — Derrière un gateway existant](#option-c--derrière-un-gateway-existant)
+   - [Option D — PostgreSQL/Redis existants](#option-d--postgresqlredis-existants)
+   - [Développement local](#développement-local)
+4. [Variables d'environnement](#variables-denvironnement)
+5. [Premiers pas après installation](#premiers-pas-après-installation)
+6. [API Reference](#api-reference)
+   - [Authentification](#authentification)
+   - [Paiement direct](#paiement-direct)
+   - [Session de paiement](#session-de-paiement)
+   - [Webhooks entrants (providers)](#webhooks-entrants-providers)
+7. [Webhooks sortants (vers votre app)](#webhooks-sortants-vers-votre-app)
+8. [Configuration des providers](#configuration-des-providers)
+9. [Gestion multi-projets](#gestion-multi-projets)
+10. [Mise à jour](#mise-à-jour)
+
+---
 
 ## Fonctionnalités
 
-- 🚀 **Auto-hébergé** - Contrôle total de votre infrastructure de paiement
-- 💳 **Multi-providers** - Support de Wave, Orange Money et autres
-- 🔐 **Sécurisé** - Authentification API à deux niveaux (lecture/écriture), webhooks sécurisés
-- 📊 **Dashboard complet** - Gestion des transactions, statistiques en temps réel
-- 🔔 **Webhooks** - Notifications en temps réel des événements de paiement
-- 🎯 **Multi-projets** - Gérez plusieurs projets avec une seule instance
-- 🌐 **API REST** - Intégration facile avec votre application
-- 🧪 **Mode test intégré** - Testez les providers directement depuis le dashboard
+- **Multi-providers** — Wave et Orange Money inclus, architecture extensible
+- **Deux modes de paiement** — Direct (contrôle total) ou Session (checkout hébergé)
+- **API à deux niveaux** — clé lecture (safe client-side) et clé écriture (server-side only)
+- **Webhooks sécurisés** — signature HMAC ou Shared Secret côté providers ; signature sortante configurable par projet
+- **Multi-projets** — une instance NexPay, plusieurs projets isolés
+- **Dashboard** — stats temps réel, historique transactions, configuration providers/webhooks
+- **Auto-hébergé** — Docker, zéro dépendance externe obligatoire
 
-## Prérequis
+---
 
-- Un serveur Linux (Ubuntu 20.04+ recommandé)
-- Docker et Docker Compose installés
-- Port 80 et 443 libres (pour la production)
-- Un nom de domaine pointant vers votre serveur (pour la production)
-- Accès root ou sudo sur le serveur
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Votre app                            │
+│  POST /payment/initiate   POST /payment/session/initiate    │
+└───────────────────────────────┬─────────────────────────────┘
+                                │  x-api-key (write key)
+                                ▼
+                    ┌───────────────────┐
+                    │   NexPay API      │  NestJS · Port 9000
+                    │   (api/)          │  JWT + API Key auth
+                    └──┬────────────┬──┘
+                       │            │
+               ┌───────┘            └──────────┐
+               ▼                               ▼
+        ┌─────────────┐               ┌──────────────────┐
+        │  PostgreSQL │               │  Redis (cache)   │
+        └─────────────┘               └──────────────────┘
+               ▲
+               │  webhook callback
+        ┌──────┴──────────────┐
+        │  Wave / Orange Money│
+        └─────────────────────┘
+               │  fan-out webhooks
+               ▼
+        ┌─────────────────────┐
+        │  Votre endpoint     │
+        │  (par projet)       │
+        └─────────────────────┘
+
+┌───────────────────────────────┐
+│   NexPay Web (web/)           │  Next.js 15 · Port 9001
+│   Dashboard + Checkout public │
+└───────────────────────────────┘
+```
+
+Services Docker :
+| Service | Image | Rôle |
+|---|---|---|
+| `nexpay-app` | `ghcr.io/mouhamedlamotte/nexpay:latest` | API + Web (image unifiée) |
+| `nexpay-db` | `postgres:17-alpine` | Base de données |
+| `nexpay-cache` | `redis:7-alpine` | Cache / sessions |
+
+---
 
 ## Installation
 
-### Installation en développement (local)
+### Prérequis communs
 
-Pour tester NexPay en local, suivez ces étapes simples :
-
-1. **Cloner le repository**
+- Docker ≥ 24 et Docker Compose v2
+- Un fichier `.env` créé depuis `.env.example`
 
 ```bash
 git clone https://github.com/mouhamedlamotte/nexpay.git
 cd nexpay
-```
-
-2. **Copier le fichier d'environnement**
-
-```bash
 cp .env.example .env
+# Éditez .env selon votre cas
 ```
 
-3. **Démarrer les services**
+---
+
+### Option A — Image pré-construite (recommandé)
+
+> Déploiement le plus simple. L'API et le dashboard tournent dans un seul conteneur sans Traefik. À utiliser derrière votre propre reverse proxy (Nginx, Caddy…) ou directement en HTTP pour un usage interne.
+
+**`docker-compose.yml`** (à la racine du projet) :
 
 ```bash
+docker compose up -d
+```
+
+Ce fichier démarre :
+- `nexpay-db` — PostgreSQL sur `5433`
+- `nexpay-cache` — Redis sur `63791`
+- `nexpay-app` — API sur `9000`, dashboard sur `9001`
+
+**`.env` minimum :**
+
+```env
+APP_NAME=NexPay
+APP_DOMAIN=localhost
+
+JWT_SECRET=<générer avec: openssl rand -base64 32>
+ENCRYPTION_KEY=<générer avec: openssl rand -hex 32>
+
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=<mot de passe fort>
+
+DB_NAME=nexpay
+DB_USER=nexpay
+DB_PASSWORD=<mot de passe fort>
+DATABASE_URL=postgresql://nexpay:<DB_PASSWORD>@nexpay-db:5432/nexpay
+
+REDIS_PASSWORD=<mot de passe fort>
+
+X_WRITE_KEY=<votre clé écriture>
+X_READ_KEY=<votre clé lecture>
+
+API_URL=http://localhost:9000/api/v1
+```
+
+**Accès après démarrage :**
+- Dashboard : `http://localhost:9001`
+- API : `http://localhost:9000/api/v1`
+- Swagger (dev) : `http://localhost:9000/api/v1/docs`
+
+> **Note :** Les migrations Prisma sont exécutées automatiquement au démarrage. L'admin et les providers (Wave, Orange Money) sont seeded automatiquement.
+
+---
+
+### Option B — Avec Traefik intégré (HTTPS automatique)
+
+> Pour un serveur public avec un domaine DNS pointant vers votre machine. Traefik gère SSL (Let's Encrypt) et le routing automatiquement.
+
+**Prérequis :**
+- Ports 80 et 443 libres
+- Domaine DNS pointant vers le serveur
+
+```bash
+# Créer le fichier acme.json pour Let's Encrypt
+mkdir -p config/traefik/letsencrypt
+touch config/traefik/letsencrypt/acme.json
+chmod 600 config/traefik/letsencrypt/acme.json
+
+docker compose -f docker-compose-prod.yml up -d
+```
+
+**Variables supplémentaires dans `.env` :**
+
+```env
+APP_DOMAIN=pay.votredomaine.com
+TRAEFIK_AUTH=<user:htpasswd — généré avec: echo $(htpasswd -nb admin password)>
+```
+
+**Ce que fait ce compose :**
+- `traefik` — Reverse proxy HTTPS, dashboard sur `traefik.{APP_DOMAIN}`
+- `nexpay-api` et `nexpay-web` buildés depuis les sources
+- Réseau `nexpay-backend` isolé (internal=true) — DB et Redis inaccessibles depuis l'extérieur
+- Migrations Prisma exécutées au démarrage (`npx prisma migrate deploy && npm run prod`)
+
+**Accès :**
+- Dashboard : `https://pay.votredomaine.com`
+- API : `https://pay.votredomaine.com/api/v1`
+
+> **Note :** La documentation Swagger est désactivée en production (`NODE_ENV=production`).
+
+---
+
+### Option C — Derrière un gateway existant
+
+> Vous avez déjà Nginx, Caddy, Traefik ou un autre reverse proxy. Utilisez `docker-compose.yml` (Option A) puis configurez votre gateway pour proxyfier vers NexPay.
+
+Le conteneur `nexpay-app` expose :
+- Port `9000` → API NestJS
+- Port `9001` → Dashboard Next.js
+
+**Exemple Nginx :**
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name pay.votredomaine.com;
+
+    # SSL géré par Nginx/Certbot
+
+    # Dashboard
+    location / {
+        proxy_pass http://127.0.0.1:9001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # API
+    location /api/ {
+        proxy_pass http://127.0.0.1:9000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+**Exemple Caddy :**
+
+```
+pay.votredomaine.com {
+    handle /api/* {
+        reverse_proxy localhost:9000
+    }
+    handle {
+        reverse_proxy localhost:9001
+    }
+}
+```
+
+**Variable à adapter dans `.env` :**
+```env
+APP_DOMAIN=pay.votredomaine.com
+API_URL=https://pay.votredomaine.com/api/v1
+```
+
+Si votre gateway gère le HTTPS et que l'API est derrière (`trust proxy`), la variable `CORS_ORIGIN` doit correspondre à l'origine du dashboard :
+```env
+CORS_ORIGIN=https://pay.votredomaine.com
+```
+
+---
+
+### Option D — PostgreSQL/Redis existants
+
+> Vous avez déjà une instance Postgres ou Redis. Supprimez les services correspondants du compose et pointez directement vers vos serveurs.
+
+**`docker-compose.yml` modifié** (supprimer les services `nexpay-db` et/ou `nexpay-cache`) :
+
+```yaml
+services:
+  nexpay-app:
+    image: ghcr.io/mouhamedlamotte/nexpay:latest
+    environment:
+      - DATABASE_URL=postgresql://user:password@votre-pg-host:5432/nexpay
+      - REDIS_URL=redis://:votre-redis-password@votre-redis-host:6379
+      # ... autres vars
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./media:/app/media
+      - ./logs:/app/logs
+```
+
+**Prérequis côté base de données :**
+
+```sql
+-- Créer la base et l'utilisateur si besoin
+CREATE DATABASE nexpay;
+CREATE USER nexpay WITH ENCRYPTED PASSWORD 'votre_password';
+GRANT ALL PRIVILEGES ON DATABASE nexpay TO nexpay;
+```
+
+Les migrations sont exécutées automatiquement au démarrage du conteneur.
+
+**Format `DATABASE_URL` :**
+```
+postgresql://USER:PASSWORD@HOST:PORT/DATABASE
+```
+
+**Format `REDIS_URL` :**
+```
+redis://:PASSWORD@HOST:PORT
+# Ou sans mot de passe :
+redis://HOST:PORT
+```
+
+---
+
+### Développement local
+
+Pour développer avec hot-reload sur les deux services :
+
+```bash
+# Démarre Traefik + PostgreSQL + Redis + API (watch) + Web
 docker compose -f docker-compose-dev.yml up -d
 ```
 
-4. **Accéder à l'application**
+- Dashboard : `http://localhost:9090`
+- API docs : `http://localhost:9090/api/v1/docs`
+- PostgreSQL : `localhost:54321`
+- Redis : `localhost:63791`
 
-Ouvrez votre navigateur à l'adresse : `http://localhost:9090`
-
-**Identifiants par défaut :**
-
-- Email : `admin@admin.com`
-- Mot de passe : `password`
-
-⚠️ **IMPORTANT** : Changez immédiatement le mot de passe et l'email lors de votre première connexion !
-
-### Fichier .env.example
-
-```env
-# APP
-APP_DOMAIN=localhost
-APP_NAME=Nexpay
-
-# AUTH
-JWT_SECRET=t9iKTtUazAN0Q2DM/hpRyRT/JtI8L208rWXsHmZ9gvI=
-ADMIN_EMAIL=admin@admin.com
-ADMIN_PASSWORD=password
-
-# DB
-DB_NAME=nexpay
-DB_USER=nexpay
-DB_PASSWORD=password
-
-# CACHE
-REDIS_PASSWORD=redispassword
-
-# TRAEFIK
-TRAEFIK_ENABLE_SSL=false
-
-# API KEYS
-X_WRITE_KEY=write
-X_READ_KEY=read
-
-# SECRETS
-ENCRYPTION_KEY=0072ac7fffc1cfce186b308af5f874fe7f5795adcf1c3d3592a7c2c159e01811
-```
-
-### Installation en production
-
-L'installation en production est automatisée grâce à notre script d'installation. Traefik est configuré pour gérer automatiquement les certificats SSL et le reverse proxy.
-
-#### Installation en une commande
+Pour travailler directement hors Docker :
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/install.sh | bash -s -- pay.yourdomain.com
+# Terminal 1 — API
+cd api
+pnpm install
+pnpm dev       # watch mode, port 9000
+
+# Terminal 2 — Web
+cd web
+pnpm install
+pnpm dev       # port 9001
 ```
 
-Remplacez `pay.yourdomain.com` par votre propre domaine.
-
-#### Ce que fait le script d'installation
-
-1. Vérifie les prérequis (Docker, Docker Compose)
-2. Clone le repository NexPay
-3. Configure les variables d'environnement
-4. Configure Traefik pour le reverse proxy et SSL
-5. Démarre tous les services Docker avec `docker compose -f docker-compose-prod.yml up -d`
-6. Affiche les informations de connexion
-
-#### Informations post-installation
-
-Une fois l'installation terminée, les secrets sont dispo dans `/opt/credentials.txt`
-
-- **URL d'accès** : `https://pay.yourdomain.com`
-- **Email admin** : L'email configuré
-- **Mot de passe admin** : Le mot de passe généré
-- **Clé API de lecture** : Pour les opérations de lecture côté client
-- **Clé API d'écriture** : Pour initier des paiements (à garder secrète)
-- **Autres secrets** : Nécessaires pour la configuration
-
-⚠️ **SAUVEGARDER CES INFO EN LIEUX SUR ET SUPPRIMER CE FICHIER**
-
-## Configuration
-
-### Variables d'environnement
-
-Le script d'installation crée automatiquement un fichier `.env` dans `/opt/nexpay/`. Pour modifier les variables :
-
-```bash
-cd /opt/nexpay
-nano .env
-# Modifiez les variables nécessaires
-docker compose -f docker-compose-prod.yml restart
-```
-
-### Rotation des clés API
-
-⚠️ **Note importante** : NexPay ne permet pas actuellement la rotation automatique des clés API. Les clés API sont définies dans les variables d'environnement.
-
-Pour modifier les clés API manuellement :
-
-```bash
-cd /opt/nexpay
-nano .env
-# Modifiez X_WRITE_KEY et X_READ_KEY
-docker-compose -f docker-compose-prod.yml restart
-```
-
-### Configuration des providers
-
-La configuration des providers se fait maintenant sur une page dédiée par provider : `/<providerCode>`
-
-Chaque page de configuration contient deux onglets :
-
-1. **Secrets Configuration** : Configuration des clés API du provider
-2. **Webhook Configuration** : Configuration des webhooks pour recevoir les notifications
-
-![NexPay](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/providers/0.png)
-
-#### Configuration Wave
-
-**Onglet Secrets Configuration**
-
-- **API Key** : Votre clé API Wave obtenue depuis le portail développeur Wave
-
-**Onglet Webhook Configuration**
-
-Deux types d'authentification sont disponibles :
-
-1. **Shared Secret** : Authentification simple avec une clé secrète partagée
-
-   - Entrez le secret obtenu depuis votre dashboard Wave
-   - Minimum 20 caractères requis
-2. **HMAC** : Authentification cryptographique avancée (recommandé)
-
-   - Sécurité renforcée avec vérification d'intégrité
-   - Entrez le secret HMAC depuis votre dashboard Wave
-
-**URL du webhook à configurer chez Wave** :
-
-```
-https://pay.yourdomain.com/api/v1/webhook/wave
-```
-
-#### Configuration Orange Money
-
-**Onglet Secrets Configuration**
-
-- **Client ID** : Votre identifiant client Orange Money
-- **Client Secret** : Votre secret client Orange Money
-- **Name** : Nom d'affichage du provider
-- **Code** : Code unique du provider (ex: `om`)
-
-**Onglet Webhook Configuration (Auto-configuration disponible)**
-
-Orange Money bénéficie d'une fonctionnalité d'auto-configuration :
-
-- Si vous ne fournissez pas de secret, il sera **généré automatiquement**
-- Le webhook sera configuré automatiquement chez Orange Money
-- Le secret généré sera enregistré automatiquement
-
-Si vous préférez fournir votre propre secret :
-
-- Entrez un secret d'au moins 20 caractères
-- Configurez manuellement l'URL du webhook chez Orange Money
-
-**URL du webhook à configurer chez Orange Money** :
-
-```
-https://pay.yourdomain.com/api/v1/webhook/om
-```
-
-#### Activation et test des providers
-
-**Conditions d'activation** :
-
-Un provider ne peut être activé que si :
-
-- ✅ Les secrets sont configurés
-- ✅ Le webhook est configuré
-
-Une fois ces deux conditions remplies, un bouton **"Test Payment"** apparaît.
-
-**Tester un provider** :
-
-1. Cliquez sur le bouton **"Test Payment"**
-2. Si le test réussit, une modal s'affiche avec :
-   - Un **QR code** à scanner
-   - Un **lien de checkout** direct
-   - La référence de paiement
-   - La date d'expiration
-
-![NexPay](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/providers/4.png)
-
-3. Le provider est maintenant activé et prêt à être utilisé
-
-### Configuration des webhooks NexPay
-
-Pour recevoir les notifications de NexPay dans votre application, configurez un webhook dans le dashboard.
-
-**Nouvelle fonctionnalité** : Le secret webhook est désormais **optionnel**. Si vous ne fournissez pas de secret, il sera généré automatiquement.
-
-1. Accédez à **Paramètres du compte** > **Webhooks**
-2. Cliquez sur **Nouveau webhook**
-3. Renseignez :
-   - **Webhook URL** : L'URL de votre application qui recevra les événements
-   - **Header Name** : Nom du header pour la vérification (ex: `x-webhook-secret`)
-   - **Secret** : Clé secrète pour vérifier l'authenticité (optionnel - auto-généré si vide)
-
-![NexPay](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/webhook.png)
-
-⚠️ **Attention** : le secret n'est visible que une seule fois apres la creation du webhook, copiez-le et sauvegardez-le dans un endroit sécuritaire.
-
-![NexPay](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/one_time_view.png)
-
-
-
-### Configuration des URLs de redirection
-
-Configurez les URLs de redirection après paiement dans les paramètres de votre projet :
-
-![NexPay](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/callback.png)
-
-- **Success URL** : Redirection après paiement réussi
-- **Failure URL** : Redirection après échec de paiement
-- **Cancel URL** : Redirection si l'utilisateur annule
-
-## Utilisation du Dashboard
-
-### Vue d'ensemble
-
-Le dashboard vous donne un aperçu complet de votre activité :
-
-![Dashord](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/dashboard.png)
-
-- **Volume Total** : Montant total des transactions
-- **Transactions** : Nombre de transactions
-- **Taux de Réussite** : Pourcentage de transactions réussies
-- **Performance par Provider** : Répartition par fournisseur
-- **Statistiques Rapides** : Montant moyen, nouveaux clients
-- **Transactions récentes** : Liste des dernières transactions
-
-### Processus de paiement
-
-#### 1. Sélection du mode de paiement
-
-![Checkout](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/checkout.png)
-
-Le client choisit son mode de paiement préféré (Wave, Orange Money, etc.)
-
-#### 2. Paiement via QR Code ou lien direct
-
-![NexPay](https://raw.githubusercontent.com/mouhamedlamotte/nexpay/main/images/scan.png)
-
-Le client peut :
-
-- Scanner le QR code avec son application de paiement
-- Cliquer sur le lien direct pour ouvrir l'application
-- Voir la référence de paiement et la date d'expiration
-
-## Utilisation de l'API
+---
+
+## Variables d'environnement
+
+| Variable | Obligatoire | Description | Exemple |
+|---|---|---|---|
+| `APP_NAME` | ✅ | Nom de l'application | `NexPay` |
+| `APP_DOMAIN` | ✅ | Domaine public (sans `https://`) | `pay.example.com` |
+| `JWT_SECRET` | ✅ | Secret JWT dashboard | `openssl rand -base64 32` |
+| `ENCRYPTION_KEY` | ✅ | Clé AES-256 en hex (64 chars) | `openssl rand -hex 32` |
+| `ADMIN_EMAIL` | ✅ | Email admin initial | `admin@example.com` |
+| `ADMIN_PASSWORD` | ✅ | Mot de passe admin initial | — |
+| `DATABASE_URL` | ✅ | URL de connexion PostgreSQL | `postgresql://user:pass@host:5432/db` |
+| `REDIS_URL` | ✅ | URL Redis | `redis://:pass@host:6379` |
+| `X_WRITE_KEY` | ✅ | Clé API écriture (server-side) | — |
+| `X_READ_KEY` | ✅ | Clé API lecture (client-safe) | — |
+| `API_URL` | ✅ (Option A) | URL publique de l'API (pour le web) | `https://pay.example.com/api/v1` |
+| `CORS_ORIGIN` | ⚠️ Production | Origines CORS autorisées | `https://pay.example.com` |
+| `TRAEFIK_AUTH` | ✅ Option B | Auth basique dashboard Traefik | `htpasswd -nb admin pass` |
+
+> **Génération des secrets :**
+> ```bash
+> JWT_SECRET=$(openssl rand -base64 32)
+> ENCRYPTION_KEY=$(openssl rand -hex 32)
+> X_WRITE_KEY=$(openssl rand -hex 20)
+> X_READ_KEY=$(openssl rand -hex 20)
+> ```
+
+---
+
+## Premiers pas après installation
+
+1. **Connexion** — `http(s)://votre-domaine` avec `ADMIN_EMAIL` / `ADMIN_PASSWORD`
+2. **Changer le mot de passe** — La plateforme vous le demande lors de la première connexion
+3. **Créer un projet** — Allez dans Projects → New Project
+4. **Configurer un provider** — Allez dans Providers → Wave ou Orange Money (voir [Configuration des providers](#configuration-des-providers))
+5. **Tester le provider** — Bouton "Test Payment" une fois secrets + webhook configurés
+6. **Ajouter un webhook** — Settings → Webhooks → votre endpoint de réception
+7. **Intégrer l'API** — Utilisez `X_WRITE_KEY` côté serveur pour initier des paiements
+
+---
+
+## API Reference
+
+Base URL : `https://votre-domaine/api/v1`
 
 ### Authentification
 
-NexPay utilise maintenant un système d'authentification à deux niveaux avec des clés API spécialisées.
+NexPay utilise deux mécanismes d'authentification selon l'usage.
 
-Toutes les requêtes API nécessitent une clé API dans le header `x-api-key` :
+#### Dashboard (JWT)
 
-```bash
-x-api-key: YOUR_API_KEY
-```
-
-### Types de clés API
-
-NexPay fournit deux types de clés API :
-
-#### 1. Clé API de lecture (Read Key)
-
-**Usage** :
-
-- Récupérer une session de paiement
-- Vérifier le statut d'une session de paiement
-- Utilisée sur la page checkout de NexPay
-
-**Sécurité** :
-✅ Cette clé peut être utilisée côté client
-✅ Peut être exposée publiquement (dans le code JavaScript frontend)
-✅ Ne permet pas d'initier des paiements
-
-**Exemple** :
-
-```bash
-GET /api/v1/payment/session/{sessionId}
-x-api-key: YOUR_READ_KEY
-```
-
-#### 2. Clé API d'écriture (Write Key)
-
-**Usage** :
-
-- Initier un paiement direct
-- Créer une session de paiement
-- Toutes les opérations d'écriture
-
-**Sécurité** :
-⚠️ **NE JAMAIS EXPOSER CETTE CLÉ**
-⚠️ À utiliser uniquement côté serveur
-⚠️ Ne jamais inclure dans le code frontend
-
-**Exemple** :
-
-```bash
-POST /api/v1/payment/initiate
-x-api-key: YOUR_WRITE_KEY
-Content-Type: application/json
-```
-
-### Différence entre paiement direct et session de paiement
-
-NexPay propose deux méthodes pour accepter des paiements, chacune adaptée à des cas d'usage spécifiques.
-
-#### Paiement direct (Initiate Payment)
-
-**Quand l'utiliser** :
-
-- Applications mobiles où l'utilisateur choisit déjà le provider
-- Intégrations personnalisées avec sélection de provider
-- Flux où vous contrôlez l'interface de sélection du mode de paiement
-
-**Avantages** :
-
-- Contrôle total de l'expérience utilisateur
-- Pas de redirection vers la page checkout de NexPay
-- Plus rapide pour l'utilisateur
-
-**Endpoint** :
-
-```bash
-POST /api/v1/payment/initiate
-x-api-key: YOUR_WRITE_KEY
+```http
+POST /auth/login
 Content-Type: application/json
 
 {
-  "amount": 10,
-  "currency": "XOF",
-  "provider_code": "om",
-  "customer": {
-    "name": "Mouhamed Baba",
-    "email": "customer@example.com",
-    "phone": "+221771234567"
-  },
-  "metadata": {
-    "order_id": "ORDER-123",
-    "custom_field": "value"
-  }
+  "email": "admin@example.com",
+  "password": "votre-mot-de-passe"
 }
 ```
 
-**Réponse** :
+Retourne un token JWT à passer dans le header `Authorization: Bearer <token>` pour toutes les routes dashboard.
 
+#### API Paiements (x-api-key)
+
+Toutes les requêtes de paiement requièrent :
+
+```http
+x-api-key: YOUR_KEY
+```
+
+Deux types de clés :
+
+| Type | Variable | Usage | Sécurité |
+|---|---|---|---|
+| **Write Key** | `X_WRITE_KEY` | Initier des paiements, créer des sessions | Côté serveur uniquement — ne jamais exposer |
+| **Read Key** | `X_READ_KEY` | Lire le statut d'une session | Sûre côté client (JavaScript frontend) |
+
+---
+
+### Paiement direct
+
+Le paiement direct convient quand votre app sait déjà quel provider utiliser (app mobile, etc.). Vous gérez l'interface de paiement.
+
+#### `POST /payment/initiate`
+
+**Auth :** `x-api-key` (write key)
+
+```http
+POST /api/v1/payment/initiate
+x-api-key: YOUR_WRITE_KEY
+Content-Type: application/json
+
+{
+  "amount": 5000,
+  "currency": "XOF",
+  "provider": "wave",
+  "phone": "+221771234567",
+  "projectId": "cmhciopb000049ugoic8kqhyj",
+
+  "userId": "user-uuid",
+  "name": "Jean Dupont",
+  "email": "jean@example.com",
+  "client_reference": "ORDER-123",
+  "metadata": { "order_id": "ORDER-123" },
+  "successUrl": "https://monsite.com/success",
+  "failureUrl": "https://monsite.com/error"
+}
+```
+
+**Champs obligatoires :** `amount`, `phone`, `provider`, `projectId`
+
+**Réponse `201` :**
 ```json
 {
-  "statusCode": 200,
-  "message": "Payment data successfully initialized",
+  "statusCode": 201,
+  "message": "Payment successfully initiated",
   "data": {
-    "amount": 10,
-    "provider": {
-      "id": "cmhkkw9sp0000p62174i881pb",
-      "name": "Orange Money",
-      "code": "om",
-      "logoUrl": "https://pay.your-domain.com/api/v1/media/images/logos/om.png"
-    },
+    "amount": 5000,
     "currency": "XOF",
-    "reference": "NEXPAY_TX_13C9FAED3CC0467E",
+    "reference": "NEXPAY_TX_A819BE1284654995",
+    "provider": {
+      "id": "...",
+      "name": "Wave",
+      "code": "wave",
+      "logoUrl": "https://votre-domaine/api/v1/media/images/logos/wave.png"
+    },
     "payer": {
-      "userId": "cmhlcwue70009nq210l2h5tz4",
-      "email": "kamal@admin.com",
-      "phone": "+22177000000",
-      "name": "Moustoifa Kamal Ben Moussa"
+      "userId": "user-uuid",
+      "email": "jean@example.com",
+      "phone": "+221771234567",
+      "name": "Jean Dupont"
     },
     "checkout_urls": [
       {
-        "name": "MaxIt",
-        "url": "https://sugu.orange-sonatel.com/mp/dme8tVWrilaBBh5MYbhc",
-        "thumb": "https://pay.your-domain.com/api/v1/media/images/thumbs/maxit.png"
-      },
-      {
-        "name": "Orange Money",
-        "url": "https://orange-money-prod-flowlinks.web.app/om/dme8tVWrilaBBh5MYbhc",
-        "thumb": "https://pay.your-domain.com/api/v1/media/images/thumbs/om.png"
+        "name": "Wave",
+        "url": "https://pay.wave.com/m/xxx",
+        "thumb": "https://votre-domaine/api/v1/media/images/thumbs/wave.png"
       }
     ],
     "qr_code": {
-      "data": "iVBORw0KGgoAAAANSUhEUgAAAMgAAA..."
+      "data": "iVBORw0KGgo..."
     },
-    "expiration": "2025-11-06T00:22:51.115Z"
+    "expiration": "2025-10-30T18:47:53.185Z"
   }
 }
 ```
 
-**Ce que vous recevez** :
-
-- Référence de paiement unique
-- QR code encodé en base64
-- URLs de checkout (pour ouvrir l'application de paiement)
-- Informations du payeur
-- Date d'expiration
-
-**Exemple d'intégration** :
-
+**Utilisation du résultat :**
 ```javascript
 // Afficher le QR code
 const img = document.createElement('img');
-img.src = `data:image/png;base64,${response.data.qr_code.data}`;
-document.body.appendChild(img);
+img.src = `data:image/png;base64,${data.qr_code.data}`;
 
-// Ou rediriger vers l'URL de paiement
-window.location.href = response.data.checkout_urls[0].url;
+// Ou rediriger vers l'app de paiement
+window.location.href = data.checkout_urls[0].url;
 ```
 
-#### Session de paiement (Initiate Payment Session)
+---
 
-**Quand l'utiliser** :
+### Session de paiement
 
-- Sites e-commerce standards
-- Quand vous voulez déléguer la sélection du provider à NexPay
-- Pour bénéficier de l'interface checkout optimisée de NexPay
+La session de paiement délègue la sélection du provider au checkout hébergé de NexPay. Idéal pour les sites e-commerce standards.
 
-**Avantages** :
+**Cycle de vie d'une session :**
+```
+opened ──► pending ──► completed
+                  └──► failed
+       └──► expired (après 1 heure sans action)
+```
 
-- Interface de checkout professionnelle fournie par NexPay
-- Gestion automatique de tous les providers configurés
-- Expérience utilisateur optimisée et testée
-- Moins de code à maintenir
+#### `POST /payment/session/initiate`
 
-**Endpoint** :
+**Auth :** `x-api-key` (write key)
 
-```bash
+```http
 POST /api/v1/payment/session/initiate
 x-api-key: YOUR_WRITE_KEY
 Content-Type: application/json
@@ -487,1029 +513,378 @@ Content-Type: application/json
 {
   "amount": 10000,
   "currency": "XOF",
-  "customer": {
-    "name": "Mouhamed Baba",
-    "email": "customer@example.com",
-    "phone": "+221771234567"
-  },
-  "success_url": "https://yourapp.com/success",
-  "cancel_url": "https://yourapp.com/cancel",
-  "metadata": {
-    "order_id": "ORDER-123"
-  }
+  "phone": "+221771234567",
+  "name": "Jean Dupont",
+  "email": "jean@example.com",
+  "userId": "user-uuid",
+  "client_reference": "ORDER-123",
+  "projectId": "cmhciopb000049ugoic8kqhyj",
+
+  "successUrl": "https://monsite.com/success",
+  "failureUrl": "https://monsite.com/error",
+  "metadata": { "order_id": "ORDER-123" },
+
+  "items": [
+    {
+      "label": "Abonnement mensuel",
+      "unitPrice": 9000,
+      "quantity": 1,
+      "taxRate": 18,
+      "discount": 0
+    }
+  ]
 }
 ```
 
-**Réponse** :
+**Champs obligatoires :** `amount`, `phone`, `name`, `email`, `userId`, `client_reference`, `projectId`
 
+**Réponse `201` :**
 ```json
 {
-  "statusCode": 200,
-  "message": "Le test est passé avec succès.",
+  "statusCode": 201,
+  "message": "Payment session successfully initiated",
   "data": {
-    "sessionId": "cmhmmiaef000qnq213t3az6ip",
-    "checkoutUrl": "https://pay.your-domain.com/checkout/cmhmmiaef000qnq213t3az6ip",
+    "sessionId": "cmhdpuj6m00069usa10370ldr",
+    "checkoutUrl": "https://votre-domaine/checkout/cmhdpuj6m00069usa10370ldr",
     "status": "opened",
-    "expiresAt": "2025-11-06T00:22:50.529Z"
+    "expiresAt": "2025-10-30T18:46:25.053Z"
   }
 }
 ```
 
-**Ce que vous recevez** :
-
-- ID de session unique
-- URL de checkout hébergée par NexPay
-- Statut de la session
-- Date d'expiration
-
-**Exemple d'intégration** :
-
 ```javascript
-// Rediriger l'utilisateur vers la page de checkout
+// Rediriger vers le checkout NexPay
 window.location.href = response.data.checkoutUrl;
-
-// Ou ouvrir dans une nouvelle fenêtre/modal
-window.open(response.data.checkoutUrl, '_blank');
 ```
 
-### Vérifier le statut d'une session
+---
 
-Utilisez la **clé API de lecture** pour vérifier le statut (utilisable côté client) :
+#### `GET /payment/session/{id}`
 
-```bash
-GET /api/v1/payment/session/{sessionId}
+**Auth :** `x-api-key` (read key — sûr côté client)
+
+Retourne l'état complet de la session, les providers disponibles et les données de paiement (une fois le checkout effectué).
+
+```http
+GET /api/v1/payment/session/cmhdpuj6m00069usa10370ldr
 x-api-key: YOUR_READ_KEY
 ```
 
-**Réponse** :
-
+**Réponse `200` :**
 ```json
 {
   "statusCode": 200,
   "data": {
-    "sessionId": "cmhmmiaef000qnq213t3az6ip",
-    "status": "succeeded",
-    "amount": 10000,
+    "id": "cmhdpuj6m00069usa10370ldr",
+    "status": "opened",
+    "amount": "10000",
     "currency": "XOF",
-    "provider": {
-      "name": "Wave",
-      "code": "wave"
-    },
-    "customer": {
-      "name": "Mouhamed Baba",
-      "email": "customer@example.com",
-      "phone": "+221771234567"
-    }
+    "expiresAt": "2025-10-30T18:46:25.053Z",
+    "paymentData": null,
+    "checkoutUrl": "https://votre-domaine/checkout/cmhdpuj6m00069usa10370ldr",
+    "providers": [
+      { "id": "...", "name": "Orange Money", "code": "om", "logoUrl": "..." },
+      { "id": "...", "name": "Wave", "code": "wave", "logoUrl": "..." }
+    ],
+    "payer": { "name": "Jean Dupont", "email": "...", "phone": "..." },
+    "project": { "id": "...", "name": "Mon Projet" }
   }
 }
 ```
 
-## Webhooks
+> `paymentData` est `null` jusqu'au checkout. Après `POST /checkout`, il contient les URLs de paiement et le QR code.
 
-### Structure d'un événement webhook
+---
+
+#### `POST /payment/session/{id}/checkout`
+
+**Auth :** `x-api-key` (read key)
+
+Déclenche l'initiation du paiement pour le provider choisi par l'utilisateur. C'est cette route que le checkout frontend appelle.
+
+```http
+POST /api/v1/payment/session/cmhdpuj6m00069usa10370ldr/checkout
+x-api-key: YOUR_READ_KEY
+Content-Type: application/json
+
+{
+  "provider": "om",
+  "successUrl": "https://monsite.com/success",
+  "failureUrl": "https://monsite.com/error"
+}
+```
+
+**Champs obligatoires :** `provider`
+
+**Réponse `201` :** Identique à la réponse de `POST /payment/initiate` (amount, checkout_urls, qr_code, expiration…)
+
+> Si le même provider est sélectionné une deuxième fois et que les données ne sont pas expirées, les données en cache sont retournées directement sans appel provider.
+
+---
+
+#### `POST /payment/session/{id}/status`
+
+**Auth :** `x-api-key` (read key)
+
+Long-polling côté serveur : attend jusqu'à 30 secondes que le statut passe de `pending`. Utilisé par le frontend checkout pour détecter la fin du paiement.
+
+```http
+POST /api/v1/payment/session/cmhdpuj6m00069usa10370ldr/status
+x-api-key: YOUR_READ_KEY
+```
+
+**Réponse `200` :**
+```json
+{
+  "sessionId": "cmhdpuj6m00069usa10370ldr",
+  "status": "completed",
+  "redirectUrl": "https://monsite.com/success"
+}
+```
+
+- `redirectUrl` est `null` si le statut n'est ni `completed` ni `failed`
+- Si la session est toujours `pending` après 30 secondes, retourne le statut actuel avec `redirectUrl: null`
+
+**Polling depuis le client (alternative) :**
+```javascript
+// Option 1 — long-polling serveur (recommandé pour les webhooks rapides)
+const result = await fetch(`/api/v1/payment/session/${sessionId}/status`, {
+  method: 'POST',
+  headers: { 'x-api-key': READ_KEY }
+});
+const { status, redirectUrl } = (await result.json()).data;
+if (redirectUrl) window.location.href = redirectUrl;
+
+// Option 2 — polling client (si vous préférez contrôler l'intervalle)
+const poll = setInterval(async () => {
+  const res = await fetch(`/api/v1/payment/session/${sessionId}`, {
+    headers: { 'x-api-key': READ_KEY }
+  });
+  const { status } = (await res.json()).data;
+  if (status === 'completed') { clearInterval(poll); /* succès */ }
+  if (status === 'failed') { clearInterval(poll); /* échec */ }
+}, 3000);
+```
+
+---
+
+#### `POST /payment/session/providers/{code}/test`
+
+**Auth :** JWT (dashboard uniquement)
+
+Teste les credentials d'un provider en créant une session réelle de test. Met à jour les flags `hasValidSecretConfig` et `hastSecretTestPassed` sur le provider.
+
+```http
+POST /api/v1/payment/session/providers/wave/test
+Authorization: Bearer <jwt>
+Content-Type: application/json
+
+{
+  "amount": 100,
+  "phone": "+221771234567",
+  "projectId": "cmhciopb000049ugoic8kqhyj"
+}
+```
+
+---
+
+### Webhooks entrants (providers)
+
+Ces endpoints reçoivent les callbacks des providers et mettent à jour le statut des transactions. Ils ne requièrent pas d'authentification applicative — la validation se fait via signature (configurée dans Providers > Settings > Webhook).
+
+#### `POST /webhook/wave`
+
+```json
+{
+  "id": "EV_QvEZuDSQbLdI",
+  "type": "checkout.session.completed",
+  "data": {
+    "id": "cos-18qq25rgr100a",
+    "amount": "5000",
+    "client_reference": "NEXPAY_TX_A819BE1284654995",
+    "payment_status": "succeeded"
+  }
+}
+```
+
+Types supportés : `checkout.session.completed`, `checkout.session.payment_failed`
+
+#### `POST /webhook/om`
+
+```json
+{
+  "amount": { "value": 5000, "unit": "XOF" },
+  "reference": "NEXPAY_TX_A819BE1284654995",
+  "transactionId": "MP250827.1838.C30884",
+  "status": "SUCCESS"
+}
+```
+
+Statuts supportés : `SUCCESS`, `FAILED`, `PENDING`
+
+**URL à configurer chez les providers :**
+```
+Wave  : https://votre-domaine/api/v1/webhook/wave
+OM    : https://votre-domaine/api/v1/webhook/om
+```
+
+---
+
+## Webhooks sortants (vers votre app)
+
+NexPay notifie votre application à chaque changement de statut de transaction. Configurez vos webhooks dans le dashboard : Settings → Webhooks.
+
+### Structure d'un événement
 
 ```json
 {
   "type": "payment.succeeded",
   "data": {
-    "amount": "100800",
-    "client_reference": "nexpay-ref-30-10-2025",
+    "amount": 5000,
     "status": "SUCCEEDED",
+    "client_reference": "ORDER-123",
     "resolvedAt": "2025-10-30T17:29:58.109Z",
     "payer": {
-      "name": "Mouhamed baba",
-      "email": "lamottejmohamed@gmail.com",
-      "phone": "+22177123456"
+      "userId": "user-uuid",
+      "userPhone": "+221771234567",
+      "userEmail": "client@example.com",
+      "UserName": "Jean Dupont"
     },
-    "provider": {
-      "name": "Wave",
-      "code": "wave"
-    },
-    "project": {
-      "id": "proj_123",
-      "name": "the nexcom"
-    },
-    "metadata": {
-      "order_id": "ORDER-123"
-    }
+    "provider": { "name": "Wave" },
+    "project": { "id": "proj-id", "name": "Mon Projet" },
+    "metadata": { "order_id": "ORDER-123" }
   }
 }
 ```
 
-### Types d'événements
-
-- `payment.succeeded` : Paiement réussi
-- `payment.failed` : Paiement échoué
-- `payment.pending` : Paiement en attente
-- `payment.cancelled` : Paiement annulé
+**Types d'événements :** `payment.succeeded`, `payment.failed`
 
 ### Vérification de la signature
 
-Vérifiez toujours la signature des webhooks pour garantir leur authenticité :
+Le secret configuré dans le dashboard est envoyé dans le header que vous avez défini (ex. `x-webhook-secret`). Sa valeur est le secret en clair (décrypté avant envoi).
 
 ```javascript
-const crypto = require('crypto');
+// Express.js
+app.post('/webhook/nexpay', express.json(), (req, res) => {
+  const receivedSecret = req.headers['x-webhook-secret'];
 
-function verifyWebhookSignature(payload, signature, secret) {
-  const expectedSignature = crypto
-    .createHmac('sha256', secret)
-    .update(JSON.stringify(payload))
-    .digest('hex');
-  
-  return signature === expectedSignature;
-}
+  if (receivedSecret !== process.env.NEXPAY_WEBHOOK_SECRET) {
+    return res.status(401).send('Unauthorized');
+  }
 
-// Dans votre endpoint webhook
-app.post('/webhook', (req, res) => {
-  const signature = req.headers['x-webhook-secret'];
-  const isValid = verifyWebhookSignature(req.body, signature, YOUR_SECRET);
-  
-  if (!isValid) {
-    return res.status(401).send('Invalid signature');
+  const { type, data } = req.body;
+
+  if (type === 'payment.succeeded') {
+    // Marquer la commande comme payée
+    // data.metadata.order_id contient votre référence
   }
-  
-  // Traiter l'événement
-  const event = req.body;
-  console.log('Event received:', event.type);
-  
-  switch(event.type) {
-    case 'payment.succeeded':
-      // Marquer la commande comme payée
-      break;
-    case 'payment.failed':
-      // Notifier l'utilisateur
-      break;
-  }
-  
+
   res.status(200).send('OK');
 });
 ```
 
-## Gestion multi-projets
-
-NexPay permet de gérer plusieurs projets avec une seule instance :
-
-- **Configuration unique des providers** : Les providers (Wave, Orange Money) sont configurés une seule fois et partagés entre tous les projets
-- **Configuration dynamique par projet** : Chaque projet peut avoir ses propres webhooks, URLs de redirection et paramètres
-- **Isolation des données** : Les transactions et statistiques sont isolées par projet
-- **API Keys par projet** : Chaque projet a ses propres clés de lecture et d'écriture
-
-## Documentation API
-
-⚠️ **Note importante** : La documentation Swagger n'est plus disponible en production pour des raisons de sécurité.
-
-Pour accéder à la documentation complète de l'API :
-
-- Utilisez l'environnement de développement local
-- Consultez la documentation en ligne sur le site officiel
-
-## Sécurité
-
-### Bonnes pratiques
-
-✅ **Clés API** :
-
-- Ne jamais exposer la clé d'écriture côté client
-- Utiliser la clé de lecture uniquement pour les opérations de consultation
-- Stocker les clés dans des variables d'environnement
-
-✅ **Webhooks** :
-
-- Toujours vérifier la signature des webhooks
-- Utiliser HTTPS pour tous les endpoints webhook
-- Générer des secrets forts (minimum 32 caractères)
-
-✅ **Production** :
-
-- Changer immédiatement le mot de passe admin par défaut
-- Utiliser des mots de passe forts pour la base de données
-- Activer SSL/TLS (automatique avec Traefik en production)
-- Restreindre l'accès au serveur via firewall
-
-### Fonctionnalités de sécurité intégrées
-
-- ✅ Authentification API à deux niveaux (lecture/écriture)
-- ✅ Vérification des signatures webhook (HMAC ou Shared Secret)
-- ✅ HTTPS obligatoire en production (géré par Traefik)
-- ✅ Certificats SSL automatiques (Let's Encrypt)
-- ✅ Variables d'environnement sécurisées
-- ✅ Isolation des projets
-- ✅ Chiffrement des données sensibles
-
-## Mise à jour
-
-### Environnement de développement
-
-```bash
-cd /path/to/nexpay
-git pull origin main
-docker-compose -f docker-compose-dev.yml down
-docker-compose -f docker-compose-dev.yml up -d --build
-```
-
-### Environnement de production
-
-```bash
-cd /opt/nexpay
-git pull origin main
-docker-compose -f docker-compose-prod.yml down
-docker-compose -f docker-compose-prod.yml up -d --build
-```
-
-## Sauvegarde
-
-Il est recommandé de sauvegarder régulièrement :
-
-### 1. Base de données
-
-**Développement** :
-
-```bash
-docker-compose -f docker-compose-dev.yml exec postgres pg_dump -U nexpay nexpay > backup.sql
-```
-
-**Production** :
-
-```bash
-docker-compose -f docker-compose-prod.yml exec postgres pg_dump -U nexpay nexpay > backup.sql
-```
-
-### 2. Variables d'environnement
-
-```bash
-cp .env .env.backup
-```
-
-### 3. Restauration
-
-```bash
-docker-compose exec postgres psql -U nexpay nexpay < backup.sql
-```
-
-## Dépannage
-
-### Les paiements ne fonctionnent pas
-
-1. Vérifiez que les providers sont correctement configurés (onglets Secrets et Webhook)
-2. Vérifiez que les webhooks sont configurés chez les providers
-3. Testez le provider avec le bouton "Test Payment"
-4. Consultez les logs :
-   ```bash
-   docker-compose -f docker-compose-dev.yml logs -f
-   # ou
-   docker-compose -f docker-compose-prod.yml logs -f
-   ```
-
-### Problème de certificat SSL (Production)
-
-Traefik gère automatiquement les certificats SSL. Si vous rencontrez des problèmes :
-
-1. Vérifiez que votre domaine pointe bien vers votre serveur
-2. Vérifiez les logs Traefik :
-   ```bash
-   docker-compose -f docker-compose-prod.yml logs traefik
-   ```
-3. Attendez quelques minutes pour la génération du certificat
-4. Vérifiez que les ports 80 et 443 sont ouverts :
-   ```bash
-   sudo ufw status
-   sudo ufw allow 80/tcp
-   sudo ufw allow 443/tcp
-   ```
-
-### Impossible d'accéder au dashboard
-
-1. Vérifiez que tous les services sont démarrés :
-   ```bash
-   docker-compose ps
-   ```
-2. Vérifiez les logs :
-   ```bash
-   docker-compose logs -f
-   ```
-3. Vérifiez les ports (80/443 en production, 80 en dev)
-4. Testez la connectivité :
-   ```bash
-   curl http://localhost:9090  # Dev
-   curl https://pay.yourdomain.com  # Prod
-   ```
-
-### Erreurs d'authentification API
-
-1. Vérifiez que vous utilisez le bon header : `x-api-key` (et non `Authorization: Bearer`)
-2. Vérifiez que vous utilisez la bonne clé (lecture ou écriture)
-3. Vérifiez que la clé n'a pas été modifiée dans le `.env`
-
-### Le webhook ne fonctionne pas
-
-1. Vérifiez que l'URL du webhook est accessible publiquement
-2. Testez la signature avec le secret configuré
-3. Vérifiez les logs du provider
-4. Testez avec un outil comme webhook.site
-
-## Exemples d'intégration
-
-### Intégration JavaScript/Node.js (Paiement direct)
-
-```javascript
-const axios = require('axios');
-
-async function initiatePayment() {
-  try {
-    const response = await axios.post(
-      'https://pay.yourdomain.com/api/v1/payment/initiate',
-      {
-        amount: 5000,
-        currency: 'XOF',
-        provider_code: 'wave',
-        customer: {
-          name: 'Jean Dupont',
-          email: 'jean@example.com',
-          phone: '+221771234567'
-        },
-        metadata: {
-          order_id: 'CMD-2024-001'
-        }
-      },
-      {
-        headers: {
-          'x-api-key': process.env.NEXPAY_WRITE_KEY,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    console.log('Payment initiated:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Error:', error.response?.data || error.message);
-  }
-}
-```
-
-### Intégration JavaScript/Node.js (Session de paiement)
-
-```javascript
-async function createPaymentSession() {
-  try {
-    const response = await axios.post(
-      'https://pay.yourdomain.com/api/v1/payment/session/initiate',
-      {
-        amount: 5000,
-        currency: 'XOF',
-        customer: {
-          name: 'Jean Dupont',
-          email: 'jean@example.com',
-          phone: '+221771234567'
-        },
-        success_url: 'https://monsite.com/success',
-        cancel_url: 'https://monsite.com/cancel',
-        metadata: {
-          order_id: 'CMD-2024-001'
-        }
-      },
-      {
-        headers: {
-          'x-api-key': process.env.NEXPAY_WRITE_KEY,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    // Rediriger vers la page de checkout
-    window.location.href = response.data.data.checkoutUrl;
-  } catch (error) {
-    console.error('Error:', error.response?.data || error.message);
-  }
-}
-```
-
-### Vérification côté client (avec clé de lecture)
-
-```javascript
-// Sûr à utiliser côté client
-async function checkPaymentStatus(sessionId) {
-  try {
-    const response = await axios.get(
-      `https://pay.yourdomain.com/api/v1/payment/session/${sessionId}`,
-      {
-        headers: {
-          'x-api-key': 'YOUR_READ_KEY' // Peut être exposé
-        }
-      }
-    );
-
-    return response.data;
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
-
-// Polling pour vérifier le statut
-const pollInterval = setInterval(async () => {
-  const status = await checkPaymentStatus(sessionId);
-  
-  if (status.data.status === 'succeeded') {
-    clearInterval(pollInterval);
-    // Afficher succès
-  } else if (status.data.status === 'failed') {
-    clearInterval(pollInterval);
-    // Afficher échec
-  }
-}, 3000);
-```
-
-### Intégration Python
-
-```python
-import requests
-import os
-
-NEXPAY_API_URL = "https://pay.yourdomain.com/api/v1"
-WRITE_KEY = os.getenv("NEXPAY_WRITE_KEY")
-
-def create_payment_session(amount, customer):
-    headers = {
-        "x-api-key": WRITE_KEY,
-        "Content-Type": "application/json"
-    }
-  
-    payload = {
-        "amount": amount,
-        "currency": "XOF",
-        "customer": customer,
-        "success_url": "https://monsite.com/success",
-        "cancel_url": "https://monsite.com/cancel"
-    }
-  
-    response = requests.post(
-        f"{NEXPAY_API_URL}/payment/session/initiate",
-        json=payload,
-        headers=headers
-    )
-  
-    return response.json()
-
-# Utilisation
-customer = {
-    "name": "Jean Dupont",
-    "email": "jean@example.com",
-    "phone": "+221771234567"
-}
-
-result = create_payment_session(5000, customer)
-print(f"Checkout URL: {result['data']['checkoutUrl']}")
-```
-
-### Intégration PHP
-
-```php
-<?php
-
-function createPaymentSession($amount, $customer) {
-    $writeKey = getenv('NEXPAY_WRITE_KEY');
-    $apiUrl = 'https://pay.yourdomain.com/api/v1/payment/session/initiate';
-  
-    $data = [
-        'amount' => $amount,
-        'currency' => 'XOF',
-        'customer' => $customer,
-        'success_url' => 'https://monsite.com/success',
-        'cancel_url' => 'https://monsite.com/cancel',
-        'metadata' => [
-            'order_id' => 'CMD-2024-001'
-        ]
-    ];
-  
-    $ch = curl_init($apiUrl);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'x-api-key: ' . $writeKey,
-        'Content-Type: application/json'
-    ]);
-  
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-  
-    if ($httpCode === 200) {
-        $result = json_decode($response, true);
-        return $result;
-    }
-  
-    return null;
-}
-
-// Utilisation
-$customer = [
-    'name' => 'Jean Dupont',
-    'email' => 'jean@example.com',
-    'phone' => '+221771234567'
-];
-
-$result = createPaymentSession(5000, $customer);
-
-if ($result) {
-    // Rediriger vers la page de checkout
-    header('Location: ' . $result['data']['checkoutUrl']);
-    exit;
-}
-?>
-```
-
-### Webhook Handler (Express.js)
-
-```javascript
-const express = require('express');
-const crypto = require('crypto');
-
-const app = express();
-app.use(express.json());
-
-const WEBHOOK_SECRET = process.env.NEXPAY_WEBHOOK_SECRET;
-
-function verifyWebhookSignature(payload, signature, secret) {
-  const expectedSignature = crypto
-    .createHmac('sha256', secret)
-    .update(JSON.stringify(payload))
-    .digest('hex');
-  
-  return signature === expectedSignature;
-}
-
-app.post('/webhook/nexpay', (req, res) => {
-  const signature = req.headers['x-webhook-secret'];
-  
-  // Vérifier la signature
-  if (!verifyWebhookSignature(req.body, signature, WEBHOOK_SECRET)) {
-    console.error('Invalid webhook signature');
-    return res.status(401).send('Invalid signature');
-  }
-  
-  const event = req.body;
-  
-  // Traiter l'événement selon son type
-  switch (event.type) {
-    case 'payment.succeeded':
-      handlePaymentSuccess(event.data);
-      break;
-  
-    case 'payment.failed':
-      handlePaymentFailure(event.data);
-      break;
-  
-    case 'payment.pending':
-      handlePaymentPending(event.data);
-      break;
-  
-    case 'payment.cancelled':
-      handlePaymentCancelled(event.data);
-      break;
-  
-    default:
-      console.log('Unknown event type:', event.type);
-  }
-  
-  // Toujours répondre 200 OK
-  res.status(200).send('OK');
-});
-
-function handlePaymentSuccess(data) {
-  console.log('Payment succeeded:', data.client_reference);
-  
-  // Récupérer l'order_id depuis les métadonnées
-  const orderId = data.metadata.order_id;
-  
-  // Mettre à jour la commande dans votre base de données
-  // updateOrderStatus(orderId, 'paid');
-  
-  // Envoyer un email de confirmation
-  // sendConfirmationEmail(data.payer.email, orderId);
-  
-  // Logger pour audit
-  console.log({
-    orderId,
-    amount: data.amount,
-    provider: data.provider.name,
-    payer: data.payer.name,
-    timestamp: data.resolvedAt
-  });
-}
-
-function handlePaymentFailure(data) {
-  console.log('Payment failed:', data.client_reference);
-  
-  const orderId = data.metadata.order_id;
-  
-  // Mettre à jour le statut
-  // updateOrderStatus(orderId, 'failed');
-  
-  // Notifier l'utilisateur
-  // sendPaymentFailureEmail(data.payer.email, orderId);
-}
-
-function handlePaymentPending(data) {
-  console.log('Payment pending:', data.client_reference);
-  // Traiter le paiement en attente
-}
-
-function handlePaymentCancelled(data) {
-  console.log('Payment cancelled:', data.client_reference);
-  // Traiter l'annulation
-}
-
-app.listen(3000, () => {
-  console.log('Webhook server running on port 3000');
-});
-```
-
-### Webhook Handler (Python/Flask)
-
-```python
-from flask import Flask, request, jsonify
-import hmac
-import hashlib
-import json
-import os
-
-app = Flask(__name__)
-WEBHOOK_SECRET = os.getenv('NEXPAY_WEBHOOK_SECRET')
-
-def verify_webhook_signature(payload, signature, secret):
-    expected_signature = hmac.new(
-        secret.encode('utf-8'),
-        json.dumps(payload).encode('utf-8'),
-        hashlib.sha256
-    ).hexdigest()
-  
-    return hmac.compare_digest(signature, expected_signature)
-
-@app.route('/webhook/nexpay', methods=['POST'])
-def nexpay_webhook():
-    signature = request.headers.get('x-webhook-secret')
-    payload = request.get_json()
-  
-    # Vérifier la signature
-    if not verify_webhook_signature(payload, signature, WEBHOOK_SECRET):
-        return jsonify({'error': 'Invalid signature'}), 401
-  
-    event_type = payload.get('type')
-    data = payload.get('data')
-  
-    # Traiter l'événement
-    if event_type == 'payment.succeeded':
-        handle_payment_success(data)
-    elif event_type == 'payment.failed':
-        handle_payment_failure(data)
-    elif event_type == 'payment.pending':
-        handle_payment_pending(data)
-    elif event_type == 'payment.cancelled':
-        handle_payment_cancelled(data)
-  
-    return jsonify({'status': 'ok'}), 200
-
-def handle_payment_success(data):
-    print(f"Payment succeeded: {data['client_reference']}")
-    order_id = data['metadata']['order_id']
-    # Mettre à jour la commande
-    # update_order_status(order_id, 'paid')
-
-def handle_payment_failure(data):
-    print(f"Payment failed: {data['client_reference']}")
-    # Traiter l'échec
-
-def handle_payment_pending(data):
-    print(f"Payment pending: {data['client_reference']}")
-    # Traiter le statut en attente
-
-def handle_payment_cancelled(data):
-    print(f"Payment cancelled: {data['client_reference']}")
-    # Traiter l'annulation
-
-if __name__ == '__main__':
-    app.run(port=3000)
-```
-
-### Webhook Handler (PHP)
-
-```php
-<?php
-
-$webhookSecret = getenv('NEXPAY_WEBHOOK_SECRET');
-
-function verifyWebhookSignature($payload, $signature, $secret) {
-    $expectedSignature = hash_hmac('sha256', json_encode($payload), $secret);
-    return hash_equals($signature, $expectedSignature);
-}
-
-// Récupérer les données
-$signature = $_SERVER['HTTP_X_WEBHOOK_SECRET'] ?? '';
-$payload = json_decode(file_get_contents('php://input'), true);
-
-// Vérifier la signature
-if (!verifyWebhookSignature($payload, $signature, $webhookSecret)) {
-    http_response_code(401);
-    die('Invalid signature');
-}
-
-$eventType = $payload['type'];
-$data = $payload['data'];
-
-// Traiter l'événement
-switch ($eventType) {
-    case 'payment.succeeded':
-        handlePaymentSuccess($data);
-        break;
-    
-    case 'payment.failed':
-        handlePaymentFailure($data);
-        break;
-    
-    case 'payment.pending':
-        handlePaymentPending($data);
-        break;
-    
-    case 'payment.cancelled':
-        handlePaymentCancelled($data);
-        break;
-}
-
-function handlePaymentSuccess($data) {
-    error_log("Payment succeeded: " . $data['client_reference']);
-  
-    $orderId = $data['metadata']['order_id'];
-  
-    // Mettre à jour la commande dans la base de données
-    // $db->query("UPDATE orders SET status = 'paid' WHERE id = ?", [$orderId]);
-  
-    // Envoyer un email de confirmation
-    // sendConfirmationEmail($data['payer']['email'], $orderId);
-}
-
-function handlePaymentFailure($data) {
-    error_log("Payment failed: " . $data['client_reference']);
-    // Traiter l'échec
-}
-
-function handlePaymentPending($data) {
-    error_log("Payment pending: " . $data['client_reference']);
-    // Traiter le statut en attente
-}
-
-function handlePaymentCancelled($data) {
-    error_log("Payment cancelled: " . $data['client_reference']);
-    // Traiter l'annulation
-}
-
-// Répondre 200 OK
-http_response_code(200);
-echo 'OK';
-?>
-```
-
-## Architecture et déploiement
-
-### Architecture des services
-
-NexPay utilise une architecture microservices avec Docker Compose :
-
-- **Frontend** : Application React pour le dashboard et checkout
-- **Backend** : API REST Node.js/NestJS
-- **Database** : PostgreSQL pour les données persistantes
-- **Cache** : Redis pour les sessions et cache
-- **Reverse Proxy** : Traefik pour SSL et routing (production uniquement)
-
-### Configuration Docker
-
-#### docker-compose-dev.yml
-
-Utilisé pour le développement local :
-
-- Pas de SSL (HTTP uniquement)
-- Ports exposés directement
-- Rechargement à chaud activé
-- Logs verbeux
-
-```bash
-docker-compose -f docker-compose-dev.yml up -d
-```
-
-#### docker-compose-prod.yml
-
-Utilisé pour la production :
-
-- SSL automatique via Traefik et Let's Encrypt
-- Reverse proxy configuré
-- Optimisations de performance
-- Logs structurés
-
-```bash
-docker-compose -f docker-compose-prod.yml up -d
-```
-
-### Monitoring et logs
-
-#### Voir les logs en temps réel
-
-```bash
-# Tous les services
-docker-compose -f docker-compose-prod.yml logs -f
-
-# Un service spécifique
-docker-compose -f docker-compose-prod.yml logs -f backend
-docker-compose -f docker-compose-prod.yml logs -f postgres
-docker-compose -f docker-compose-prod.yml logs -f traefik
-```
-
-#### Vérifier l'état des services
-
-```bash
-docker-compose -f docker-compose-prod.yml ps
-```
-
-#### Redémarrer un service
-
-```bash
-# Redémarrer tous les services
-docker-compose -f docker-compose-prod.yml restart
-
-# Redémarrer un service spécifique
-docker-compose -f docker-compose-prod.yml restart backend
-```
-
-### Performance et optimisation
-
-#### Optimisation de la base de données
-
-```bash
-# Accéder au conteneur PostgreSQL
-docker-compose exec postgres psql -U nexpay
-
--- Analyser les performances
-EXPLAIN ANALYZE SELECT * FROM transactions WHERE status = 'succeeded';
-
--- Créer des index si nécessaire
-CREATE INDEX idx_transactions_status ON transactions(status);
-CREATE INDEX idx_transactions_created_at ON transactions(created_at DESC);
-```
-
-#### Nettoyage du cache Redis
-
-```bash
-# Accéder à Redis
-docker-compose exec redis redis-cli -a redispassword
-
-# Vider le cache
-FLUSHALL
-
-# Voir les clés
-KEYS *
-```
-
-## FAQ
-
-### Questions générales
-
-**Q: Puis-je utiliser NexPay gratuitement ?**
-R: Oui, NexPay est open source. Vous ne payez que les frais des providers (Wave, Orange Money, etc.)
-
-**Q: Quels pays sont supportés ?**
-R: NexPay supporte tous les pays où Wave et Orange Money sont disponibles (principalement l'Afrique de l'Ouest et Centrale).
-
-**Q: Puis-je ajouter d'autres providers ?**
-R: Oui, l'architecture de NexPay permet d'ajouter facilement de nouveaux providers. Consultez la documentation de contribution.
-
-**Q: Combien de transactions puis-je traiter ?**
-R: Il n'y a pas de limite imposée par NexPay. Les limites dépendent de vos providers et de votre infrastructure serveur.
-
-### Questions techniques
-
-**Q: Pourquoi y a-t-il deux types de clés API ?**
-R: Pour améliorer la sécurité. La clé de lecture peut être utilisée côté client en toute sécurité, tandis que la clé d'écriture doit rester secrète côté serveur.
-
-**Q: Puis-je changer les clés API ?**
-R: Oui, mais manuellement. Modifiez les variables `X_WRITE_KEY` et `X_READ_KEY` dans le fichier `.env` et redémarrez les services.
-
-**Q: Comment gérer plusieurs environnements (dev, staging, prod) ?**
-R: Déployez plusieurs instances de NexPay avec des configurations différentes. Utilisez des sous-domaines différents (dev.pay.domain.com, pay.domain.com).
-
-**Q: Les webhooks sont-ils fiables ?**
-R: Oui, mais implémentez toujours une logique de vérification du statut côté serveur en cas d'échec de webhook.
-
-**Q: Que faire si un webhook échoue ?**
-R: NexPay réessaie automatiquement les webhooks échoués. Vous pouvez aussi consulter l'historique dans le dashboard.
-
-### Questions de sécurité
-
-**Q: Mes données sont-elles sécurisées ?**R: Oui, avec une configuration appropriée :
-
-- SSL/TLS automatique en production
-- Chiffrement des données sensibles
-- Authentification forte
-- Isolation des projets
-
-**Q: Dois-je être PCI-DSS compliant ?**
-R: Non, NexPay ne traite pas directement les cartes bancaires. Les paiements sont gérés par Wave, Orange Money, etc.
-
-**Q: Comment protéger mes clés API ?**R:
-
-- Ne jamais commiter les clés dans Git
-- Utiliser des variables d'environnement
-- Ne jamais exposer la clé d'écriture côté client
-- Restreindre l'accès au serveur
-
-## Ressources et support
-
-### Documentation officielle
-
-- **Site web** : https://nexpay.thenexcom.com
-- **GitHub** : https://github.com/mouhamedlamotte/nexpay
-- **Changelog** : Consultez les releases GitHub pour les nouveautés
-
-### Communauté
-
-- **Issues GitHub** : Pour reporter des bugs ou demander des fonctionnalités
-- **Discussions GitHub** : Pour poser des questions et échanger avec la communauté
-
-### Support professionnel
-
-Pour un support personnalisé, des formations ou des développements sur mesure, contactez :
-
-- **Email** : support@nexpay.com
-- **Site** : https://mouhamedlamotte.thenexcom.com
-
-## Contribuer
-
-Les contributions sont les bienvenues ! Voici comment participer :
-
-1. **Fork** le repository
-2. **Créer une branche** pour votre fonctionnalité (`git checkout -b feature/AmazingFeature`)
-3. **Commiter** vos changements (`git commit -m 'Add some AmazingFeature'`)
-4. **Push** vers la branche (`git push origin feature/AmazingFeature`)
-5. **Ouvrir une Pull Request**
-
-### Guidelines
-
-- Écrivez du code propre et documenté
-- Ajoutez des tests pour les nouvelles fonctionnalités
-- Suivez les conventions de code du projet
-- Décrivez clairement vos changements dans la PR
-
-## Roadmap
-
-### Version actuelle (v2.0)
-
-✅ Configuration des providers par page dédiée
-✅ Test de providers intégré
-✅ Auto-configuration des webhooks Orange Money
-✅ Deux types de clés API (lecture/écriture)
-✅ Génération automatique des secrets webhook
-✅ Mode développement local
-
-### Prochaines versions
-
-🔜 **v2.1**
-
-- Rotation automatique des clés API
-- Dashboard de monitoring avancé
-- Support de Free Money
-- Support de PayDunya
-
-🔜 **v2.2**
-
-- API GraphQL
-- Webhooks retry configurable
-- Multi-devise étendu
-- Mode sandbox pour tests
-
-🔜 **v3.0**
-
-- Support des paiements récurrents (abonnements)
-- Gestion des remboursements
-- Facturation automatique
-- Rapports comptables avancés
-
-## Licence
-
-NexPay est un logiciel open source sous licence MIT. Consultez le fichier [LICENSE](https://github.com/mouhamedlamotte/nexpay/blob/main/LICENSE) pour plus d'informations.
-
-## Remerciements
-
-NexPay a été développé pour faciliter l'intégration des paiements mobiles en Afrique. Merci à tous les contributeurs et à la communauté pour leur soutien.
-
-### Technologies utilisées
-
-- **Backend** : Node.js, NestJS, TypeScript
-- **Frontend** : React, TailwindCSS
-- **Database** : PostgreSQL
-- **Cache** : Redis
-- **Infrastructure** : Docker, Traefik
-- **Providers** : Wave API, Orange Money API
+> **Important :** Toujours répondre `200 OK` rapidement. NexPay n'implémente pas de retry automatique pour le moment.
 
 ---
 
-**Développé avec ❤️ par [Mouhamed Lamotte](https://mouhamedlamotte.thenexcom.com)**
+## Configuration des providers
 
-*Dernière mise à jour : Novembre 2025*
+### Providers disponibles
+
+| Code | Nom | Secrets requis |
+|---|---|---|
+| `wave` | Wave | `api_key` |
+| `om` | Orange Money | `client_id`, `client_secret`, `name`, `code` |
+
+Les providers sont inactifs par défaut. Un provider n'est activable que si ses secrets ET son webhook sont configurés.
+
+### Wave
+
+**Dashboard → Providers → Wave**
+
+1. **Onglet "Secrets"** — Entrez votre `api_key` Wave
+2. **Onglet "Webhook"** — Choisissez le type d'auth et entrez le secret
+   - `sharedSecret` : secret partagé simple (min. 20 caractères)
+   - `hmac` : authentification cryptographique (recommandé)
+3. **Test Payment** — Vérifiez l'intégration depuis le dashboard
+4. **URL webhook à configurer chez Wave :**
+   ```
+   https://votre-domaine/api/v1/webhook/wave
+   ```
+
+### Orange Money
+
+**Dashboard → Providers → Orange Money**
+
+1. **Onglet "Secrets"** — Entrez `client_id`, `client_secret`, `name`, `code`
+2. **Onglet "Webhook"** — Deux options :
+   - `autoConfigure: true` : NexPay configure automatiquement le webhook chez OM et génère le secret
+   - `autoConfigure: false` : Fournissez votre propre secret (min. 20 caractères)
+3. **URL webhook à configurer chez Orange Money :**
+   ```
+   https://votre-domaine/api/v1/webhook/om
+   ```
+
+---
+
+## Gestion multi-projets
+
+Une instance NexPay gère plusieurs projets indépendants. Chaque projet a :
+- Ses propres transactions et statistiques
+- Ses propres webhooks sortants
+- Ses propres URLs de redirection (success/failure)
+
+Les providers (Wave, OM) sont configurés **une seule fois** et partagés entre tous les projets.
+
+Chaque requête API de paiement doit inclure un `projectId` :
+
+```json
+{
+  "amount": 5000,
+  "projectId": "cmhciopb000049ugoic8kqhyj",
+  ...
+}
+```
+
+Récupérez l'ID de votre projet depuis `GET /api/v1/projects` (auth JWT) ou via le dashboard.
+
+---
+
+## Mise à jour
+
+### Option A (image pré-construite)
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+### Option B/C (build depuis les sources)
+
+```bash
+git pull origin main
+docker compose -f docker-compose-prod.yml up -d --build
+```
+
+Les migrations Prisma sont exécutées automatiquement au redémarrage.
+
+---
+
+## Sauvegarde
+
+```bash
+# Dump PostgreSQL
+docker exec nexpay-db pg_dump -U nexpay nexpay > backup_$(date +%Y%m%d).sql
+
+# Restauration
+docker exec -i nexpay-db psql -U nexpay nexpay < backup_20251030.sql
+
+# Sauvegarder les médias (logos providers)
+tar -czf media_backup.tar.gz ./media/
+```
+
+---
+
+## Licence
+
+MIT — [Mouhamed Lamotte](https://mouhamedlamotte.thenexcom.com)
